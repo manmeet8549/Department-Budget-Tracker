@@ -1,0 +1,28 @@
+/* Global styles — import tokens.css first */
+@import './tokens.css';
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body {
+  background: var(--dp-color-ground);
+  color: var(--dp-color-ink);
+  font-family: 'Instrument Sans', var(--dp-typography-fallback);
+  font-size: var(--dp-typography-body);
+  line-height: var(--dp-typography-body-leading);
+  margin: 0;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Host Grotesk', var(--dp-typography-fallback);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  margin: 0;
+}
+
+/* Tabular numbers for all financial figures */
+.numeric {
+  font-variant-numeric: tabular-nums;
+}

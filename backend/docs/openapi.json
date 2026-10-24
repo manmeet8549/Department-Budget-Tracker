@@ -1,0 +1,77 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Department Budget Spending Tracker API",
+    "version": "0.1.0",
+    "description": "RESTful JSON API for the college budget management system.\n\nBase path: `/api/v1`. All responses: `{ success, data }` or `{ success, error: { code, message, details } }`.\n\nAuthentication: `Authorization: Bearer <accessToken>` (added in Iteration 1)."
+  },
+  "servers": [
+    { "url": "http://localhost:5000/api/v1", "description": "Local development" }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Health check",
+        "description": "Liveness probe. No authentication required.",
+        "tags": ["System"],
+        "operationId": "getHealth",
+        "responses": {
+          "200": {
+            "description": "Service is running",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "status": { "type": "string", "example": "ok" },
+                        "version": { "type": "string", "example": "0.1.0" },
+                        "env": { "type": "string", "example": "development" },
+                        "timestamp": { "type": "string", "format": "date-time" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "SuccessResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "example": true },
+          "data": { "type": "object" }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "example": false },
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": { "type": "string", "example": "INSUFFICIENT_BALANCE" },
+              "message": { "type": "string" },
+              "details": { "type": "object" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

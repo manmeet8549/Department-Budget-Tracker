@@ -1,0 +1,2 @@
+﻿// requireRole(...roles) middleware
+export {};
