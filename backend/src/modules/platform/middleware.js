@@ -2,29 +2,67 @@
  * platform/middleware.js
  * Express middleware factory functions.
  *
- * v1 stubs — requireAuth is a pass-through (real JWT verify added in Iteration 1).
- * The interface (function signatures) is final so all routes are wired correctly now.
- *
  * Middleware order on every protected route (techstack §9):
  *   auth → role → department → validate → controller
  */
+import jwt from 'jsonwebtoken';
 import { AppError } from './errors.js';
+import { prisma } from '../../config/db.js';
+
+const JWT_SECRET = process.env.JWT_SECRET ?? 'fallback_secret_for_tests_only';
 
 /**
- * requireAuth — v1 stub.
- * Iteration 1 will verify the JWT and populate req.user.
- * Until then every request is passed through (test environment only).
+ * requireAuth — verifies JWT access token from Authorization header.
+ * Populates req.user with sanitized user details.
  */
-export function requireAuth(req, _res, next) {
-  // v1: attach a placeholder so downstream middleware does not crash
-  if (!req.user) {
-    req.user = req.__testUser ?? null;
+export async function requireAuth(req, _res, next) {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return next(new AppError('UNAUTHORIZED', 'Authentication token required', 401));
+    }
+
+    const token = authHeader.split(' ')[1];
+    let decoded;
+    try {
+      decoded = jwt.verify(token, JWT_SECRET);
+    } catch (err) {
+      return next(new AppError('UNAUTHORIZED', 'Invalid or expired token', 401, { error: err.message }));
+    }
+
+    if (!decoded?.userId) {
+      return next(new AppError('UNAUTHORIZED', 'Malformed token payload', 401));
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.userId },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        departmentId: true,
+        isActive: true,
+      },
+    });
+
+    if (!user) {
+      return next(new AppError('UNAUTHORIZED', 'User no longer exists', 401));
+    }
+
+    if (!user.isActive) {
+      return next(new AppError('ACCOUNT_DISABLED', 'User account is disabled', 401));
+    }
+
+    req.user = user;
+    next();
+  } catch (err) {
+    next(err);
   }
-  next();
 }
 
 /**
- * requireRole(...roles) — returns middleware that checks req.user.role.
+ * requireRole(...roles) — checks req.user.role against allowed roles.
  * @param {...string} roles - allowed roles, e.g. 'SUPER_ADMIN', 'MANAGEMENT'
  */
 export function requireRole(...roles) {
@@ -47,25 +85,23 @@ export function scopeDepartment(req, _res, next) {
   if (!req.user) return next();
   const { role, departmentId } = req.user;
   if (role === 'HOD' || role === 'STAFF') {
-    // Allow the request only if the target department matches the user's department
-    const targetDept = req.params.deptId ?? req.query.department ?? req.body?.departmentId;
+    const targetDept = req.params.deptId ?? req.query.department ?? req.query.departmentId ?? req.body?.departmentId;
     if (targetDept && String(targetDept) !== String(departmentId)) {
       return next(new AppError('FORBIDDEN', 'Access to this department is not allowed', 403));
     }
-    // Force-set the filter on the request so services can rely on it
     req.departmentScope = departmentId;
   }
   next();
 }
 
 /**
- * validate(schema) — validates req.body (and optionally req.query / req.params) with Zod.
- * On failure returns 400 with details per the standard error format.
- * @param {import('zod').ZodSchema} schema - Zod schema for req.body
+ * validate(schema, target) — validates req.body, req.query, or req.params with Zod.
+ * @param {import('zod').ZodSchema} schema - Zod schema
+ * @param {'body'|'query'|'params'} target - property on req to validate
  */
-export function validate(schema) {
+export function validate(schema, target = 'body') {
   return (req, _res, next) => {
-    const result = schema.safeParse(req.body);
+    const result = schema.safeParse(req[target]);
     if (!result.success) {
       const details = result.error.errors.map((e) => ({
         field: e.path.join('.'),
@@ -73,7 +109,7 @@ export function validate(schema) {
       }));
       return next(new AppError('VALIDATION_ERROR', 'Validation failed', 400, { fields: details }));
     }
-    req.body = result.data; // replace with parsed + coerced data
+    req[target] = result.data;
     next();
   };
 }

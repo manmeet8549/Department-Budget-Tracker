@@ -15,6 +15,25 @@
 
 ---
 
+## Seed Accounts & Test Passwords (Iteration 1)
+
+All seeded test accounts share the password: **`Password@123`**
+
+| Role | Email | Password | Department Scope |
+|---|---|---|---|
+| **SUPER_ADMIN** | `superadmin@college.edu` | `Password@123` | College-wide (Unrestricted) |
+| **MANAGEMENT** | `management@college.edu` | `Password@123` | College-wide (Unrestricted) |
+| **FINANCE** | `finance@college.edu` | `Password@123` | College-wide (Unrestricted) |
+| **HOD** | `hod_et@college.edu` | `Password@123` | Engineering Block (`ET`) |
+| **HOD** | `hod_pharma@college.edu` | `Password@123` | Pharmacy Block (`PHARMA`) |
+| **STAFF** | `staff_et@college.edu` | `Password@123` | Engineering Block (`ET`) |
+| **AUDITOR** | `auditor@college.edu` | `Password@123` | College-wide (Read-only) |
+| *Disabled User* | `disabled_user@college.edu` | `Password@123` | Inactive (Cannot log in) |
+
+> **Note on Departments:** Minimal placeholder departments (`ET`, `PHARMA`, `HM`, `MT`) are seeded in Iteration 1 solely to support department scoping for HOD and STAFF roles. The complete department structure (including parent-child relationships for sub-units like BBA/BCOM under MT) and administrative CRUD will be implemented in the `master` module in Iteration 2.
+
+---
+
 ## 1. Local Development (Without Docker)
 
 ### Prerequisites

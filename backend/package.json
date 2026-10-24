@@ -20,9 +20,12 @@
   },
   "dependencies": {
     "@prisma/client": "^5.14.0",
+    "bcryptjs": "^3.0.3",
+    "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "express": "^4.19.2",
     "helmet": "^7.1.0",
+    "jsonwebtoken": "^9.0.3",
     "pino": "^9.2.0",
     "pino-http": "^10.2.0",
     "swagger-ui-express": "^5.0.1",

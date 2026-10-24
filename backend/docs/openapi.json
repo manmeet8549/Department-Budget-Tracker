@@ -3,7 +3,7 @@
   "info": {
     "title": "Department Budget Spending Tracker API",
     "version": "0.1.0",
-    "description": "RESTful JSON API for the college budget management system.\n\nBase path: `/api/v1`. All responses: `{ success, data }` or `{ success, error: { code, message, details } }`.\n\nAuthentication: `Authorization: Bearer <accessToken>` (added in Iteration 1)."
+    "description": "RESTful JSON API for the college budget management system.\n\nBase path: `/api/v1`. All responses: `{ success, data }` or `{ success, error: { code, message, details } }`.\n\nAuthentication: `Authorization: Bearer <accessToken>`."
   },
   "servers": [
     { "url": "http://localhost:5000/api/v1", "description": "Local development" }
@@ -40,6 +40,171 @@
           }
         }
       }
+    },
+    "/auth/login": {
+      "post": {
+        "summary": "User login",
+        "description": "Authenticates user with email and password. Returns access token in response body and sets refresh token in httpOnly cookie.",
+        "tags": ["Auth"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "password"],
+                "properties": {
+                  "email": { "type": "string", "format": "email", "example": "superadmin@college.edu" },
+                  "password": { "type": "string", "example": "Admin@123456" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Login successful" },
+          "401": { "description": "Invalid credentials or user disabled" }
+        }
+      }
+    },
+    "/auth/refresh": {
+      "post": {
+        "summary": "Refresh access token",
+        "description": "Generates a new access token using the refresh token cookie.",
+        "tags": ["Auth"],
+        "responses": {
+          "200": { "description": "Token refreshed" },
+          "401": { "description": "Missing or expired refresh token" }
+        }
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "summary": "User logout",
+        "description": "Clears the refresh token cookie.",
+        "tags": ["Auth"],
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Logged out successfully" }
+        }
+      }
+    },
+    "/auth/change-password": {
+      "post": {
+        "summary": "Change password",
+        "description": "Allows an authenticated user to change their password.",
+        "tags": ["Auth"],
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["currentPassword", "newPassword"],
+                "properties": {
+                  "currentPassword": { "type": "string" },
+                  "newPassword": { "type": "string", "minLength": 6 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Password updated" },
+          "400": { "description": "Invalid current password or new password format" }
+        }
+      }
+    },
+    "/users": {
+      "get": {
+        "summary": "List users",
+        "description": "List users with role and department details. Restricted to SUPER_ADMIN.",
+        "tags": ["Users"],
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Users retrieved" },
+          "403": { "description": "Access denied" }
+        }
+      },
+      "post": {
+        "summary": "Create user",
+        "description": "Creates a new user. Restricted to SUPER_ADMIN.",
+        "tags": ["Users"],
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "password", "name", "role"],
+                "properties": {
+                  "email": { "type": "string", "format": "email" },
+                  "password": { "type": "string", "minLength": 6 },
+                  "name": { "type": "string" },
+                  "role": { "type": "string", "enum": ["SUPER_ADMIN", "MANAGEMENT", "FINANCE", "HOD", "STAFF", "AUDITOR"] },
+                  "departmentId": { "type": "integer", "nullable": true }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "User created" },
+          "403": { "description": "Access denied" }
+        }
+      }
+    },
+    "/users/{id}": {
+      "patch": {
+        "summary": "Update user",
+        "description": "Updates or disables a user. Restricted to SUPER_ADMIN.",
+        "tags": ["Users"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" },
+                  "role": { "type": "string" },
+                  "departmentId": { "type": "integer", "nullable": true },
+                  "isActive": { "type": "boolean" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "User updated" },
+          "403": { "description": "Access denied" }
+        }
+      }
+    },
+    "/audit-logs": {
+      "get": {
+        "summary": "List audit logs",
+        "description": "Returns immutable audit logs with pagination and filters. Restricted to SUPER_ADMIN.",
+        "tags": ["Audit"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 20 } },
+          { "name": "action", "in": "query", "schema": { "type": "string" } },
+          { "name": "tableName", "in": "query", "schema": { "type": "string" } },
+          { "name": "userId", "in": "query", "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "description": "Audit logs retrieved" },
+          "403": { "description": "Access denied" }
+        }
+      }
     }
   },
   "components": {
@@ -65,7 +230,7 @@
           "error": {
             "type": "object",
             "properties": {
-              "code": { "type": "string", "example": "INSUFFICIENT_BALANCE" },
+              "code": { "type": "string", "example": "UNAUTHORIZED" },
               "message": { "type": "string" },
               "details": { "type": "object" }
             }

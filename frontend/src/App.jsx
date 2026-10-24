@@ -1,52 +1,51 @@
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider } from './features/auth/AuthContext.jsx';
+import LoginPage from './features/auth/LoginPage.jsx';
+import ProtectedRoute from './components/ProtectedRoute.jsx';
+import AppLayout from './components/AppLayout.jsx';
+import DashboardPage from './features/dashboard/DashboardPage.jsx';
 
-
-/**
- * App shell — Iteration 0.
- * Providers (QueryClient, Router, auth context) are wired in Iteration 5.
- * For now, confirms the React app starts and tokens.css is loaded.
- */
 export default function App() {
   return (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        minHeight: '100vh',
-        background: 'var(--dp-color-ground)',
-        color: 'var(--dp-color-ink)',
-        fontFamily: 'Instrument Sans, sans-serif',
-        gap: '1rem',
-      }}
-    >
-      <h1
-        style={{
-          fontFamily: 'Host Grotesk, sans-serif',
-          fontSize: '2rem',
-          fontWeight: 700,
-          letterSpacing: '-0.02em',
-          color: 'var(--dp-color-ink)',
-          margin: 0,
-        }}
-      >
-        Department Budget Spending Tracker
-      </h1>
-      <p style={{ color: 'var(--dp-color-ink-secondary)', margin: 0 }}>
-        Foundation shell — Iteration 0
-      </p>
-      <span
-        style={{
-          display: 'inline-block',
-          padding: '4px 12px',
-          background: 'var(--dp-color-accent)',
-          color: 'var(--dp-color-on-accent)',
-          borderRadius: '8px',
-          fontSize: 'var(--dp-typography-small)',
-        }}
-      >
-        v0.1.0
-      </span>
-    </div>
+    <BrowserRouter>
+      <AuthProvider>
+        <Routes>
+          {/* Public login page */}
+          <Route path="/login" element={<LoginPage />} />
+
+          {/* Protected routes wrapped in AppLayout */}
+          <Route element={<ProtectedRoute />}>
+            <Route element={<AppLayout />}>
+              <Route path="/" element={<DashboardPage />} />
+              <Route
+                path="/users"
+                element={
+                  <ProtectedRoute allowedRoles={['SUPER_ADMIN']}>
+                    <div style={{ padding: '24px', backgroundColor: 'var(--dp-color-panel)', borderRadius: 'var(--dp-radius-panel)', border: '1px solid var(--dp-color-rule)' }}>
+                      <h2>User Directory (SUPER_ADMIN)</h2>
+                      <p style={{ color: 'var(--dp-color-ink-secondary)' }}>Manage accounts, assign roles, and toggle user active states.</p>
+                    </div>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/audit-logs"
+                element={
+                  <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'AUDITOR']}>
+                    <div style={{ padding: '24px', backgroundColor: 'var(--dp-color-panel)', borderRadius: 'var(--dp-radius-panel)', border: '1px solid var(--dp-color-rule)' }}>
+                      <h2>Audit Trail (SUPER_ADMIN & AUDITOR)</h2>
+                      <p style={{ color: 'var(--dp-color-ink-secondary)' }}>Read-only historical view of all insert, update, and deletion writes across modules.</p>
+                    </div>
+                  </ProtectedRoute>
+                }
+              />
+            </Route>
+          </Route>
+
+          {/* Fallback */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </AuthProvider>
+    </BrowserRouter>
   );
 }

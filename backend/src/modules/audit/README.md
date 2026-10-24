@@ -1,26 +1,46 @@
-﻿# Module: audit
+# Module: audit (L1)
 
 **Layer:** L1  
-**Iteration:** See `architecture.md` §8
+**Iteration:** 1 (Release 1: Working core)  
+**Status:** In Progress / Active
+
+---
 
 ## Responsibilities
 
-> _To be filled as module is implemented._
+- Immutable audit trail recording every state-changing action in the application.
+- Accepts an existing Prisma transaction client `tx` so that the business operation, balance update, and audit log write succeed or roll back atomically in the same transaction.
+- Exposes `GET /api/v1/audit-logs` for `SUPER_ADMIN` to query system history.
+
+---
 
 ## Owns (tables)
 
-audit_logs (insert-only)
+`audit_logs` (insert-only — records cannot be updated or deleted)
+
+---
 
 ## Public API (`index.js` exports)
 
-`log(tx, payload), search(filters)`
+```javascript
+export { log, search } from './service.js';
+export { auditRouter } from './routes.js';
+```
+
+- `log(tx, { userId, action, table, recordId, oldValue, newValue })`: records an immutable audit entry inside transaction `tx`.
+- `search(filters)`: queries audit entries with pagination, action, table, or user filtering.
+
+---
 
 ## Events emitted
 
-_(none)_
+None — audit is an observer and logger of events, not an emitter.
+
+---
 
 ## Version history
 
-| Version | Status | Content |
-|---|---|---|
-| v1 | 🔲 Planned | v1 planned: log() writer, GET /audit-logs for SUPER_ADMIN |
+| Version | Iteration | Status | Content |
+|---|---|---|---|
+| v1 | 1 | ✅ Done | `log()` writer used by every service write; `GET /audit-logs` for `SUPER_ADMIN` |
+| v2 | 11 | 🔲 Planned | Auditor role access, filters (user, table, date), export |

@@ -11,11 +11,51 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-// Baseline system health / migration probe model
-model HealthCheck {
+// Minimal placeholder department model for Iteration 1 to allow department-scoping for HOD/STAFF.
+// Note: Will be extended/replaced with the full master module in Iteration 2.
+model Department {
   id        Int      @id @default(autoincrement())
-  status    String   @default("ok")
-  checkedAt DateTime @default(now()) @map("checked_at")
+  code      String   @unique
+  name      String
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-  @@map("_health_check")
+  users     User[]
+
+  @@map("departments")
+}
+
+// User account with one of six roles: SUPER_ADMIN, MANAGEMENT, FINANCE, HOD, STAFF, AUDITOR.
+model User {
+  id           Int         @id @default(autoincrement())
+  email        String      @unique
+  passwordHash String      @map("password_hash")
+  name         String
+  role         String
+  departmentId Int?        @map("department_id")
+  isActive     Boolean     @default(true) @map("is_active")
+  createdAt    DateTime    @default(now()) @map("created_at")
+  updatedAt    DateTime    @updatedAt @map("updated_at")
+
+  department   Department? @relation(fields: [departmentId], references: [id])
+  auditLogs    AuditLog[]
+
+  @@map("users")
+}
+
+// Insert-only audit trail logging every write across the system.
+model AuditLog {
+  id        Int      @id @default(autoincrement())
+  userId    Int?     @map("user_id")
+  action    String
+  tableName String   @map("table_name")
+  recordId  String   @map("record_id")
+  oldValue  Json?    @map("old_value")
+  newValue  Json?    @map("new_value")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user      User?    @relation(fields: [userId], references: [id])
+
+  @@map("audit_logs")
 }

@@ -1,20 +1,27 @@
-/**
- * App.test.jsx — smoke test for the Iteration 0 React shell.
- * Verifies that App mounts without crashing and renders the heading.
- */
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import App from '../App.jsx';
 
-describe('App shell (Iteration 0)', () => {
-  it('renders the application heading', () => {
+describe('App & Authentication Routing (Iteration 1)', () => {
+  it('redirects unauthenticated users to the login page', async () => {
     render(<App />);
-    expect(
-      screen.getByRole('heading', { name: /Department Budget Spending Tracker/i })
-    ).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('heading', { name: /Budget Spending Tracker/i })
+      ).toBeInTheDocument();
+      expect(screen.getByLabelText(/Email Address/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/Password/i)).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Sign In/i })).toBeInTheDocument();
+    });
   });
 
-  it('shows the Iteration 0 label', () => {
+  it('renders demo seed role buttons on login screen', async () => {
     render(<App />);
-    expect(screen.getByText(/Foundation shell/i)).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText(/DEMO SEED ROLES/i)).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Admin/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /HoD \(ET\)/i })).toBeInTheDocument();
+    });
   });
 });
