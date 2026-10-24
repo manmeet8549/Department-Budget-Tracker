@@ -6,15 +6,16 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Iteration 0: empty schema — migration tooling is proven, no tables yet.
-// Tables are added one iteration at a time (see architecture.md §6).
-//
-// Iteration 1 adds: users, audit_logs
-// Iteration 2 adds: financial_years, departments, categories
-// etc.
-// ─────────────────────────────────────────────────────────────────────────────
+// Baseline system health / migration probe model
+model HealthCheck {
+  id        Int      @id @default(autoincrement())
+  status    String   @default("ok")
+  checkedAt DateTime @default(now()) @map("checked_at")
+
+  @@map("_health_check")
+}
