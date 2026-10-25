@@ -42,6 +42,7 @@
 ```javascript
 export {
   getActiveFinancialYear,
+  getFinancialYear,
   getDepartment,
   listDepartments,
   getCategory,
@@ -51,6 +52,7 @@ export { masterRouter } from './routes.js';
 ```
 
 - `getActiveFinancialYear()`: returns the currently active financial year record or null.
+- `getFinancialYear(id)`: returns a specific financial year by ID (or active year if omitted).
 - `getDepartment(id)`: returns a department by ID including parent and sub-units.
 - `listDepartments({ includeInactive } = {})`: returns active departments (or all if requested).
 - `getCategory(id)`: returns category by ID.
@@ -68,5 +70,7 @@ None in v1 (`year.closed` will be emitted in v3 upon permanent closing and locki
 | Version | Iteration | Status | Content |
 |---|---|---|---|
 | v1 | 2 | ✅ Done | Financial years (one active, OPEN/CLOSED), departments (with sub-units via parent_id), categories; admin CRUD with soft delete, audit integration |
+| v1.5 | 5 | ✅ Done | Added `getFinancialYear(id)` helper to support dashboard module aggregation |
 | v2 | 7 | 🔲 Planned | Vendors, settings (thresholds, over-budget policy), approval limits; Redis cache of master lists |
 | v3 | 15 | 🔲 Planned | Year close and lock (read-only after close), opening-data CSV import, year.closed event |
+

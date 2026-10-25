@@ -26,3 +26,56 @@ h1, h2, h3, h4, h5, h6 {
 .numeric {
   font-variant-numeric: tabular-nums;
 }
+
+/* Accessible visually hidden utility */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Accessible focus styling */
+:focus-visible {
+  outline: 2px solid var(--dp-color-accent);
+  outline-offset: 2px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Responsive layout adjustments for 1280, 1050, 760, and 480 px */
+@media (max-width: 1050px) {
+  .dashboard-header-split {
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .app-layout-container {
+    flex-direction: column !important;
+  }
+  .app-layout-sidebar {
+    width: 100% !important;
+    height: auto !important;
+    position: static !important;
+  }
+  .dashboard-header-split,
+  .login-layout-split {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .department-cards-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+

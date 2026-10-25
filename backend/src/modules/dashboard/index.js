@@ -1,2 +1,9 @@
-﻿// Dashboard module — exposes REST endpoints only, no service exports
-export {};
+/**
+ * modules/dashboard/index.js
+ * Public API for the dashboard module.
+ */
+export {
+  getDashboardSummary,
+} from './service.js';
+
+export { dashboardRouter } from './routes.js';

@@ -772,6 +772,73 @@
           "409": { "description": "Expense is not in APPROVED status" }
         }
       }
+    },
+    "/dashboard/summary": {
+      "get": {
+        "summary": "Get dashboard summary figures and department cards",
+        "description": "Returns financialYear, college totals, and department cards for all departments with an APPROVED budget. Scoped: HOD and STAFF see only their own department and college is null; MANAGEMENT, FINANCE, AUDITOR, SUPER_ADMIN see all and college totals.",
+        "tags": ["Dashboard"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "financialYearId",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer" },
+            "description": "Financial year ID (defaults to active financial year)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Dashboard summary figures",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "financialYear": { "type": "object" },
+                        "college": {
+                          "type": "object",
+                          "nullable": true,
+                          "properties": {
+                            "allocated": { "type": "string", "example": "800000.00" },
+                            "committed": { "type": "string", "example": "150000.50" },
+                            "spent": { "type": "string", "example": "0.00" },
+                            "available": { "type": "string", "example": "649999.50" },
+                            "utilisationPercent": { "type": "number", "example": 18.75 }
+                          }
+                        },
+                        "departments": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": { "type": "integer" },
+                              "code": { "type": "string", "example": "ET" },
+                              "name": { "type": "string", "example": "Engineering Block" },
+                              "parentCode": { "type": "string", "nullable": true, "example": null },
+                              "allocated": { "type": "string", "example": "800000.00" },
+                              "committed": { "type": "string", "example": "150000.50" },
+                              "spent": { "type": "string", "example": "0.00" },
+                              "available": { "type": "string", "example": "649999.50" },
+                              "utilisationPercent": { "type": "number", "example": 18.75 }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "description": "Unauthorized" }
+        }
+      }
     }
   },
   "components": {

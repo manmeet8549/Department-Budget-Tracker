@@ -1,6 +1,7 @@
 # Department Budget Spending Tracker
 
-> College budget management system — React + Node.js + PostgreSQL (Supabase) + Redis
+> College budget management and spending tracking system — Release 1 (MVP) v1.5.  
+> Architecture: Express (Node.js) + React (Vite) + PostgreSQL (Prisma) + Design System.
 
 ---
 
@@ -10,134 +11,169 @@
 |---|---|---|
 | **Frontend Web App** | [http://localhost:5173](http://localhost:5173) | Vite + React SPA |
 | **Backend API Base** | [http://localhost:5000/api/v1](http://localhost:5000/api/v1) | Express REST API |
-| **Health Check** | [http://localhost:5000/api/v1/health](http://localhost:5000/api/v1/health) | Liveness probe |
+| **Health Check** | [http://localhost:5000/api/v1/health](http://localhost:5000/api/v1/health) | Liveness probe (`/health`) |
 | **Swagger Documentation** | [http://localhost:5000/api/docs](http://localhost:5000/api/docs) | OpenAPI 3.0 Interactive UI |
 
 ---
 
-## Seed Accounts & Master Data (Iteration 2)
+## Prerequisites
 
-All seeded test accounts share the password: **`Password@123`**
-
-| Role | Email | Password | Department Scope |
-|---|---|---|---|
-| **SUPER_ADMIN** | `superadmin@college.edu` | `Password@123` | College-wide (Unrestricted) |
-| **MANAGEMENT** | `management@college.edu` | `Password@123` | College-wide (Unrestricted) |
-| **FINANCE** | `finance@college.edu` | `Password@123` | College-wide (Unrestricted) |
-| **HOD** | `hod_et@college.edu` | `Password@123` | Engineering Block (`ET`) |
-| **HOD** | `hod_pharma@college.edu` | `Password@123` | Pharmacy Block (`PHARMA`) |
-| **HOD** | `hod_hm@college.edu` | `Password@123` | Hotel Management (`HM`) |
-| **HOD** | `hod_mt@college.edu` | `Password@123` | Management & Technology (`MT`) |
-| **STAFF** | `staff_et@college.edu` | `Password@123` | Engineering Block (`ET`) |
-| **STAFF** | `staff_hm@college.edu` | `Password@123` | Hotel Management (`HM`) |
-| **STAFF** | `staff_mt@college.edu` | `Password@123` | Management & Technology (`MT`) |
-| **AUDITOR** | `auditor@college.edu` | `Password@123` | College-wide (Read-only) |
-| *Disabled User* | `disabled_user@college.edu` | `Password@123` | Inactive (Cannot log in) |
-
-### Seeded Master Data:
-- **Active Financial Year:** `2026-27` (1 April 2026 to 31 March 2027, status: `OPEN`)
-- **Departments:** `ET` (Engineering), `PHARMA` (Pharmacy), `HM` (Hotel Management), `MT` (Management & Technology)
-- **Sub-units under MT:** `BBA` (Bachelor of Business Administration), `BCOM` (Bachelor of Commerce)
-- **Categories:** Equipment, Consumables, Maintenance, Events and Seminars, Books and Journals, Travel and Tours, Software, Miscellaneous
+- **Node.js**: `>= 20.0.0`
+- **npm**: `>= 10.0.0`
+- **PostgreSQL**: PostgreSQL 14+ database instance (or Supabase URL)
+- Separate databases for development (`DATABASE_URL`) and automated testing (`DATABASE_URL_TEST`)
 
 ---
 
-## 1. Local Development (Without Docker)
+## Clean-Start Commands (Quick Start)
 
-### Prerequisites
-- Node.js >= 20
-- PostgreSQL database (or Supabase URL configured in `backend/.env`)
+To get the application up and running from a fresh clone or reset state:
 
-### Setup & Run
-
-1. **Configure Environment:**
-   ```bash
-   cp .env.example .env
-   cp backend/.env.example backend/.env
-   # Add your PostgreSQL connection strings (DATABASE_URL and DATABASE_URL_TEST)
-   ```
-
-2. **Database Migration & Seeding:**
-   > **Important:** Always use proper Prisma migrations (`prisma migrate deploy`). Do NOT use `prisma db push`.
-   ```bash
-   cd backend
-   npx prisma generate
-   npx prisma migrate deploy   # Applies versioned migrations under prisma/migrations
-   node prisma/seed.js         # Seeds master data (FY 2026-27, departments, categories, users)
-   ```
-
-3. **Backend:**
-   ```bash
-   cd backend
-   npm run dev       # Starts Express API on http://localhost:5000
-   ```
-
-4. **Frontend:**
-   ```bash
-   cd frontend
-   npm install
-   npm run dev       # Starts Vite Dev Server on http://localhost:5173
-   ```
-
----
-
-## 2. Docker Quick Start
-
-```bash
-cp backend/.env.example .env     # Fill in secrets for Docker Compose
-docker compose up -d             # Starts api, web, postgres, redis
-docker compose ps                # Check container statuses
-docker compose down              # Stop all containers
-```
-
----
-
-## 3. Running Tests & Quality Checks
-
-### Backend:
-> **Test Database Isolation:** Tests automatically connect to `DATABASE_URL_TEST` (configured in `.env`) and never touch the development database. Running `npm test` automatically runs `scripts/test-db-setup.js` to migrate, reset, and reseed the test database before running tests.
-
+### 1. Backend Setup & Start
 ```bash
 cd backend
-npm test             # Migrates/resets test DB and runs Jest test suites
-npm run test:ci      # CI runner (uses CI service container or DATABASE_URL_TEST)
-npm run db:test:setup # Manually reset and reseed the test database
-npm run lint         # Run ESLint on src and tests
-npm run lint:fix     # Auto-fix ESLint issues
-npm run format       # Run Prettier code formatting
+npm install
+cp .env.example .env     # Ensure DATABASE_URL and DATABASE_URL_TEST are configured
+
+# Apply schema migrations and seed master data:
+npx prisma migrate deploy
+node prisma/seed.js
+
+# Start backend dev server:
+npm run dev              # Listens on http://localhost:5000
 ```
 
-### Frontend:
+### 2. Frontend Setup & Start
 ```bash
 cd frontend
-npm test             # Run Vitest test runner
-npm run test:watch   # Run tests in interactive watch mode
-npm run lint         # Run ESLint on JSX/JS files
-npm run lint:fix     # Auto-fix ESLint issues
-npm run format       # Run Prettier code formatting
+npm install
+
+# Start frontend dev server:
+npm run dev              # Accessible on http://localhost:5173
 ```
 
 ---
 
-## 4. Database & Migrations
+## Demo Accounts (Seed Data)
 
-> **Important:** Stop using `prisma db push`. All schema changes must use version-controlled Prisma migrations under `prisma/migrations`.
+All test accounts share the password: **`Password@123`**
 
+| Role | Email | Password | Department / Scope |
+|---|---|---|---|
+| **SUPER_ADMIN** | `superadmin@college.edu` | `Password@123` | College-wide (Unrestricted Admin) |
+| **MANAGEMENT** | `management@college.edu` | `Password@123` | College-wide (Approver & Viewer) |
+| **FINANCE** | `finance@college.edu` | `Password@123` | College-wide (Disbursement & Allocator) |
+| **AUDITOR** | `auditor@college.edu` | `Password@123` | College-wide (Read-only Audit Trail) |
+| **HOD (ET)** | `hod_et@college.edu` | `Password@123` | Electronics & Telecom (`ET`) |
+| **HOD (PHARMA)** | `hod_pharma@college.edu` | `Password@123` | Pharmacy (`PHARMA`) |
+| **HOD (HM)** | `hod_hm@college.edu` | `Password@123` | Hotel Management (`HM`) |
+| **HOD (MT)** | `hod_mt@college.edu` | `Password@123` | Management & Technology (`MT`) |
+| **STAFF (ET)** | `staff_et@college.edu` | `Password@123` | Electronics & Telecom (`ET`) |
+| **STAFF (HM)** | `staff_hm@college.edu` | `Password@123` | Hotel Management (`HM`) |
+| **STAFF (MT)** | `staff_mt@college.edu` | `Password@123` | Management & Technology (`MT`) |
+| *Disabled User* | `disabled_user@college.edu` | `Password@123` | Inactive test user (Login blocked) |
+
+### Master Data Included:
+- **Active Financial Year:** `2026-27` (`OPEN`, 1 Apr 2026 – 31 Mar 2027)
+- **Top-level Departments:** `ET` (Engineering), `PHARMA` (Pharmacy), `HM` (Hotel Management), `MT` (Management & Technology)
+- **Sub-units under MT:** `BBA` (Bachelor of Business Administration), `BCOM` (Bachelor of Commerce)
+- **Standard Expense Categories:** Equipment, Consumables, Maintenance, Events and Seminars, Books and Journals, Travel and Tours, Software, Miscellaneous
+
+---
+
+## 10-Step MVP Demo Script
+
+Follow these steps to demonstrate the complete Release 1 (MVP) flow from initial login to approved budget, expense lifecycle, and live dashboard updates:
+
+1. **Step 1 — Login as Super Admin**
+   - Navigate to [http://localhost:5173](http://localhost:5173).
+   - Click the **Admin** pill (or sign in with `superadmin@college.edu` / `Password@123`).
+   - Confirm active financial year `2026-27` is open, and academic departments and expense categories are active.
+
+2. **Step 2 — Inspect Empty/Initial Dashboard as HOD**
+   - Sign out and log in as HOD ET (`hod_et@college.edu` / `Password@123`).
+   - Landing page is the **Department Dashboard**.
+   - Note the role scoping: HOD sees only their department card; the college-wide facts strip is not shown.
+
+3. **Step 3 — Propose Annual Department Budget**
+   - Navigate to **Budgets** (or **Annual Proposal** in sidebar).
+   - Create a budget proposal for FY `2026-27` for Department `ET` totaling **₹ 8,00,000**:
+     - *Equipment*: ₹ 5,00,000.00
+     - *Consumables*: ₹ 2,00,000.00
+     - *Software*: ₹ 1,00,000.00
+   - Submit the proposal (`DRAFT` → `SUBMITTED`).
+
+4. **Step 4 — Login as Management for Approval**
+   - Sign out and log in as Management (`management@college.edu` / `Password@123`).
+   - Landing page displays the 1.45 : 1 header split with the **ProductDiagram** dynamically showing connected departments converging on the blue central "Budget control" hub.
+
+5. **Step 5 — Approve the Department Budget**
+   - Navigate to **Budget Approvals** (`/budgets`).
+   - Review ET's submitted budget of ₹ 8,00,000.00.
+   - Click **Approve Budget**. Status transitions to `APPROVED`.
+   - The central balance ledger is initialized with `allocated: 800000.00`, `available: 800000.00`, `committed: 0.00`, and `spent: 0.00`.
+
+6. **Step 6 — Draft Expense Claim as Staff**
+   - Sign out and log in as Staff ET (`staff_et@college.edu` / `Password@123`).
+   - Navigate to **Expenses** (`/expenses`) → **Raise Request**.
+   - Create a draft expense:
+     - *Category*: Equipment
+     - *Amount*: ₹ 1,50,000.50
+     - *Purpose*: "Lab oscilloscope and test probes"
+   - Status is `DRAFT`. At this stage, money is not reserved.
+
+7. **Step 7 — Submit Expense Claim**
+   - Click **Submit** on the draft expense. Status transitions to `SUBMITTED`.
+   - Balance check confirms money is not committed yet (`Committed: 0.00`, `Available: 8,00,000.00`), preventing premature budget exhaustion.
+
+8. **Step 8 — HOD Expense Approval (Money Committed)**
+   - Sign out and log in as HOD ET (`hod_et@college.edu` / `Password@123`).
+   - Navigate to **Expenses** → Review the submitted claim of ₹ 1,50,000.50.
+   - Click **Approve**.
+   - The system executes an atomic row lock: ₹ 1,50,000.50 is moved into `committed`.
+   - Department Available balance drops immediately to ₹ 6,49,999.50 (`8,00,000.00 - 1,50,000.50`).
+
+9. **Step 9 — Finance Disbursement (Money Spent)**
+   - Sign out and log in as Finance (`finance@college.edu` / `Password@123`).
+   - Navigate to **Payment Processing** (`/expenses`).
+   - Locate the approved claim of ₹ 1,50,000.50.
+   - Click **Mark Paid** and enter payment reference `UTR-2026-1025-01`.
+   - Money transitions from `committed` to `spent`: `Committed: 0.00`, `Spent: 1,50,000.50`, `Available: 6,49,999.50`.
+
+10. **Step 10 — Verify Live Dashboard**
+    - Sign out and log in as Management (`management@college.edu`) or Super Admin (`superadmin@college.edu`).
+    - The landing Dashboard immediately displays real-time updated figures:
+      - **College Facts Strip**: Total Allocated ₹ 8,00,000, Total Spent ₹ 1,50,000.50, Total Available ₹ 6,49,999.50.
+      - **Department Card (ET)**: Tabular figures with Indian currency grouping (`₹ 8,00,000`, `₹ 1,50,000.50`, `₹ 6,49,999.50`).
+      - **Utilisation Progress Bar**: "18.75% used" displayed in accent blue.
+      - Invariant verified: `Available + Committed + Spent == Allocated` (`6,49,999.50 + 0.00 + 1,50,000.50 == 8,00,000.00`).
+
+---
+
+## Automated Test Suites & Verification
+
+### Backend Tests (Isolated Test Database)
 ```bash
 cd backend
-npx prisma migrate deploy    # Apply pending migrations to database
-npx prisma migrate dev       # Create a new migration during local schema changes
-node prisma/seed.js          # Seed master data into database
-npm run db:test:setup        # Reset and reseed the isolated test database
+npm test                # Runs all 24 Jest test suites (unit, contract, concurrency, e2e)
+npm run lint            # Verifies ESLint zero errors/warnings
+npx prisma migrate status # Verifies zero database schema drift
+```
+
+### Frontend Tests (Vitest + Testing Library)
+```bash
+cd frontend
+npm test                # Runs 6 Vitest test suites (39 tests)
+npm run lint            # Verifies ESLint zero errors/warnings
 ```
 
 ---
 
-## Documents
+## Architectural Documentation
 
-| File | Purpose |
+| Document | Description |
 |---|---|
-| [techstack.md](./techstack.md) | Stack, hard rules, API conventions — highest authority |
-| [architecture.md](./architecture.md) | Module layers, iteration plan, testing gates |
-| [design.md](./design.md) | Frontend visual style and design tokens |
-| [PROJECT.md](./PROJECT.md) | Full product requirements and feature specification |
+| [techstack.md](./techstack.md) | Highest authority on technology stack, hard rules, and conventions |
+| [architecture.md](./architecture.md) | System architecture, module boundaries, iteration gates |
+| [design.md](./design.md) | Visual design tokens, layout geometry, typography, and accessibility |
+| [PROJECT.md](./PROJECT.md) | Complete business requirements and lifecycle specification |

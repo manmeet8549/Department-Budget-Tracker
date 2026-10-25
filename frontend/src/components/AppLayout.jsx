@@ -61,9 +61,10 @@ export default function AppLayout() {
   const navItems = getNavItems();
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: 'var(--dp-color-ground)' }}>
+    <div className="app-layout-container" style={{ display: 'flex', minHeight: '100vh', backgroundColor: 'var(--dp-color-ground)' }}>
       {/* Sidebar Navigation */}
       <aside
+        className="app-layout-sidebar"
         style={{
           width: '260px',
           backgroundColor: 'var(--dp-color-panel)',
@@ -104,7 +105,7 @@ export default function AppLayout() {
               Budget Tracker
             </div>
             <div style={{ fontSize: '12px', color: 'var(--dp-color-ink-secondary)' }}>
-              Iteration 1 • v1
+              Release 1 (MVP) • v1.5
             </div>
           </div>
         </div>

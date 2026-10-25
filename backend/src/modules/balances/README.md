@@ -40,7 +40,7 @@ export {
 } from './index.js';
 ```
 
-- `getDepartmentBalance(fyId, deptId)`: returns `{ departmentId, financialYearId, allocated, committed, spent, available, utilisation }`.
+- `getDepartmentBalance(fyId, deptId)`: returns `{ departmentId, financialYearId, allocated, committed, spent, available, utilisation, hasApprovedBudget }`.
 - `getCategoryBalances(fyId, deptId)`: returns array of category balances `{ categoryId, categoryName, allocated, committed, spent, available, utilisation }`.
 - `getCollegeBalance(fyId)`: returns `{ financialYearId, allocated, committed, spent, available, utilisation }` across all departments.
 - `getAvailable(tx, fyId, deptId, categoryId, { lock })`: calculates category available balance; acquires row lock when `lock === true`.
@@ -58,6 +58,8 @@ export {
 
 | Version | Iteration | Status | Content |
 |---|---|---|---|
-| v1 | 4a | 🟡 Current | Four figures per department and category, plus Available and Utilisation %, row lock for concurrency |
+| v1 | 4a | ✅ Done | Four figures per department and category, plus Available and Utilisation %, row lock for concurrency |
+| v1.5 | 5 | ✅ Done | Added `hasApprovedBudget` flag to `getDepartmentBalance` to support SQL-free dashboard aggregation |
 | v2 | 8 | 🔲 Planned | Threshold statuses (NORMAL, WARNING, CRITICAL, EXCEEDED), monthly totals |
 | v3 | 15 | 🔲 Planned | Year close and period snapshots |
+

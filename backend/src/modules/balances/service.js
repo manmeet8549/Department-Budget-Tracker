@@ -84,6 +84,7 @@ export async function getDepartmentBalance(financialYearId, departmentId) {
     departmentId: deptId,
     departmentCode: dept?.code || null,
     departmentName: dept?.name || null,
+    hasApprovedBudget: !!approvedBudget,
     ...balances,
   };
 }

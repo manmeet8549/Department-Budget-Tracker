@@ -75,7 +75,9 @@ Emitted through `platform/events.js` after transaction commit:
 
 | Version | Iteration | Status | Content |
 |---|---|---|---|
-| v1 (Part 1) | 4a | ✅ Complete | Expense DRAFT creation, editing, deletion, scoped paginated list, and detail view |
-| v1 (Part 2) | 4b | 🟡 Current | Submit, single approval, rejection, pay, approval trail, events, and concurrency row locking |
+| v1 (Part 1) | 4a | ✅ Done | Expense DRAFT creation, editing, deletion, scoped paginated list, and detail view |
+| v1 (Part 2) | 4b | ✅ Done | Submit, single approval, rejection, pay, approval trail, events, and concurrency row locking |
+| v1.5 | 5 | ✅ Done | Full Release 1 (MVP) completion: lifecycle verified with dashboard module |
 | v2 | 7 | 🔲 Planned | Bill file uploads, vendors, multi-step approval chains by amount via approval_limits |
 | v3 | 16 | 🔲 Planned | Reversing entries for corrections and CSV exports |
+

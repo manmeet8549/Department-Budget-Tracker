@@ -5,6 +5,10 @@ describe('master module contract', () => {
     expect(typeof master.getActiveFinancialYear).toBe('function');
   });
 
+  test('exposes getFinancialYear function', () => {
+    expect(typeof master.getFinancialYear).toBe('function');
+  });
+
   test('exposes getDepartment function', () => {
     expect(typeof master.getDepartment).toBe('function');
   });

@@ -56,6 +56,17 @@ export async function getActiveFinancialYear() {
   });
 }
 
+export async function getFinancialYear(id) {
+  const fyId = Number(id);
+  const fy = await prisma.financialYear.findUnique({
+    where: { id: fyId },
+  });
+  if (!fy) {
+    throw new AppError('NOT_FOUND', `Financial year with id ${id} not found`, 404);
+  }
+  return fy;
+}
+
 export async function setActiveFinancialYear(id, userId) {
   const fyId = Number(id);
   const fy = await prisma.financialYear.findUnique({
