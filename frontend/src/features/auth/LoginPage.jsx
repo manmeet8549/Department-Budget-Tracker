@@ -287,61 +287,63 @@ export default function LoginPage() {
             </button>
           </form>
 
-          {/* Quick-fill demo account pills */}
-          <div
-            style={{
-              marginTop: '28px',
-              paddingTop: '20px',
-              borderTop: '1px solid var(--dp-color-rule)',
-            }}
-          >
+          {/* Quick-fill demo account pills (development only) */}
+          {Boolean(import.meta.env.DEV) && (
             <div
               style={{
-                fontSize: 'var(--dp-typography-label)',
-                color: 'var(--dp-color-ink-secondary)',
-                fontWeight: '600',
-                marginBottom: '10px',
-                textAlign: 'center',
+                marginTop: '28px',
+                paddingTop: '20px',
+                borderTop: '1px solid var(--dp-color-rule)',
               }}
             >
-              DEMO SEED ROLES (Password: Password@123)
+              <div
+                style={{
+                  fontSize: 'var(--dp-typography-label)',
+                  color: 'var(--dp-color-ink-secondary)',
+                  fontWeight: '600',
+                  marginBottom: '10px',
+                  textAlign: 'center',
+                }}
+              >
+                DEMO SEED ROLES (Password: Password@123)
+              </div>
+              <div
+                style={{
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  gap: '6px',
+                  justifyContent: 'center',
+                }}
+              >
+                {[
+                  { label: 'Admin', email: 'superadmin@college.edu' },
+                  { label: 'Management', email: 'management@college.edu' },
+                  { label: 'Finance', email: 'finance@college.edu' },
+                  { label: 'HoD (ET)', email: 'hod_et@college.edu' },
+                  { label: 'Staff (ET)', email: 'staff_et@college.edu' },
+                  { label: 'HoD (HM)', email: 'hod_hm@college.edu' },
+                  { label: 'Auditor', email: 'auditor@college.edu' },
+                ].map((role) => (
+                  <button
+                    key={role.email}
+                    type="button"
+                    onClick={() => handleFillDemo(role.email)}
+                    style={{
+                      fontSize: '11px',
+                      padding: '4px 8px',
+                      borderRadius: '6px',
+                      border: '1px solid var(--dp-color-rule)',
+                      backgroundColor: 'var(--dp-color-ground-muted)',
+                      color: 'var(--dp-color-ink)',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {role.label}
+                  </button>
+                ))}
+              </div>
             </div>
-            <div
-              style={{
-                display: 'flex',
-                flexWrap: 'wrap',
-                gap: '6px',
-                justifyContent: 'center',
-              }}
-            >
-              {[
-                { label: 'Admin', email: 'superadmin@college.edu' },
-                { label: 'Management', email: 'management@college.edu' },
-                { label: 'Finance', email: 'finance@college.edu' },
-                { label: 'HoD (ET)', email: 'hod_et@college.edu' },
-                { label: 'Staff (ET)', email: 'staff_et@college.edu' },
-                { label: 'HoD (HM)', email: 'hod_hm@college.edu' },
-                { label: 'Auditor', email: 'auditor@college.edu' },
-              ].map((role) => (
-                <button
-                  key={role.email}
-                  type="button"
-                  onClick={() => handleFillDemo(role.email)}
-                  style={{
-                    fontSize: '11px',
-                    padding: '4px 8px',
-                    borderRadius: '6px',
-                    border: '1px solid var(--dp-color-rule)',
-                    backgroundColor: 'var(--dp-color-ground-muted)',
-                    color: 'var(--dp-color-ink)',
-                    cursor: 'pointer',
-                  }}
-                >
-                  {role.label}
-                </button>
-              ))}
-            </div>
-          </div>
+          )}
         </div>
       </div>
     </div>
