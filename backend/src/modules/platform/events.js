@@ -11,7 +11,9 @@
  * Documented Event Payloads:
  * - user.created:        { userId, email, role, departmentId }
  * - user.disabled:       { userId }
+ * - budget.submitted:    { budgetId, fyId, departmentId, totalAmount, submittedBy, submittedOn }
  * - budget.approved:     { budgetId, fyId, departmentId, totalAmount, approvedBy, approvedOn }
+ * - budget.rejected:     { budgetId, fyId, departmentId, totalAmount, rejectedBy, rejectedOn, remark }
  * - expense.submitted:   { expenseId, financialYearId, departmentId, categoryId, amount, submittedBy, submittedOn }
  * - expense.approved:    { expenseId, financialYearId, departmentId, categoryId, amount, approvedBy, approvedOn }
  * - expense.rejected:    { expenseId, financialYearId, departmentId, categoryId, amount, rejectedBy, rejectedOn, remark }

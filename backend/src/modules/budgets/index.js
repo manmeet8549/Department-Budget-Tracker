@@ -6,6 +6,7 @@ export {
   getApprovedBudget,
   getBudgetItem,
   assertBudgetUsable,
+  getCollegeCeiling,
 } from './service.js';
 
-export { budgetsRouter } from './routes.js';
+export { budgetsRouter, budgetCeilingsRouter } from './routes.js';

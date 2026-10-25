@@ -13,6 +13,10 @@ describe('budgets module contract', () => {
     expect(typeof budgets.assertBudgetUsable).toBe('function');
   });
 
+  test('exposes getCollegeCeiling function', () => {
+    expect(typeof budgets.getCollegeCeiling).toBe('function');
+  });
+
   test('exposes budgetsRouter', () => {
     expect(budgets.budgetsRouter).toBeDefined();
   });

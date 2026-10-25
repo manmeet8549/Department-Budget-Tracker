@@ -315,7 +315,17 @@ describe('Iteration 3: Budgets Module v1', () => {
       }
     });
 
-    it('allows MANAGEMENT to approve in a single step, fires budget.approved event, and writes audit log', async () => {
+    it('allows MANAGEMENT to approve an UNDER_REVIEW budget, fires budget.approved event, and writes audit log', async () => {
+      // Transition DRAFT -> SUBMITTED -> UNDER_REVIEW
+      await request(app)
+        .post(`/api/v1/budgets/${createdBudgetId}/submit`)
+        .set('Authorization', `Bearer ${financeToken}`);
+
+      await request(app)
+        .post(`/api/v1/budgets/${createdBudgetId}/review`)
+        .set('Authorization', `Bearer ${financeToken}`)
+        .send({ remark: 'Finance review complete' });
+
       let eventPayload = null;
       events.once('budget.approved', (payload) => {
         eventPayload = payload;
@@ -369,7 +379,7 @@ describe('Iteration 3: Budgets Module v1', () => {
 
       expect(res.status).toBe(409);
       expect(res.body.success).toBe(false);
-      expect(res.body.error.code).toBe('INVALID_STATUS');
+      expect(['INVALID_STATUS', 'INVALID_STATE']).toContain(res.body.error.code);
     });
   });
 

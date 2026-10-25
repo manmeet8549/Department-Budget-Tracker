@@ -6,6 +6,7 @@
 export {
   getActiveFinancialYear,
   getFinancialYear,
+  getPreviousFinancialYear,
   getDepartment,
   listDepartments,
   getCategory,

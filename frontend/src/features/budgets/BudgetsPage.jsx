@@ -10,6 +10,7 @@ import {
   getBudgets,
   createBudget,
   updateBudget,
+  submitBudget,
   approveBudget,
 } from '../../api/budgets.js';
 import {
@@ -18,6 +19,10 @@ import {
   getDepartments,
   getCategories,
 } from '../../api/master.js';
+import CeilingPanel from './components/CeilingPanel.jsx';
+import BudgetDetailModal from './components/BudgetDetailModal.jsx';
+import BudgetReviewModal from './components/BudgetReviewModal.jsx';
+import BudgetRejectModal from './components/BudgetRejectModal.jsx';
 
 export default function BudgetsPage() {
   const { user } = useAuth();
@@ -27,39 +32,57 @@ export default function BudgetsPage() {
   const [error, setError] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
 
-  // Master data for form
+  // Master data
   const [departments, setDepartments] = useState([]);
   const [categories, setCategories] = useState([]);
   const [activeFy, setActiveFy] = useState(null);
   const [financialYears, setFinancialYears] = useState([]);
 
-  // Form modal state
+  // Form modal state (Create / Edit)
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingBudget, setEditingBudget] = useState(null);
   const [formSubmitting, setFormSubmitting] = useState(false);
   const [formError, setFormError] = useState('');
-
-  // Form fields
   const [formData, setFormData] = useState({
     financialYearId: '',
     departmentId: '',
     totalAmount: '',
-    items: {}, // map categoryId -> { amount: '', justification: '' }
+    items: {},
   });
 
-  // Read-only modal state
-  const [viewingBudget, setViewingBudget] = useState(null);
-  const [approving, setApproving] = useState(false);
+  // Action / Detail modals
+  const [viewingBudgetId, setViewingBudgetId] = useState(null);
+  const [reviewingBudget, setReviewingBudget] = useState(null);
+  const [rejectingBudget, setRejectingBudget] = useState(null);
+  const [approvingId, setApprovingId] = useState(null);
 
-  // Permission helpers
+  // Role permissions
   const canCreate = user?.role === 'FINANCE' || user?.role === 'HOD';
-  const canApprove = user?.role === 'MANAGEMENT';
+  const isManagement = user?.role === 'MANAGEMENT';
+  const isFinance = user?.role === 'FINANCE';
 
   const canEditBudget = (budget) => {
-    if (budget.status === 'APPROVED') return false;
-    if (user?.role === 'FINANCE') return true;
+    if (budget.status !== 'DRAFT' && budget.status !== 'REJECTED') return false;
+    if (isFinance) return true;
     if (user?.role === 'HOD' && user?.departmentId === budget.departmentId) return true;
     return false;
+  };
+
+  const canSubmitBudget = (budget) => {
+    if (budget.status !== 'DRAFT' && budget.status !== 'REJECTED') return false;
+    if (isFinance) return true;
+    if (user?.role === 'HOD' && user?.departmentId === budget.departmentId) return true;
+    return false;
+  };
+
+  const canReviewBudget = (budget) => {
+    if (!isFinance) return false;
+    return budget.status === 'SUBMITTED' || budget.status === 'UNDER_REVIEW';
+  };
+
+  const canApproveOrReject = (budget) => {
+    if (!isManagement) return false;
+    return budget.status === 'UNDER_REVIEW';
   };
 
   // Load budgets list
@@ -103,7 +126,7 @@ export default function BudgetsPage() {
     loadBudgets();
   }, [loadBudgets]);
 
-  // Running sum calculation
+  // Running sum calculation for form
   const { runningItemsSum, enteredTotalNum, isSumMatched } = useMemo(() => {
     let sumPaise = 0;
     Object.values(formData.items || {}).forEach((item) => {
@@ -113,11 +136,9 @@ export default function BudgetsPage() {
       }
     });
     const totalPaise = Math.round((parseFloat(formData.totalAmount) || 0) * 100);
-    const sumRupees = sumPaise / 100;
-    const totalRupees = totalPaise / 100;
     return {
-      runningItemsSum: sumRupees,
-      enteredTotalNum: totalRupees,
+      runningItemsSum: sumPaise / 100,
+      enteredTotalNum: totalPaise / 100,
       isSumMatched: sumPaise > 0 && sumPaise === totalPaise,
     };
   }, [formData.items, formData.totalAmount]);
@@ -140,14 +161,15 @@ export default function BudgetsPage() {
     setIsFormOpen(true);
   };
 
-  // Open Edit Form (DRAFT only)
+  // Open Edit Form
   const handleOpenEdit = (budget) => {
-    if (budget.status === 'APPROVED') {
-      alert('Approved budgets are frozen and cannot be edited.');
+    if (budget.status !== 'DRAFT' && budget.status !== 'REJECTED') {
+      alert(`Budgets in ${budget.status} status cannot be edited directly.`);
       return;
     }
     setEditingBudget(budget);
     setFormError('');
+
     const itemsMap = {};
     categories.forEach((cat) => {
       const existing = budget.items?.find((i) => i.categoryId === cat.id);
@@ -187,7 +209,6 @@ export default function BudgetsPage() {
       return;
     }
 
-    // Collect category items with amount > 0
     const itemsPayload = [];
     Object.entries(formData.items || {}).forEach(([catIdStr, item]) => {
       const amt = parseFloat(item.amount);
@@ -229,22 +250,30 @@ export default function BudgetsPage() {
     }
   };
 
-  // Handle Approve by MANAGEMENT
+  // Submit proposal action
+  const handleSubmitProposal = async (budgetId) => {
+    if (!window.confirm('Submit this budget proposal for institutional review?')) return;
+    try {
+      await submitBudget(budgetId);
+      await loadBudgets();
+    } catch (err) {
+      alert(err.response?.data?.error?.message || 'Failed to submit budget.');
+    }
+  };
+
+  // Approve action
   const handleApprove = async (budgetId) => {
     if (!window.confirm('Are you sure you want to approve this budget? Once approved, it will be frozen and cannot be edited.')) {
       return;
     }
     try {
-      setApproving(true);
+      setApprovingId(budgetId);
       await approveBudget(budgetId);
-      if (viewingBudget && viewingBudget.id === budgetId) {
-        setViewingBudget(null);
-      }
       await loadBudgets();
     } catch (err) {
       alert(err.response?.data?.error?.message || 'Failed to approve budget.');
     } finally {
-      setApproving(false);
+      setApprovingId(null);
     }
   };
 
@@ -262,8 +291,8 @@ export default function BudgetsPage() {
               style={{
                 marginLeft: '8px',
                 fontSize: '11px',
-                backgroundColor: 'var(--dp-color-accent-subtle)',
-                color: 'var(--dp-color-accent)',
+                backgroundColor: 'var(--dp-color-accent-subtle, #e0e7ff)',
+                color: 'var(--dp-color-accent, #074ce0)',
                 padding: '2px 6px',
                 borderRadius: '4px',
                 fontWeight: '600',
@@ -302,30 +331,41 @@ export default function BudgetsPage() {
       render: (b) => <StatusBadge status={b.status} id={`badge-status-${b.id}`} />,
     },
     {
-      header: 'Approved By',
-      render: (b) =>
-        b.status === 'APPROVED' ? (
-          <div>
-            <div style={{ fontWeight: '500', color: 'var(--dp-color-ink)' }}>
-              {b.approver?.name || `User #${b.approvedBy}`}
+      header: 'Workflow / Approver',
+      render: (b) => {
+        if (b.status === 'APPROVED') {
+          return (
+            <div>
+              <div style={{ fontWeight: '500', color: 'var(--dp-color-ink)' }}>
+                {b.approver?.name || `User #${b.approvedBy}`}
+              </div>
+              <div style={{ fontSize: '11px', color: 'var(--dp-color-ink-secondary)' }}>
+                {b.approvedOn ? new Date(b.approvedOn).toLocaleDateString('en-IN') : '—'}
+              </div>
             </div>
-            <div style={{ fontSize: '11px', color: 'var(--dp-color-ink-secondary)' }}>
-              {b.approvedOn ? new Date(b.approvedOn).toLocaleDateString('en-IN') : '—'}
-            </div>
-          </div>
-        ) : (
-          <span style={{ color: 'var(--dp-color-ink-secondary)' }}>—</span>
-        ),
+          );
+        }
+        if (b.status === 'UNDER_REVIEW') {
+          return <span style={{ color: 'var(--dp-color-status-review, #6d28d9)', fontSize: '12px' }}>In Finance Review</span>;
+        }
+        if (b.status === 'SUBMITTED') {
+          return <span style={{ color: 'var(--dp-color-status-submitted, #1d4ed8)', fontSize: '12px' }}>Submitted to Finance</span>;
+        }
+        if (b.status === 'REJECTED') {
+          return <span style={{ color: '#b91c1c', fontSize: '12px' }}>Rejected (Needs Revision)</span>;
+        }
+        return <span style={{ color: 'var(--dp-color-ink-secondary)' }}>Draft (Not Submitted)</span>;
+      },
     },
     {
       header: 'Actions',
       align: 'right',
       render: (b) => (
-        <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+        <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
           <Button
             size="sm"
             variant="secondary"
-            onClick={() => setViewingBudget(b)}
+            onClick={() => setViewingBudgetId(b.id)}
             id={`btn-view-${b.id}`}
           >
             View
@@ -342,17 +382,50 @@ export default function BudgetsPage() {
             </Button>
           )}
 
-          {canApprove && b.status === 'DRAFT' && (
+          {canSubmitBudget(b) && (
             <Button
               size="sm"
-              variant="primary"
-              loading={approving}
-              onClick={() => handleApprove(b.id)}
-              id={`btn-approve-${b.id}`}
-              style={{ backgroundColor: '#15803d' }}
+              variant="secondary"
+              onClick={() => handleSubmitProposal(b.id)}
+              id={`btn-submit-${b.id}`}
             >
-              Approve
+              Submit
             </Button>
+          )}
+
+          {canReviewBudget(b) && (
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={() => setReviewingBudget(b)}
+              id={`btn-review-${b.id}`}
+            >
+              Review
+            </Button>
+          )}
+
+          {canApproveOrReject(b) && (
+            <>
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={() => setRejectingBudget(b)}
+                id={`btn-reject-${b.id}`}
+                style={{ color: '#b91c1c', borderColor: '#fca5a5' }}
+              >
+                Reject
+              </Button>
+              <Button
+                size="sm"
+                variant="primary"
+                loading={approvingId === b.id}
+                onClick={() => handleApprove(b.id)}
+                id={`btn-approve-${b.id}`}
+                style={{ backgroundColor: '#15803d' }}
+              >
+                Approve
+              </Button>
+            </>
           )}
         </div>
       ),
@@ -362,13 +435,13 @@ export default function BudgetsPage() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       {/* Top Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
         <div>
           <h1 style={{ margin: 0, fontSize: '24px', fontWeight: '700', color: 'var(--dp-color-ink)' }}>
             Annual Department Budgets
           </h1>
           <p style={{ margin: '6px 0 0 0', color: 'var(--dp-color-ink-secondary)', fontSize: 'var(--dp-typography-body)' }}>
-            Financial Year budget allocations, category line items, and institutional approval workflow.
+            Institutional budget proposals, category allocations, college ceilings, and multi-stage workflow.
           </p>
         </div>
 
@@ -378,6 +451,13 @@ export default function BudgetsPage() {
           </Button>
         )}
       </div>
+
+      {/* College Ceiling Panel */}
+      <CeilingPanel
+        user={user}
+        activeFy={activeFy}
+        onCeilingChanged={() => loadBudgets()}
+      />
 
       {/* Filter and stats banner */}
       <Card>
@@ -401,19 +481,31 @@ export default function BudgetsPage() {
             >
               <option value="">All Statuses</option>
               <option value="DRAFT">DRAFT</option>
+              <option value="SUBMITTED">SUBMITTED</option>
+              <option value="UNDER_REVIEW">UNDER_REVIEW</option>
               <option value="APPROVED">APPROVED</option>
+              <option value="REJECTED">REJECTED</option>
             </select>
           </div>
 
-          <div style={{ display: 'flex', gap: '24px', fontSize: '13px', color: 'var(--dp-color-ink-secondary)' }}>
+          <div style={{ display: 'flex', gap: '20px', fontSize: '13px', color: 'var(--dp-color-ink-secondary)', flexWrap: 'wrap' }}>
             <div>
-              Total Budgets: <strong style={{ color: 'var(--dp-color-ink)' }}>{budgets.length}</strong>
+              Total: <strong style={{ color: 'var(--dp-color-ink)' }}>{budgets.length}</strong>
             </div>
             <div>
               Approved: <strong style={{ color: '#15803d' }}>{budgets.filter((b) => b.status === 'APPROVED').length}</strong>
             </div>
             <div>
+              Review: <strong style={{ color: '#6d28d9' }}>{budgets.filter((b) => b.status === 'UNDER_REVIEW').length}</strong>
+            </div>
+            <div>
+              Submitted: <strong style={{ color: '#1d4ed8' }}>{budgets.filter((b) => b.status === 'SUBMITTED').length}</strong>
+            </div>
+            <div>
               Drafts: <strong style={{ color: '#d97706' }}>{budgets.filter((b) => b.status === 'DRAFT').length}</strong>
+            </div>
+            <div>
+              Rejected: <strong style={{ color: '#b91c1c' }}>{budgets.filter((b) => b.status === 'REJECTED').length}</strong>
             </div>
           </div>
         </div>
@@ -443,7 +535,7 @@ export default function BudgetsPage() {
         emptyMessage="No department budgets found for the current selection."
       />
 
-      {/* ── CREATE / EDIT MODAL ─────────────────────────────────────────── */}
+      {/* ── CREATE / EDIT FORM MODAL ─────────────────────────────────────── */}
       {isFormOpen && (
         <div
           style={{
@@ -467,7 +559,7 @@ export default function BudgetsPage() {
               maxHeight: '90vh',
               display: 'flex',
               flexDirection: 'column',
-              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
             }}
           >
             {/* Modal Header */}
@@ -482,7 +574,9 @@ export default function BudgetsPage() {
             >
               <div>
                 <h2 style={{ margin: 0, fontSize: '18px', fontWeight: '700', color: 'var(--dp-color-ink)' }}>
-                  {editingBudget ? `Edit DRAFT Budget (ID: #${editingBudget.id})` : 'Create Department Budget Proposal'}
+                  {editingBudget
+                    ? `Edit ${editingBudget.status} Budget (ID: #${editingBudget.id})`
+                    : 'Create Department Budget Proposal'}
                 </h2>
                 <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: 'var(--dp-color-ink-secondary)' }}>
                   Enter the total annual budget and allocate amounts across active categories.
@@ -526,7 +620,6 @@ export default function BudgetsPage() {
 
                 {/* Primary Meta Row */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                  {/* Financial Year */}
                   <Field
                     label="Financial Year *"
                     helpText={editingBudget ? 'Financial year cannot be changed during edit' : 'Must be active and OPEN'}
@@ -554,7 +647,6 @@ export default function BudgetsPage() {
                     </select>
                   </Field>
 
-                  {/* Department */}
                   <Field
                     label="Department *"
                     helpText={user?.role === 'HOD' ? 'Locked to your department' : 'Select target department'}
@@ -613,7 +705,7 @@ export default function BudgetsPage() {
                   />
                 </Field>
 
-                {/* ── Running Total Balance Helper ──────────────────────────────── */}
+                {/* Running Total Match Indicator */}
                 <div
                   id="helper-running-total"
                   style={{
@@ -668,9 +760,6 @@ export default function BudgetsPage() {
                       )}
                     </div>
                   </div>
-                  <div style={{ fontSize: '11px', color: 'var(--dp-color-ink-secondary)' }}>
-                    * Convenience helper only. The server is the authoritative validator and will reject sum mismatches with HTTP 400.
-                  </div>
                 </div>
 
                 {/* Category Items Form Table */}
@@ -678,13 +767,7 @@ export default function BudgetsPage() {
                   <div style={{ marginBottom: '8px', fontWeight: '600', fontSize: '14px', color: 'var(--dp-color-ink)' }}>
                     Category Allocations (One row per category)
                   </div>
-                  <div
-                    style={{
-                      border: '1px solid var(--dp-color-rule)',
-                      borderRadius: '8px',
-                      overflow: 'hidden',
-                    }}
-                  >
+                  <div style={{ border: '1px solid var(--dp-color-rule)', borderRadius: '8px', overflow: 'hidden' }}>
                     <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
                       <thead>
                         <tr style={{ backgroundColor: 'var(--dp-color-ground-muted)', borderBottom: '1px solid var(--dp-color-rule)' }}>
@@ -700,11 +783,6 @@ export default function BudgetsPage() {
                             <tr key={cat.id} style={{ borderBottom: '1px solid var(--dp-color-rule)' }}>
                               <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
                                 <span style={{ fontWeight: '600', color: 'var(--dp-color-ink)' }}>{cat.name}</span>
-                                {cat.description && (
-                                  <div style={{ fontSize: '11px', color: 'var(--dp-color-ink-secondary)' }}>
-                                    {cat.description}
-                                  </div>
-                                )}
                               </td>
                               <td style={{ padding: '10px 14px' }}>
                                 <input
@@ -796,7 +874,7 @@ export default function BudgetsPage() {
                   loading={formSubmitting}
                   disabled={!isSumMatched}
                 >
-                  {editingBudget ? 'Update DRAFT Budget' : 'Save DRAFT Budget'}
+                  {editingBudget ? `Update ${editingBudget.status} Budget` : 'Save DRAFT Budget'}
                 </Button>
               </div>
             </form>
@@ -804,189 +882,40 @@ export default function BudgetsPage() {
         </div>
       )}
 
-      {/* ── READ-ONLY DETAIL MODAL ────────────────────────────────────────── */}
-      {viewingBudget && (
-        <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000,
-            padding: '20px',
+      {/* ── DETAIL MODAL ─────────────────────────────────────────────────── */}
+      {viewingBudgetId && (
+        <BudgetDetailModal
+          budgetId={viewingBudgetId}
+          initialBudget={budgets.find((b) => b.id === viewingBudgetId)}
+          user={user}
+          categories={categories}
+          onClose={() => setViewingBudgetId(null)}
+          onActionComplete={async () => {
+            await loadBudgets();
           }}
-        >
-          <div
-            style={{
-              backgroundColor: 'var(--dp-color-panel)',
-              borderRadius: '12px',
-              border: '1px solid var(--dp-color-rule)',
-              width: '100%',
-              maxWidth: '750px',
-              maxHeight: '90vh',
-              display: 'flex',
-              flexDirection: 'column',
-              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
-            }}
-          >
-            {/* Header */}
-            <div
-              style={{
-                padding: '20px 24px',
-                borderBottom: '1px solid var(--dp-color-rule)',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-              }}
-            >
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <h2 style={{ margin: 0, fontSize: '18px', fontWeight: '700', color: 'var(--dp-color-ink)' }}>
-                    {viewingBudget.department?.code} - {viewingBudget.department?.name}
-                  </h2>
-                  <StatusBadge status={viewingBudget.status} size="sm" />
-                </div>
-                <div style={{ margin: '4px 0 0 0', fontSize: '13px', color: 'var(--dp-color-ink-secondary)' }}>
-                  Financial Year: <strong>{viewingBudget.financialYear?.year}</strong>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setViewingBudget(null)}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  fontSize: '22px',
-                  color: 'var(--dp-color-ink-secondary)',
-                  cursor: 'pointer',
-                }}
-              >
-                &times;
-              </button>
-            </div>
+        />
+      )}
 
-            {/* Content */}
-            <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px', overflowY: 'auto' }}>
-              {/* Highlight cards */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                <div
-                  style={{
-                    padding: '16px',
-                    borderRadius: '8px',
-                    backgroundColor: 'var(--dp-color-ground-muted)',
-                    border: '1px solid var(--dp-color-rule)',
-                  }}
-                >
-                  <div style={{ fontSize: '12px', color: 'var(--dp-color-ink-secondary)' }}>Total Approved Amount</div>
-                  <div style={{ fontSize: '20px', fontWeight: '700', color: 'var(--dp-color-ink)', marginTop: '4px' }}>
-                    {formatINR(viewingBudget.totalAmount)}
-                  </div>
-                </div>
+      {/* ── FINANCE REVIEW MODAL ─────────────────────────────────────────── */}
+      {reviewingBudget && (
+        <BudgetReviewModal
+          budget={reviewingBudget}
+          onClose={() => setReviewingBudget(null)}
+          onSuccess={async () => {
+            await loadBudgets();
+          }}
+        />
+      )}
 
-                <div
-                  style={{
-                    padding: '16px',
-                    borderRadius: '8px',
-                    backgroundColor: 'var(--dp-color-ground-muted)',
-                    border: '1px solid var(--dp-color-rule)',
-                  }}
-                >
-                  <div style={{ fontSize: '12px', color: 'var(--dp-color-ink-secondary)' }}>Status & Approval</div>
-                  <div style={{ fontSize: '14px', fontWeight: '600', color: 'var(--dp-color-ink)', marginTop: '4px' }}>
-                    {viewingBudget.status === 'APPROVED' ? (
-                      <div>
-                        Approved by {viewingBudget.approver?.name || `User #${viewingBudget.approvedBy}`}
-                        <div style={{ fontSize: '11px', color: 'var(--dp-color-ink-secondary)' }}>
-                          on {viewingBudget.approvedOn ? new Date(viewingBudget.approvedOn).toLocaleString('en-IN') : '—'}
-                        </div>
-                      </div>
-                    ) : (
-                      <span style={{ color: '#d97706' }}>Awaiting Management Approval</span>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Category Breakdown Table */}
-              <div>
-                <div style={{ marginBottom: '8px', fontWeight: '600', fontSize: '14px', color: 'var(--dp-color-ink)' }}>
-                  Category Allocations
-                </div>
-                <div
-                  style={{
-                    border: '1px solid var(--dp-color-rule)',
-                    borderRadius: '8px',
-                    overflow: 'hidden',
-                  }}
-                >
-                  <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
-                    <thead>
-                      <tr style={{ backgroundColor: 'var(--dp-color-ground-muted)', borderBottom: '1px solid var(--dp-color-rule)' }}>
-                        <th style={{ padding: '10px 14px', fontWeight: '600' }}>Category</th>
-                        <th style={{ padding: '10px 14px', fontWeight: '600', textAlign: 'right' }}>Amount (₹)</th>
-                        <th style={{ padding: '10px 14px', fontWeight: '600' }}>Justification</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {viewingBudget.items?.map((item) => (
-                        <tr key={item.id} style={{ borderBottom: '1px solid var(--dp-color-rule)' }}>
-                          <td style={{ padding: '10px 14px', fontWeight: '600', color: 'var(--dp-color-ink)' }}>
-                            {item.category?.name || `Category #${item.categoryId}`}
-                          </td>
-                          <td style={{ padding: '10px 14px', textAlign: 'right', fontWeight: '700', color: 'var(--dp-color-ink)' }}>
-                            {formatINR(item.amount)}
-                          </td>
-                          <td style={{ padding: '10px 14px', color: item.justification ? 'var(--dp-color-ink)' : 'var(--dp-color-ink-secondary)' }}>
-                            {item.justification || '—'}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-
-            {/* Modal Footer */}
-            <div
-              style={{
-                padding: '16px 24px',
-                borderTop: '1px solid var(--dp-color-rule)',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                backgroundColor: 'var(--dp-color-ground-muted)',
-              }}
-            >
-              <div>
-                {viewingBudget.status === 'APPROVED' && (
-                  <span style={{ fontSize: '12px', color: 'var(--dp-color-ink-secondary)' }}>
-                    🔒 This budget is approved and frozen. It cannot be modified.
-                  </span>
-                )}
-              </div>
-
-              <div style={{ display: 'flex', gap: '10px' }}>
-                <Button variant="secondary" onClick={() => setViewingBudget(null)}>
-                  Close
-                </Button>
-
-                {canApprove && viewingBudget.status === 'DRAFT' && (
-                  <Button
-                    variant="primary"
-                    loading={approving}
-                    onClick={() => handleApprove(viewingBudget.id)}
-                    style={{ backgroundColor: '#15803d' }}
-                  >
-                    Approve Budget
-                  </Button>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
+      {/* ── MANAGEMENT REJECT MODAL ──────────────────────────────────────── */}
+      {rejectingBudget && (
+        <BudgetRejectModal
+          budget={rejectingBudget}
+          onClose={() => setRejectingBudget(null)}
+          onSuccess={async () => {
+            await loadBudgets();
+          }}
+        />
       )}
     </div>
   );

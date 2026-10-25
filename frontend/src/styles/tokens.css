@@ -46,6 +46,11 @@
   --dp-color-status-cancelled-border: #e5e7eb;
   --dp-color-status-cancelled-dot:    #6b7280;
 
+  --dp-color-status-review:           #6d28d9;
+  --dp-color-status-review-bg:        #ede9fe;
+  --dp-color-status-review-border:    #ddd6fe;
+  --dp-color-status-review-dot:       #7c3aed;
+
   /* Typography */
   --dp-typography-fallback:       sans-serif;
   --dp-typography-body:           16px;

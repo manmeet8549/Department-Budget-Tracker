@@ -21,8 +21,9 @@ model FinancialYear {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  budgets   Budget[]
-  expenses  Expense[]
+  budgets        Budget[]
+  expenses       Expense[]
+  collegeCeiling CollegeCeiling?
 
   @@map("financial_years")
 }
@@ -77,8 +78,9 @@ model User {
   hodOfDepartments Department[] @relation("DepartmentHod")
   auditLogs        AuditLog[]
   approvedBudgets  Budget[]     @relation("BudgetApprover")
-  createdExpenses  Expense[]    @relation("ExpenseCreator")
-  approvals        Approval[]   @relation("UserApprovals")
+  createdExpenses  Expense[]        @relation("ExpenseCreator")
+  approvals        Approval[]       @relation("UserApprovals")
+  ceilingsSet      CollegeCeiling[] @relation("CeilingSetter")
 
   @@map("users")
 }
@@ -110,6 +112,15 @@ model Budget {
   approvedBy      Int?          @map("approved_by")
   approver        User?         @relation("BudgetApprover", fields: [approvedBy], references: [id])
   approvedOn      DateTime?     @map("approved_on")
+
+  // Budgets v2 workflow fields
+  submittedBy     Int?          @map("submitted_by")
+  submittedOn     DateTime?     @map("submitted_on")
+  reviewedBy      Int?          @map("reviewed_by")
+  reviewedOn      DateTime?     @map("reviewed_on")
+  rejectedBy      Int?          @map("rejected_by")
+  rejectedOn      DateTime?     @map("rejected_on")
+
   createdAt       DateTime      @default(now()) @map("created_at")
   updatedAt       DateTime      @updatedAt @map("updated_at")
 
@@ -117,6 +128,18 @@ model Budget {
 
   @@unique([financialYearId, departmentId])
   @@map("budgets")
+}
+
+model CollegeCeiling {
+  id              Int           @id @default(autoincrement())
+  financialYearId Int           @unique @map("financial_year_id")
+  financialYear   FinancialYear @relation(fields: [financialYearId], references: [id])
+  amount          Decimal       @db.Decimal(14, 2)
+  setBy           Int           @map("set_by")
+  setter          User          @relation("CeilingSetter", fields: [setBy], references: [id])
+  setOn           DateTime      @default(now()) @map("set_on")
+
+  @@map("college_ceilings")
 }
 
 model BudgetItem {

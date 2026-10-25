@@ -17,7 +17,7 @@ import { healthRouter } from './routes/health.js';
 import { authRouter, usersRouter } from './modules/auth/index.js';
 import { auditRouter } from './modules/audit/index.js';
 import { masterRouter } from './modules/master/index.js';
-import { budgetsRouter } from './modules/budgets/index.js';
+import { budgetsRouter, budgetCeilingsRouter } from './modules/budgets/index.js';
 import { balancesRouter } from './modules/balances/index.js';
 import { expensesRouter } from './modules/expenses/index.js';
 import { dashboardRouter } from './modules/dashboard/index.js';
@@ -45,6 +45,7 @@ export function createApp() {
   app.use('/api/v1', auditRouter);
   app.use('/api/v1', masterRouter);
   app.use('/api/v1/budgets', budgetsRouter);
+  app.use('/api/v1/budget-ceilings', budgetCeilingsRouter);
   app.use('/api/v1/balances', balancesRouter);
   app.use('/api/v1/expenses', expensesRouter);
   app.use('/api/v1/dashboard', dashboardRouter);

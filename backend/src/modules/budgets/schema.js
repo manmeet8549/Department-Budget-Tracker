@@ -1,7 +1,13 @@
 import { z } from 'zod';
 import { toMinorUnits } from '../platform/money.js';
 
-export const budgetStatusEnum = z.enum(['DRAFT', 'APPROVED']);
+export const budgetStatusEnum = z.enum([
+  'DRAFT',
+  'SUBMITTED',
+  'UNDER_REVIEW',
+  'APPROVED',
+  'REJECTED',
+]);
 
 export const budgetItemSchema = z.object({
   categoryId: z.number().int().positive('Category ID is required'),
@@ -59,4 +65,30 @@ export const listBudgetsQuerySchema = z.object({
   financialYearId: z.coerce.number().int().positive().optional(),
   departmentId: z.coerce.number().int().positive().optional(),
   status: budgetStatusEnum.optional(),
+});
+
+export const submitBudgetSchema = z.object({
+  remark: z.string().trim().max(1000).optional(),
+}).optional();
+
+export const reviewBudgetSchema = z.object({
+  remark: z.string().trim().min(1, 'Remark is required on review').max(1000),
+  items: z.array(budgetItemSchema).min(1).optional(),
+  totalAmount: z.coerce.number().positive().optional(),
+}).superRefine((data, ctx) => {
+  if (data.items && data.totalAmount !== undefined) {
+    validateItemsSumAndUniqueness(data, ctx);
+  }
+});
+
+export const approveBudgetSchema = z.object({
+  remark: z.string().trim().max(1000).optional(),
+}).optional();
+
+export const rejectBudgetSchema = z.object({
+  remark: z.string().trim().min(1, 'Rejection remark is required').max(1000),
+});
+
+export const setCeilingSchema = z.object({
+  amount: z.coerce.number().positive('Ceiling amount must be greater than zero'),
 });

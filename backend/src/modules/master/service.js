@@ -67,6 +67,23 @@ export async function getFinancialYear(id) {
   return fy;
 }
 
+export async function getPreviousFinancialYear(id) {
+  const fyId = Number(id);
+  const currentFy = await prisma.financialYear.findUnique({
+    where: { id: fyId },
+  });
+  if (!currentFy) {
+    return null;
+  }
+  return prisma.financialYear.findFirst({
+    where: {
+      startDate: { lt: currentFy.startDate },
+    },
+    orderBy: { startDate: 'desc' },
+  });
+}
+
+
 export async function setActiveFinancialYear(id, userId) {
   const fyId = Number(id);
   const fy = await prisma.financialYear.findUnique({

@@ -9,6 +9,10 @@ describe('master module contract', () => {
     expect(typeof master.getFinancialYear).toBe('function');
   });
 
+  test('exposes getPreviousFinancialYear function', () => {
+    expect(typeof master.getPreviousFinancialYear).toBe('function');
+  });
+
   test('exposes getDepartment function', () => {
     expect(typeof master.getDepartment).toBe('function');
   });

@@ -282,8 +282,18 @@ describe('Iteration 5: Dashboard v1 (MVP Release 1)', () => {
       const budgetId = budgetRes.body.data.id;
 
       await request(app)
+        .post(`/api/v1/budgets/${budgetId}/submit`)
+        .set('Authorization', `Bearer ${finToken}`);
+
+      await request(app)
+        .post(`/api/v1/budgets/${budgetId}/review`)
+        .set('Authorization', `Bearer ${finToken}`)
+        .send({ remark: 'Review HM budget' });
+
+      const appRes = await request(app)
         .post(`/api/v1/budgets/${budgetId}/approve`)
         .set('Authorization', `Bearer ${mgmtToken}`);
+      expect(appRes.status).toBe(200);
 
       // Verify dashboard step 1: Allocated = 200000.00, Committed = 0.00, Spent = 0.00, Available = 200000.00
       let dashRes = await request(app)

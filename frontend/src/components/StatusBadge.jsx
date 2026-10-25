@@ -48,6 +48,14 @@ export default function StatusBadge({
           dotColor: 'var(--dp-color-status-submitted-dot)',
           icon: '↗',
         };
+      case 'UNDER_REVIEW':
+        return {
+          color: 'var(--dp-color-status-review)',
+          backgroundColor: 'var(--dp-color-status-review-bg)',
+          borderColor: 'var(--dp-color-status-review-border)',
+          dotColor: 'var(--dp-color-status-review-dot)',
+          icon: '⊙',
+        };
       case 'CANCELLED':
         return {
           color: 'var(--dp-color-status-cancelled)',

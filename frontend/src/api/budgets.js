@@ -20,7 +20,37 @@ export async function updateBudget(id, data) {
   return res.data.data;
 }
 
-export async function approveBudget(id) {
-  const res = await apiClient.post(`/budgets/${id}/approve`);
+export async function submitBudget(id, data = {}) {
+  const res = await apiClient.post(`/budgets/${id}/submit`, data);
+  return res.data.data;
+}
+
+export async function reviewBudget(id, data) {
+  const res = await apiClient.post(`/budgets/${id}/review`, data);
+  return res.data.data;
+}
+
+export async function approveBudget(id, data = {}) {
+  const res = await apiClient.post(`/budgets/${id}/approve`, data);
+  return res.data.data;
+}
+
+export async function rejectBudget(id, data) {
+  const res = await apiClient.post(`/budgets/${id}/reject`, data);
+  return res.data.data;
+}
+
+export async function getBudgetComparison(id) {
+  const res = await apiClient.get(`/budgets/${id}/comparison`);
+  return res.data.data;
+}
+
+export async function getCollegeCeiling(financialYearId) {
+  const res = await apiClient.get(`/budget-ceilings/${financialYearId}`);
+  return res.data.data;
+}
+
+export async function setCollegeCeiling(financialYearId, data) {
+  const res = await apiClient.put(`/budget-ceilings/${financialYearId}`, data);
   return res.data.data;
 }
