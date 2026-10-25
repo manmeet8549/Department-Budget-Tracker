@@ -163,7 +163,7 @@ Emits: `expense.submitted`, `expense.approved`, `expense.rejected`, `expense.can
 
 | Version | Content |
 | --- | --- |
-| v1 | Create draft, submit, approve (single approver: HOD approves STAFF requests, FINANCE approves HOD requests, never the requester), reject, mark paid. Submit runs the balance check inside a transaction with a row lock; insufficient balance returns `409 INSUFFICIENT_BALANCE` |
+| v1 | Create draft, submit, approve (single approver: HOD approves STAFF requests, FINANCE approves HOD requests, never the requester), reject, mark paid. Submit runs the balance check; approve runs the balance check inside a transaction with a row lock. Money is committed at approval, not at submission; insufficient balance returns `409 INSUFFICIENT_BALANCE` |
 | v2 | Approval chain by amount via `approval_limits`, cancel (releases committed amount), bill upload (Multer) mandatory before paid, over-budget policy (block or escalate), vendors |
 | v3 | Reversing entries for paid records, petty-cash shortcut, CSV import of historical expenses |
 
@@ -328,7 +328,7 @@ An iteration is done only when **all** of these pass:
 4. **Event tests**: each emitted event fires once, after commit, with the documented payload.
 5. **Regression**: the full suite from all earlier iterations still passes.
 6. **Cross-checks** (from the first iteration where the data exists): department Available + Committed + Spent equals Allocated; dashboard totals equal `balances`; report totals equal dashboard totals.
-7. **Concurrency test** (from iteration 4): two simultaneous approvals that together exceed the balance, exactly one succeeds.
+7. **Concurrency test** (from iteration 4): two simultaneous approvals that together exceed the category's available balance: exactly one succeeds.
 8. **Redis-down test** (from iteration 10): the feature still works with Redis stopped.
 9. **Frontend**: component tests for new screens; keyboard and focus check; layout check at 1280, 1050, 760 and 480 px.
 10. **Lint** passes; Swagger lists every endpoint; module `README.md` version history updated.
