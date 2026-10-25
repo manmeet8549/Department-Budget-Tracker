@@ -19,7 +19,7 @@ expensesRouter.get(
 
 expensesRouter.post(
   '/',
-  requireRole('HOD', 'STAFF', 'FINANCE', 'SUPER_ADMIN'),
+  requireRole('HOD', 'STAFF'),
   validate(createExpenseSchema),
   controller.createExpense
 );
@@ -31,13 +31,13 @@ expensesRouter.get(
 
 expensesRouter.put(
   '/:id',
-  requireRole('HOD', 'STAFF', 'FINANCE', 'SUPER_ADMIN'),
+  requireRole('HOD', 'STAFF'),
   validate(updateExpenseSchema),
   controller.updateExpense
 );
 
 expensesRouter.delete(
   '/:id',
-  requireRole('HOD', 'STAFF', 'FINANCE', 'SUPER_ADMIN'),
+  requireRole('HOD', 'STAFF'),
   controller.deleteExpense
 );

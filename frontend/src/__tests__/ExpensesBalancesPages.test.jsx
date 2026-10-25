@@ -135,14 +135,17 @@ describe('Expenses & Balances Frontend (Iteration 4a)', () => {
       });
       unmount();
 
-      // Auditor cannot create
-      vi.spyOn(authContext, 'useAuth').mockReturnValue({
-        user: { id: 999, role: 'AUDITOR', departmentId: null },
-      });
-      render(<ExpensesPage />);
-      await waitFor(() => {
-        expect(screen.queryByText('+ New Expense Draft')).not.toBeInTheDocument();
-      });
+      // Finance and SuperAdmin and Auditor cannot create (only HOD and STAFF raise requests)
+      for (const nonRequesterRole of ['FINANCE', 'SUPER_ADMIN', 'AUDITOR', 'MANAGEMENT']) {
+        vi.spyOn(authContext, 'useAuth').mockReturnValue({
+          user: { id: 999, role: nonRequesterRole, departmentId: 10 },
+        });
+        const { unmount: unmountRole } = render(<ExpensesPage />);
+        await waitFor(() => {
+          expect(screen.queryByText('+ New Expense Draft')).not.toBeInTheDocument();
+        });
+        unmountRole();
+      }
     });
 
     it('displays Category Available balance from Balances API inside the create modal without computing in UI', async () => {

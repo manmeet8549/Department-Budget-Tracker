@@ -23,8 +23,7 @@
   - Non-draft expenses cannot be edited or deleted (`409 Conflict`).
 - **Role Permissions & Scoping:**
   - `HOD` and `STAFF`: Create, edit, and delete drafts for their own department only. Query lists and details for their own department only (`403` on other departments).
-  - `FINANCE`, `MANAGEMENT`, `AUDITOR`, `SUPER_ADMIN`: Read-only access to all departments.
-  - `AUDITOR` and `MANAGEMENT`: Cannot create, edit, or delete expenses (`403 Forbidden`).
+  - `FINANCE`, `MANAGEMENT`, `AUDITOR`, `SUPER_ADMIN`: Read-only access to all departments. Cannot create, edit, or delete expenses (`403 Forbidden`; Finance approves and pays, keeping requester and approver roles separate).
 - **Audit Logging:**
   - Every write (`EXPENSE_CREATE`, `EXPENSE_UPDATE`, `EXPENSE_DELETE`) writes an `audit_logs` entry inside the same database transaction.
 

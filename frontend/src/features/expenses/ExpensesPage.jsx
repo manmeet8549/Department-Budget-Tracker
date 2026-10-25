@@ -71,7 +71,7 @@ export default function ExpensesPage() {
   }, [user?.role]);
 
   const canCreate = useMemo(() => {
-    return ['HOD', 'STAFF', 'FINANCE', 'SUPER_ADMIN'].includes(user?.role);
+    return ['HOD', 'STAFF'].includes(user?.role);
   }, [user?.role]);
 
   const canEditOrDelete = (expense) => {

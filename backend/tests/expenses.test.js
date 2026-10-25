@@ -156,9 +156,24 @@ describe('Iteration 4a: Expenses Module v1 (Part 1)', () => {
     });
 
     it('rejects expense draft if department is inactive', async () => {
+      const inactiveStaff = await prisma.user.create({
+        data: {
+          email: 'staff_inactive_dept@college.edu',
+          name: 'Staff Inactive Dept',
+          role: 'STAFF',
+          departmentId: inactiveDept.id,
+          passwordHash: superadminUser.passwordHash,
+          isActive: true,
+        },
+      });
+      const loginRes = await request(app)
+        .post('/api/v1/auth/login')
+        .send({ email: 'staff_inactive_dept@college.edu', password: 'Password@123' });
+      const inactiveStaffToken = loginRes.body.data.accessToken;
+
       const res = await request(app)
         .post('/api/v1/expenses')
-        .set('Authorization', `Bearer ${adminToken}`)
+        .set('Authorization', `Bearer ${inactiveStaffToken}`)
         .send({
           financialYearId: activeFy.id,
           departmentId: inactiveDept.id,
@@ -169,6 +184,8 @@ describe('Iteration 4a: Expenses Module v1 (Part 1)', () => {
 
       expect(res.status).toBe(400);
       expect(res.body.success).toBe(false);
+
+      await prisma.user.delete({ where: { id: inactiveStaff.id } });
     });
 
     it('rejects expense draft if financial year is inactive or not OPEN', async () => {
@@ -250,7 +267,7 @@ describe('Iteration 4a: Expenses Module v1 (Part 1)', () => {
       expect(res.status).toBe(403);
     });
 
-    it('prevents AUDITOR and MANAGEMENT from creating expenses (403)', async () => {
+    it('prevents FINANCE, SUPER_ADMIN, AUDITOR, and MANAGEMENT from creating expenses (403)', async () => {
       const payload = {
         financialYearId: activeFy.id,
         departmentId: etDept.id,
@@ -259,17 +276,13 @@ describe('Iteration 4a: Expenses Module v1 (Part 1)', () => {
         purpose: 'Attempted creation',
       };
 
-      const resAuditor = await request(app)
-        .post('/api/v1/expenses')
-        .set('Authorization', `Bearer ${auditorToken}`)
-        .send(payload);
-      expect(resAuditor.status).toBe(403);
-
-      const resMgmt = await request(app)
-        .post('/api/v1/expenses')
-        .set('Authorization', `Bearer ${managementToken}`)
-        .send(payload);
-      expect(resMgmt.status).toBe(403);
+      for (const token of [financeToken, adminToken, auditorToken, managementToken]) {
+        const res = await request(app)
+          .post('/api/v1/expenses')
+          .set('Authorization', `Bearer ${token}`)
+          .send(payload);
+        expect(res.status).toBe(403);
+      }
     });
   });
 

@@ -328,7 +328,7 @@ An iteration is done only when **all** of these pass:
 4. **Event tests**: each emitted event fires once, after commit, with the documented payload.
 5. **Regression**: the full suite from all earlier iterations still passes.
 6. **Cross-checks** (from the first iteration where the data exists): department Available + Committed + Spent equals Allocated; dashboard totals equal `balances`; report totals equal dashboard totals.
-7. **Concurrency test** (from iteration 4): two simultaneous submits that together exceed the balance, exactly one succeeds.
+7. **Concurrency test** (from iteration 4): two simultaneous approvals that together exceed the balance, exactly one succeeds.
 8. **Redis-down test** (from iteration 10): the feature still works with Redis stopped.
 9. **Frontend**: component tests for new screens; keyboard and focus check; layout check at 1280, 1050, 760 and 480 px.
 10. **Lint** passes; Swagger lists every endpoint; module `README.md` version history updated.

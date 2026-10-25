@@ -4,15 +4,13 @@ import * as audit from '../audit/index.js';
 import { assertBudgetUsable } from '../budgets/index.js';
 
 export async function createExpense(data, user) {
-  // Scoping & Role checks
-  if (['AUDITOR', 'MANAGEMENT'].includes(user.role)) {
-    throw new AppError('FORBIDDEN', 'Auditors and Management cannot create expenses', 403);
+  // Role & Department Scoping checks: only HOD and STAFF can create expense requests
+  if (!['HOD', 'STAFF'].includes(user.role)) {
+    throw new AppError('FORBIDDEN', 'Only HOD and STAFF can create expense requests', 403);
   }
 
-  if (['HOD', 'STAFF'].includes(user.role)) {
-    if (user.departmentId !== data.departmentId) {
-      throw new AppError('FORBIDDEN', 'Cannot create expenses for another department', 403);
-    }
+  if (user.departmentId !== data.departmentId) {
+    throw new AppError('FORBIDDEN', 'Cannot create expenses for another department', 403);
   }
 
   // Financial Year check

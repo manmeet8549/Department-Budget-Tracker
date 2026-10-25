@@ -574,7 +574,7 @@
       },
       "post": {
         "summary": "Create a DRAFT expense",
-        "description": "Creates an expense draft. Amount > 0, active category, active department, active open FY, and department must have an APPROVED budget. Allowed: HOD, STAFF (own dept), FINANCE, SUPER_ADMIN.",
+        "description": "Creates an expense draft. Amount > 0, active category, active department, active open FY, and department must have an APPROVED budget. Allowed: HOD, STAFF (own dept only).",
         "tags": ["Expenses"],
         "security": [{ "bearerAuth": [] }],
         "requestBody": {
