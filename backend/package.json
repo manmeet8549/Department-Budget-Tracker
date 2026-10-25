@@ -9,14 +9,16 @@
   "scripts": {
     "dev": "node --watch src/server.js",
     "start": "node src/server.js",
-    "test": "cross-env NODE_OPTIONS=--experimental-vm-modules npx jest --runInBand",
-    "test:ci": "cross-env NODE_OPTIONS=--experimental-vm-modules npx jest --runInBand --ci --forceExit",
+    "test": "node scripts/test-db-setup.js && cross-env NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules npx jest --runInBand",
+    "test:ci": "cross-env NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules npx jest --runInBand --ci --forceExit",
     "lint": "eslint src tests --ext .js",
     "lint:fix": "eslint src tests --ext .js --fix",
     "format": "prettier --write \"src/**/*.js\" \"tests/**/*.js\"",
     "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy",
     "db:seed": "node prisma/seed.js",
-    "db:reset": "prisma migrate reset --force"
+    "db:reset": "prisma migrate reset --force",
+    "db:test:setup": "node scripts/test-db-setup.js"
   },
   "dependencies": {
     "@prisma/client": "^5.14.0",

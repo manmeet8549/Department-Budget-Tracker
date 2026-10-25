@@ -47,7 +47,7 @@ jobs:
 
       - name: Setup Test Database
         run: |
-          npx prisma db push
+          npx prisma migrate deploy
           node prisma/seed.js
         env:
           DATABASE_URL: postgresql://test_user:test_password@localhost:5432/budget_tracker_test

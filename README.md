@@ -15,7 +15,7 @@
 
 ---
 
-## Seed Accounts & Test Passwords (Iteration 1)
+## Seed Accounts & Master Data (Iteration 2)
 
 All seeded test accounts share the password: **`Password@123`**
 
@@ -30,7 +30,11 @@ All seeded test accounts share the password: **`Password@123`**
 | **AUDITOR** | `auditor@college.edu` | `Password@123` | College-wide (Read-only) |
 | *Disabled User* | `disabled_user@college.edu` | `Password@123` | Inactive (Cannot log in) |
 
-> **Note on Departments:** Minimal placeholder departments (`ET`, `PHARMA`, `HM`, `MT`) are seeded in Iteration 1 solely to support department scoping for HOD and STAFF roles. The complete department structure (including parent-child relationships for sub-units like BBA/BCOM under MT) and administrative CRUD will be implemented in the `master` module in Iteration 2.
+### Seeded Master Data:
+- **Active Financial Year:** `2026-27` (1 April 2026 to 31 March 2027, status: `OPEN`)
+- **Departments:** `ET` (Engineering), `PHARMA` (Pharmacy), `HM` (Hotel Management), `MT` (Management & Technology)
+- **Sub-units under MT:** `BBA` (Bachelor of Business Administration), `BCOM` (Bachelor of Commerce)
+- **Categories:** Equipment, Consumables, Maintenance, Events and Seminars, Books and Journals, Travel and Tours, Software, Miscellaneous
 
 ---
 
@@ -44,19 +48,27 @@ All seeded test accounts share the password: **`Password@123`**
 
 1. **Configure Environment:**
    ```bash
+   cp .env.example .env
    cp backend/.env.example backend/.env
-   # Add your PostgreSQL / Supabase connection strings and secrets
+   # Add your PostgreSQL connection strings (DATABASE_URL and DATABASE_URL_TEST)
    ```
 
-2. **Backend:**
+2. **Database Migration & Seeding:**
+   > **Important:** Always use proper Prisma migrations (`prisma migrate deploy`). Do NOT use `prisma db push`.
    ```bash
    cd backend
-   npm install
    npx prisma generate
+   npx prisma migrate deploy   # Applies versioned migrations under prisma/migrations
+   node prisma/seed.js         # Seeds master data (FY 2026-27, departments, categories, users)
+   ```
+
+3. **Backend:**
+   ```bash
+   cd backend
    npm run dev       # Starts Express API on http://localhost:5000
    ```
 
-3. **Frontend:**
+4. **Frontend:**
    ```bash
    cd frontend
    npm install
@@ -79,10 +91,13 @@ docker compose down              # Stop all containers
 ## 3. Running Tests & Quality Checks
 
 ### Backend:
+> **Test Database Isolation:** Tests automatically connect to `DATABASE_URL_TEST` (configured in `.env`) and never touch the development database. Running `npm test` automatically runs `scripts/test-db-setup.js` to migrate, reset, and reseed the test database before running tests.
+
 ```bash
 cd backend
-npm test             # Run Jest unit & API tests
-npm run test:ci      # Run Jest tests with CI flag & forceExit
+npm test             # Migrates/resets test DB and runs Jest test suites
+npm run test:ci      # CI runner (uses CI service container or DATABASE_URL_TEST)
+npm run db:test:setup # Manually reset and reseed the test database
 npm run lint         # Run ESLint on src and tests
 npm run lint:fix     # Auto-fix ESLint issues
 npm run format       # Run Prettier code formatting
@@ -102,11 +117,14 @@ npm run format       # Run Prettier code formatting
 
 ## 4. Database & Migrations
 
+> **Important:** Stop using `prisma db push`. All schema changes must use version-controlled Prisma migrations under `prisma/migrations`.
+
 ```bash
 cd backend
-npx prisma db push        # Push schema changes to database
-npx prisma migrate dev    # Create and apply migrations
-npx prisma db seed        # Run database seed script
+npx prisma migrate deploy    # Apply pending migrations to database
+npx prisma migrate dev       # Create a new migration during local schema changes
+node prisma/seed.js          # Seed master data into database
+npm run db:test:setup        # Reset and reseed the isolated test database
 ```
 
 ---

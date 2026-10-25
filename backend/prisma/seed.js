@@ -4,25 +4,25 @@ import { prisma } from '../src/config/db.js';
 export async function seed() {
   console.log('Seeding master data (financial year, departments, categories) and users...');
 
-  // 1. Seed Financial Year
+  // 1. Seed Financial Year (2026-27, 1 April 2026 to 31 March 2027)
   const fy = await prisma.financialYear.upsert({
-    where: { year: '2024-2025' },
+    where: { year: '2026-27' },
     update: {
-      startDate: new Date('2024-04-01T00:00:00.000Z'),
-      endDate: new Date('2025-03-31T23:59:59.999Z'),
+      startDate: new Date('2026-04-01T00:00:00.000Z'),
+      endDate: new Date('2027-03-31T23:59:59.999Z'),
       isActive: true,
       status: 'OPEN',
     },
     create: {
-      year: '2024-2025',
-      startDate: new Date('2024-04-01T00:00:00.000Z'),
-      endDate: new Date('2025-03-31T23:59:59.999Z'),
+      year: '2026-27',
+      startDate: new Date('2026-04-01T00:00:00.000Z'),
+      endDate: new Date('2027-03-31T23:59:59.999Z'),
       isActive: true,
       status: 'OPEN',
     },
   });
 
-  // Ensure only one active FY
+  // Ensure only one active FY (mark any other FY as inactive)
   await prisma.financialYear.updateMany({
     where: { id: { not: fy.id } },
     data: { isActive: false },

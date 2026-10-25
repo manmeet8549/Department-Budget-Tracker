@@ -42,6 +42,20 @@ describe('Iteration 2: Master Data Module (Financial Years, Departments, Categor
   });
 
   describe('Financial Years', () => {
+    it('verifies seeded active financial year is 2026-27 (1 April 2026 to 31 March 2027)', async () => {
+      const res = await request(app)
+        .get('/api/v1/financial-years/active')
+        .set('Authorization', `Bearer ${adminToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.year).toBe('2026-27');
+      expect(new Date(res.body.data.startDate).toISOString()).toContain('2026-04-01');
+      expect(new Date(res.body.data.endDate).toISOString()).toContain('2027-03-31');
+      expect(res.body.data.status).toBe('OPEN');
+      expect(res.body.data.isActive).toBe(true);
+    });
+
     it('creates a financial year and logs audit event', async () => {
       const yearName = `FY-${Date.now()}`;
       const res = await request(app)
