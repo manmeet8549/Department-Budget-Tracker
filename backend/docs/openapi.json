@@ -387,6 +387,137 @@
           "403": { "description": "Access denied" }
         }
       }
+    },
+    "/budgets": {
+      "get": {
+        "summary": "List budgets",
+        "description": "Returns budgets. Scoped by role: HOD and STAFF see only their own department; MANAGEMENT, FINANCE, AUDITOR, SUPER_ADMIN see all.",
+        "tags": ["Budgets"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "financialYearId", "in": "query", "schema": { "type": "integer" } },
+          { "name": "departmentId", "in": "query", "schema": { "type": "integer" } },
+          { "name": "status", "in": "query", "schema": { "type": "string", "enum": ["DRAFT", "APPROVED"] } }
+        ],
+        "responses": {
+          "200": { "description": "List of budgets" },
+          "401": { "description": "Unauthorized" }
+        }
+      },
+      "post": {
+        "summary": "Create annual budget proposal",
+        "description": "Creates a budget in DRAFT status with category items. HOD can create for own department; FINANCE can create for any department.",
+        "tags": ["Budgets"],
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["financialYearId", "departmentId", "totalAmount", "items"],
+                "properties": {
+                  "financialYearId": { "type": "integer", "example": 1 },
+                  "departmentId": { "type": "integer", "example": 1 },
+                  "totalAmount": { "type": "number", "example": 1000000.00 },
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": ["categoryId", "amount"],
+                      "properties": {
+                        "categoryId": { "type": "integer", "example": 1 },
+                        "amount": { "type": "number", "example": 500000.00 },
+                        "justification": { "type": "string", "example": "Lab equipment upgrade" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Budget created" },
+          "400": { "description": "Sum of items does not match totalAmount or validation failure" },
+          "403": { "description": "Forbidden for role or outside department scope" },
+          "409": { "description": "Duplicate budget for department and financial year" }
+        }
+      }
+    },
+    "/budgets/{id}": {
+      "get": {
+        "summary": "Get budget details",
+        "description": "Returns budget details including all category items.",
+        "tags": ["Budgets"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "description": "Budget details" },
+          "403": { "description": "Forbidden (HOD/STAFF outside department scope)" },
+          "404": { "description": "Budget not found" }
+        }
+      },
+      "put": {
+        "summary": "Update DRAFT budget",
+        "description": "Updates items and total amount of a DRAFT budget. APPROVED budgets are frozen and return 409.",
+        "tags": ["Budgets"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["totalAmount", "items"],
+                "properties": {
+                  "totalAmount": { "type": "number", "example": 1200000.00 },
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": ["categoryId", "amount"],
+                      "properties": {
+                        "categoryId": { "type": "integer", "example": 1 },
+                        "amount": { "type": "number", "example": 600000.00 },
+                        "justification": { "type": "string" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Budget updated" },
+          "400": { "description": "Sum of items does not match totalAmount" },
+          "403": { "description": "Forbidden" },
+          "409": { "description": "Cannot edit an APPROVED budget" }
+        }
+      }
+    },
+    "/budgets/{id}/approve": {
+      "post": {
+        "summary": "Approve budget proposal",
+        "description": "Approve a DRAFT budget in a single step. Freezes budget and records approval metadata. MANAGEMENT role only.",
+        "tags": ["Budgets"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "description": "Budget approved and frozen" },
+          "403": { "description": "Forbidden (only MANAGEMENT can approve)" },
+          "404": { "description": "Budget not found" },
+          "409": { "description": "Budget is already approved or not in DRAFT" }
+        }
+      }
     }
   },
   "components": {

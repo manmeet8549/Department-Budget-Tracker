@@ -21,6 +21,8 @@ model FinancialYear {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
+  budgets   Budget[]
+
   @@map("financial_years")
 }
 
@@ -38,17 +40,20 @@ model Department {
   updatedAt DateTime     @updatedAt @map("updated_at")
 
   users     User[]       @relation("DepartmentMembers")
+  budgets   Budget[]
 
   @@map("departments")
 }
 
 model Category {
-  id          Int      @id @default(autoincrement())
-  name        String   @unique
+  id          Int          @id @default(autoincrement())
+  name        String       @unique
   description String?
-  isActive    Boolean  @default(true) @map("is_active")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  isActive    Boolean      @default(true) @map("is_active")
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+
+  budgetItems BudgetItem[]
 
   @@map("categories")
 }
@@ -68,6 +73,7 @@ model User {
   department       Department?  @relation("DepartmentMembers", fields: [departmentId], references: [id])
   hodOfDepartments Department[] @relation("DepartmentHod")
   auditLogs        AuditLog[]
+  approvedBudgets  Budget[]     @relation("BudgetApprover")
 
   @@map("users")
 }
@@ -86,4 +92,39 @@ model AuditLog {
   user      User?    @relation(fields: [userId], references: [id])
 
   @@map("audit_logs")
+}
+
+model Budget {
+  id              Int           @id @default(autoincrement())
+  financialYearId Int           @map("financial_year_id")
+  financialYear   FinancialYear @relation(fields: [financialYearId], references: [id])
+  departmentId    Int           @map("department_id")
+  department      Department    @relation(fields: [departmentId], references: [id])
+  totalAmount     Decimal       @map("total_amount") @db.Decimal(14, 2)
+  status          String        @default("DRAFT")
+  approvedBy      Int?          @map("approved_by")
+  approver        User?         @relation("BudgetApprover", fields: [approvedBy], references: [id])
+  approvedOn      DateTime?     @map("approved_on")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+
+  items           BudgetItem[]
+
+  @@unique([financialYearId, departmentId])
+  @@map("budgets")
+}
+
+model BudgetItem {
+  id            Int      @id @default(autoincrement())
+  budgetId      Int      @map("budget_id")
+  budget        Budget   @relation(fields: [budgetId], references: [id], onDelete: Cascade)
+  categoryId    Int      @map("category_id")
+  category      Category @relation(fields: [categoryId], references: [id])
+  amount        Decimal  @db.Decimal(14, 2)
+  justification String?
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  @@unique([budgetId, categoryId])
+  @@map("budget_items")
 }

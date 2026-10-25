@@ -10,13 +10,13 @@ import { prisma } from '../../config/db.js';
  * Records an immutable audit log entry.
  * Can be called with an active Prisma transaction client (tx) to guarantee atomicity.
  */
-export async function log(tx, { userId, action, table, recordId, oldValue = null, newValue = null }) {
+export async function log(tx, { userId, action, table, tableName, recordId, oldValue = null, newValue = null }) {
   const db = tx ?? prisma;
   return db.auditLog.create({
     data: {
       userId: userId ? Number(userId) : null,
       action,
-      tableName: table,
+      tableName: table || tableName,
       recordId: String(recordId),
       oldValue: oldValue ?? undefined,
       newValue: newValue ?? undefined,

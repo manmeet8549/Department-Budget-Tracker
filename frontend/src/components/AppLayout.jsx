@@ -14,6 +14,7 @@ export default function AppLayout() {
           { label: 'Financial Years', path: '/financial-years' },
           { label: 'Departments', path: '/departments' },
           { label: 'Categories', path: '/categories' },
+          { label: 'Budgets', path: '/budgets' },
           { label: 'User Directory', path: '/users' },
           { label: 'Audit Logs', path: '/audit-logs' },
         ];
@@ -40,11 +41,13 @@ export default function AppLayout() {
       case 'STAFF':
         return [
           { label: 'My Department', path: '/' },
+          { label: 'Department Budget', path: '/budgets' },
           { label: 'My Expense Claims', path: '/expenses' },
         ];
       case 'AUDITOR':
         return [
           { label: 'Financial Summary', path: '/' },
+          { label: 'Budgets', path: '/budgets' },
           { label: 'Audit Trail', path: '/audit-logs' },
           { label: 'Compliance Reports', path: '/reports' },
         ];

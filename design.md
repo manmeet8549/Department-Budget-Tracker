@@ -147,10 +147,11 @@ Use a single content width for the whole app (for example `max-width: 1200px`, c
 
 ## 7. Budget status display (the one controlled exception to "no extra colors")
 
-Budget thresholds (Normal, Warning, Critical, Exceeded) must be distinguishable. Keep this contained:
+Budget thresholds and document statuses (DRAFT, APPROVED, Warning, Critical) must be distinguishable. Keep this contained:
 
-- Never rely on color alone. Every status shows a text label and an icon: `Normal`, `Warning`, `Critical`, `Exceeded`.
-- Progress bars use accent for Normal. For Warning, Critical and Exceeded use the same accent bar plus a distinct icon, a text badge, and a heavier border or pattern on the badge. If the project owner approves extra status hues, add them as new tokens (`--dp-color-status-warning`, `--dp-color-status-critical`) in `tokens.css`, muted, used only on the status badge and bar, and ask the user before doing so.
+- **Design Decision (Option A Chosen):** Defined controlled, muted status tokens in `tokens.css` (`--dp-color-status-draft`, `--dp-color-status-draft-bg`, `--dp-color-status-approved`, `--dp-color-status-approved-bg`, `--dp-color-status-warning`, `--dp-color-status-critical`). These tokens are used exclusively within the shared `StatusBadge` component.
+- Never rely on color alone. Every status badge always displays a clear text label and an indicator icon/dot.
+- Progress bars use accent for Normal. For Warning, Critical and Exceeded use the same accent bar plus a distinct icon, a text badge, and a heavier border or pattern on the badge.
 - Do not tint whole cards or table rows with status color.
 
 ---

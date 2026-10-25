@@ -42,7 +42,7 @@ async function setupTestDb() {
   // 3. Truncate tables to ensure a clean state
   console.log('Resetting test database tables...');
   await prisma.$executeRawUnsafe(`
-    TRUNCATE TABLE "audit_logs", "users", "departments", "categories", "financial_years" RESTART IDENTITY CASCADE;
+    TRUNCATE TABLE "budget_items", "budgets", "audit_logs", "users", "departments", "categories", "financial_years" RESTART IDENTITY CASCADE;
   `);
 
   // 4. Seed baseline test data

@@ -12,6 +12,25 @@
   --dp-color-panel:               #ffffff;
   --dp-color-on-accent:           #ffffff;
 
+  /* Controlled Muted Status Tokens (design.md §7 Option A: used ONLY on StatusBadge with text label) */
+  --dp-color-status-draft:            #92400e;
+  --dp-color-status-draft-bg:         #fef3c7;
+  --dp-color-status-draft-border:     #fde68a;
+  --dp-color-status-draft-dot:        #d97706;
+
+  --dp-color-status-approved:         #15803d;
+  --dp-color-status-approved-bg:      #dcfce7;
+  --dp-color-status-approved-border:  #bbf7d0;
+  --dp-color-status-approved-dot:     #16a34a;
+
+  --dp-color-status-warning:          #b45309;
+  --dp-color-status-warning-bg:       #fffbeb;
+  --dp-color-status-warning-border:   #fed7aa;
+
+  --dp-color-status-critical:         #b91c1c;
+  --dp-color-status-critical-bg:      #fee2e2;
+  --dp-color-status-critical-border:  #fecaca;
+
   /* Typography */
   --dp-typography-fallback:       sans-serif;
   --dp-typography-body:           16px;
