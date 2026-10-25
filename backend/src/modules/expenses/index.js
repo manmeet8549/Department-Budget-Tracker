@@ -1,3 +1,5 @@
-﻿// Public API for the expenses module
-// Exports: getExpense, listForReport
-export {};
+export {
+  getExpense,
+} from './service.js';
+
+export { expensesRouter } from './routes.js';

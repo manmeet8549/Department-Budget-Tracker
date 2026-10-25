@@ -232,7 +232,7 @@ Threshold status (values from `settings`, defaults shown): `NORMAL` < 70, `WARNI
 | Expense | `POST /expenses/:id/cancel` | owner, FINANCE |
 | Expense | `POST /expenses/:id/bill` (multipart) | HOD, STAFF, FINANCE |
 | Expense | `POST /expenses/:id/pay` | FINANCE |
-| Control | `GET /balances`; `GET /balances/:deptId/categories` | MANAGEMENT, FINANCE, AUDITOR, HOD (own) |
+| Control | `GET /balances`; `GET /balances/:deptId/categories` | MANAGEMENT, FINANCE, AUDITOR, SUPER_ADMIN, HOD (own), STAFF (own) |
 | Dashboard | `GET /dashboard/summary`, `/monthly-trend`, `/category-split`, `/pending-approvals` | all (scoped) |
 | Reports | `POST /reports`; `GET /reports/:id`; `GET /reports/:id/download` | MANAGEMENT, FINANCE, AUDITOR, HOD |
 | Notify | `GET /notifications`; `PATCH /notifications/:id/read` | logged in |

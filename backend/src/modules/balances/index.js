@@ -1,4 +1,8 @@
-﻿// Public API for the balances module (CONTROL ENGINE)
-// Exports: getDepartmentBalance, getCategoryBalances, getCollegeBalance,
-//          getAvailable (used inside transactions), getStatus
-export {};
+export {
+  getDepartmentBalance,
+  getCategoryBalances,
+  getCollegeBalance,
+  getAvailable,
+} from './service.js';
+
+export { balancesRouter } from './routes.js';

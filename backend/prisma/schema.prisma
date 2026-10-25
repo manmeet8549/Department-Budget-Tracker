@@ -22,6 +22,7 @@ model FinancialYear {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   budgets   Budget[]
+  expenses  Expense[]
 
   @@map("financial_years")
 }
@@ -41,6 +42,7 @@ model Department {
 
   users     User[]       @relation("DepartmentMembers")
   budgets   Budget[]
+  expenses  Expense[]
 
   @@map("departments")
 }
@@ -54,6 +56,7 @@ model Category {
   updatedAt   DateTime     @updatedAt @map("updated_at")
 
   budgetItems BudgetItem[]
+  expenses    Expense[]
 
   @@map("categories")
 }
@@ -74,6 +77,7 @@ model User {
   hodOfDepartments Department[] @relation("DepartmentHod")
   auditLogs        AuditLog[]
   approvedBudgets  Budget[]     @relation("BudgetApprover")
+  createdExpenses  Expense[]    @relation("ExpenseCreator")
 
   @@map("users")
 }
@@ -127,4 +131,35 @@ model BudgetItem {
 
   @@unique([budgetId, categoryId])
   @@map("budget_items")
+}
+
+model Expense {
+  id              Int           @id @default(autoincrement())
+  financialYearId Int           @map("financial_year_id")
+  financialYear   FinancialYear @relation(fields: [financialYearId], references: [id])
+  departmentId    Int           @map("department_id")
+  department      Department    @relation(fields: [departmentId], references: [id])
+  categoryId      Int           @map("category_id")
+  category        Category      @relation(fields: [categoryId], references: [id])
+  amount          Decimal       @db.Decimal(14, 2)
+  purpose         String
+  status          String        @default("DRAFT")
+  createdBy       Int           @map("created_by")
+  creator         User          @relation("ExpenseCreator", fields: [createdBy], references: [id])
+
+  // 4b fields (nullable)
+  submittedOn     DateTime?     @map("submitted_on")
+  submittedBy     Int?          @map("submitted_by")
+  approvedOn      DateTime?     @map("approved_on")
+  approvedBy      Int?          @map("approved_by")
+  paidOn          DateTime?     @map("paid_on")
+  paidBy          Int?          @map("paid_by")
+  paymentRef      String?       @map("payment_ref")
+  paymentMode     String?       @map("payment_mode")
+
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+
+  @@index([departmentId, financialYearId, categoryId, status, createdAt])
+  @@map("expenses")
 }

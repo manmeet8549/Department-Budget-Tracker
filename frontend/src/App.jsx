@@ -8,6 +8,7 @@ import FinancialYearsPage from './features/master/FinancialYearsPage.jsx';
 import DepartmentsPage from './features/master/DepartmentsPage.jsx';
 import CategoriesPage from './features/master/CategoriesPage.jsx';
 import BudgetsPage from './features/budgets/BudgetsPage.jsx';
+import ExpensesPage from './features/expenses/ExpensesPage.jsx';
 
 export default function App() {
   return (
@@ -50,6 +51,14 @@ export default function App() {
                 element={
                   <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'MANAGEMENT', 'FINANCE', 'HOD', 'STAFF', 'AUDITOR']}>
                     <BudgetsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/expenses"
+                element={
+                  <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'MANAGEMENT', 'FINANCE', 'HOD', 'STAFF', 'AUDITOR']}>
+                    <ExpensesPage />
                   </ProtectedRoute>
                 }
               />

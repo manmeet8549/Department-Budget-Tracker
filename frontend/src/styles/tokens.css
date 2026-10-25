@@ -31,6 +31,21 @@
   --dp-color-status-critical-bg:      #fee2e2;
   --dp-color-status-critical-border:  #fecaca;
 
+  --dp-color-status-paid:             #0f766e;
+  --dp-color-status-paid-bg:          #ccfbf1;
+  --dp-color-status-paid-border:      #99f6e4;
+  --dp-color-status-paid-dot:         #14b8a6;
+
+  --dp-color-status-submitted:        #1d4ed8;
+  --dp-color-status-submitted-bg:     #dbeafe;
+  --dp-color-status-submitted-border:  #bfdbfe;
+  --dp-color-status-submitted-dot:    #2563eb;
+
+  --dp-color-status-cancelled:        #4b5563;
+  --dp-color-status-cancelled-bg:     #f3f4f6;
+  --dp-color-status-cancelled-border: #e5e7eb;
+  --dp-color-status-cancelled-dot:    #6b7280;
+
   /* Typography */
   --dp-typography-fallback:       sans-serif;
   --dp-typography-body:           16px;

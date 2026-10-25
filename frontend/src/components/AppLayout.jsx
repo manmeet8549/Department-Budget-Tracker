@@ -15,6 +15,7 @@ export default function AppLayout() {
           { label: 'Departments', path: '/departments' },
           { label: 'Categories', path: '/categories' },
           { label: 'Budgets', path: '/budgets' },
+          { label: 'Expenses', path: '/expenses' },
           { label: 'User Directory', path: '/users' },
           { label: 'Audit Logs', path: '/audit-logs' },
         ];
@@ -48,6 +49,7 @@ export default function AppLayout() {
         return [
           { label: 'Financial Summary', path: '/' },
           { label: 'Budgets', path: '/budgets' },
+          { label: 'Expenses', path: '/expenses' },
           { label: 'Audit Trail', path: '/audit-logs' },
           { label: 'Compliance Reports', path: '/reports' },
         ];

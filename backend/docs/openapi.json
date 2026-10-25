@@ -518,6 +518,151 @@
           "409": { "description": "Budget is already approved or not in DRAFT" }
         }
       }
+    },
+    "/balances": {
+      "get": {
+        "summary": "Get college or department balance summary",
+        "description": "Calculates Allocated, Committed, Spent, Available, and Utilisation % over approved budgets and expenses. Allowed: MANAGEMENT, FINANCE, AUDITOR, SUPER_ADMIN (any dept), HOD and STAFF (own dept only).",
+        "tags": ["Balances"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "financialYearId", "in": "query", "schema": { "type": "integer" } },
+          { "name": "departmentId", "in": "query", "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "description": "Balance summary retrieved" },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Forbidden (scoping violation)" }
+        }
+      }
+    },
+    "/balances/{deptId}/categories": {
+      "get": {
+        "summary": "Get category-wise balance breakdown for a department",
+        "description": "Returns allocated, committed, spent, available, and utilisation % per category. Allowed: MANAGEMENT, FINANCE, AUDITOR, SUPER_ADMIN, HOD & STAFF (own dept).",
+        "tags": ["Balances"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "deptId", "in": "path", "required": true, "schema": { "type": "integer" } },
+          { "name": "financialYearId", "in": "query", "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "description": "Category balances retrieved" },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Forbidden" }
+        }
+      }
+    },
+    "/expenses": {
+      "get": {
+        "summary": "List expenses with pagination and filters",
+        "description": "Filter by financialYearId, departmentId, categoryId, status. Scoped: HOD/STAFF own dept, FINANCE/MANAGEMENT/AUDITOR/SUPER_ADMIN all.",
+        "tags": ["Expenses"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 20 } },
+          { "name": "financialYearId", "in": "query", "schema": { "type": "integer" } },
+          { "name": "departmentId", "in": "query", "schema": { "type": "integer" } },
+          { "name": "categoryId", "in": "query", "schema": { "type": "integer" } },
+          { "name": "status", "in": "query", "schema": { "type": "string", "enum": ["DRAFT", "SUBMITTED", "APPROVED", "REJECTED", "PAID", "CANCELLED"] } }
+        ],
+        "responses": {
+          "200": { "description": "Paginated list of expenses" },
+          "401": { "description": "Unauthorized" }
+        }
+      },
+      "post": {
+        "summary": "Create a DRAFT expense",
+        "description": "Creates an expense draft. Amount > 0, active category, active department, active open FY, and department must have an APPROVED budget. Allowed: HOD, STAFF (own dept), FINANCE, SUPER_ADMIN.",
+        "tags": ["Expenses"],
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["financialYearId", "departmentId", "categoryId", "amount", "purpose"],
+                "properties": {
+                  "financialYearId": { "type": "integer" },
+                  "departmentId": { "type": "integer" },
+                  "categoryId": { "type": "integer" },
+                  "amount": { "type": "number", "example": 15000 },
+                  "purpose": { "type": "string", "example": "Laboratory glassware" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "DRAFT expense created" },
+          "400": { "description": "Validation error or invalid state" },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Forbidden" }
+        }
+      }
+    },
+    "/expenses/{id}": {
+      "get": {
+        "summary": "Get expense details",
+        "tags": ["Expenses"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "description": "Expense details" },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Forbidden" },
+          "404": { "description": "Not found" }
+        }
+      },
+      "put": {
+        "summary": "Edit a DRAFT expense",
+        "description": "Edits a draft expense. Only the creator or an HOD of that department can edit. Non-draft returns 409.",
+        "tags": ["Expenses"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "categoryId": { "type": "integer" },
+                  "amount": { "type": "number" },
+                  "purpose": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Expense updated" },
+          "403": { "description": "Forbidden (not creator or HOD)" },
+          "404": { "description": "Not found" },
+          "409": { "description": "Expense is not in DRAFT status" }
+        }
+      },
+      "delete": {
+        "summary": "Delete a DRAFT expense",
+        "description": "Deletes a draft expense. Only the creator or an HOD of that department can delete. Non-draft returns 409.",
+        "tags": ["Expenses"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "description": "Expense deleted" },
+          "403": { "description": "Forbidden (not creator or HOD)" },
+          "404": { "description": "Not found" },
+          "409": { "description": "Expense is not in DRAFT status" }
+        }
+      }
     }
   },
   "components": {

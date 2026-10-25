@@ -32,6 +32,30 @@ export default function StatusBadge({
           dotColor: 'var(--dp-color-status-warning)',
           icon: '⚠',
         };
+      case 'PAID':
+        return {
+          color: 'var(--dp-color-status-paid)',
+          backgroundColor: 'var(--dp-color-status-paid-bg)',
+          borderColor: 'var(--dp-color-status-paid-border)',
+          dotColor: 'var(--dp-color-status-paid-dot)',
+          icon: '✓',
+        };
+      case 'SUBMITTED':
+        return {
+          color: 'var(--dp-color-status-submitted)',
+          backgroundColor: 'var(--dp-color-status-submitted-bg)',
+          borderColor: 'var(--dp-color-status-submitted-border)',
+          dotColor: 'var(--dp-color-status-submitted-dot)',
+          icon: '↗',
+        };
+      case 'CANCELLED':
+        return {
+          color: 'var(--dp-color-status-cancelled)',
+          backgroundColor: 'var(--dp-color-status-cancelled-bg)',
+          borderColor: 'var(--dp-color-status-cancelled-border)',
+          dotColor: 'var(--dp-color-status-cancelled-dot)',
+          icon: '⊘',
+        };
       case 'CRITICAL':
       case 'REJECTED':
         return {
