@@ -31,3 +31,36 @@ export const listExpensesQuerySchema = z.object({
   categoryId: z.coerce.number().int().positive().optional(),
   status: expenseStatusEnum.optional(),
 });
+
+export const submitExpenseSchema = z.object({}).optional();
+
+export const approveExpenseSchema = z.object({
+  remark: z.string().trim().max(1000, 'Remark is too long').optional(),
+});
+
+export const rejectExpenseSchema = z.object({
+  remark: z.string().trim().min(1, 'A non-empty remark is required for rejection').max(1000, 'Remark is too long'),
+});
+
+export const payExpenseSchema = z.object({
+  paidOn: z.coerce.date().optional(),
+  paid_on: z.coerce.date().optional(),
+  paymentMode: z.string().trim().optional(),
+  payment_mode: z.string().trim().optional(),
+  paymentRef: z.string().trim().optional(),
+  payment_ref: z.string().trim().optional(),
+}).refine((data) => !!(data.paidOn || data.paid_on), {
+  message: 'paid_on date is required',
+  path: ['paidOn'],
+}).refine((data) => !!((data.paymentMode && data.paymentMode.length > 0) || (data.payment_mode && data.payment_mode.length > 0)), {
+  message: 'payment_mode is required',
+  path: ['paymentMode'],
+}).refine((data) => !!((data.paymentRef && data.paymentRef.length > 0) || (data.payment_ref && data.payment_ref.length > 0)), {
+  message: 'payment_ref is required',
+  path: ['paymentRef'],
+}).transform((data) => ({
+  paidOn: data.paidOn || data.paid_on,
+  paymentMode: (data.paymentMode || data.payment_mode).trim(),
+  paymentRef: (data.paymentRef || data.payment_ref).trim(),
+}));
+

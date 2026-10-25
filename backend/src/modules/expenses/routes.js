@@ -5,6 +5,10 @@ import {
   createExpenseSchema,
   updateExpenseSchema,
   listExpensesQuerySchema,
+  submitExpenseSchema,
+  approveExpenseSchema,
+  rejectExpenseSchema,
+  payExpenseSchema,
 } from './schema.js';
 
 export const expensesRouter = Router();
@@ -40,4 +44,30 @@ expensesRouter.delete(
   '/:id',
   requireRole('HOD', 'STAFF'),
   controller.deleteExpense
+);
+
+expensesRouter.post(
+  '/:id/submit',
+  requireRole('HOD', 'STAFF'),
+  validate(submitExpenseSchema),
+  controller.submitExpense
+);
+
+expensesRouter.post(
+  '/:id/approve',
+  validate(approveExpenseSchema),
+  controller.approveExpense
+);
+
+expensesRouter.post(
+  '/:id/reject',
+  validate(rejectExpenseSchema),
+  controller.rejectExpense
+);
+
+expensesRouter.post(
+  '/:id/pay',
+  requireRole('FINANCE'),
+  validate(payExpenseSchema),
+  controller.payExpense
 );

@@ -222,7 +222,7 @@ describe('Expenses & Balances Frontend (Iteration 4a)', () => {
       render(<ExpensesPage />);
 
       await waitFor(() => {
-        expect(screen.getByTestId ? screen.getByText('Delete') : screen.getByText('Delete')).toBeInTheDocument();
+        expect(screen.getByText('Delete')).toBeInTheDocument();
       });
 
       const deleteBtn = screen.getByText('Delete');
@@ -232,5 +232,208 @@ describe('Expenses & Balances Frontend (Iteration 4a)', () => {
         expect(deleteSpy).toHaveBeenCalledWith(1);
       });
     });
+
+    it('allows creator to submit a draft expense', async () => {
+      vi.spyOn(authContext, 'useAuth').mockReturnValue({
+        user: { id: 100, role: 'STAFF', departmentId: 10 },
+      });
+      const submitSpy = vi.spyOn(expensesApi, 'submitExpense').mockResolvedValue({
+        id: 1,
+        status: 'SUBMITTED',
+      });
+      vi.spyOn(window, 'confirm').mockReturnValue(true);
+
+      render(<ExpensesPage />);
+
+      await waitFor(() => {
+        expect(screen.getByText('Submit')).toBeInTheDocument();
+      });
+
+      fireEvent.click(screen.getByText('Submit'));
+
+      await waitFor(() => {
+        expect(submitSpy).toHaveBeenCalledWith(1);
+      });
+    });
+
+    it('displays 409 INSUFFICIENT_BALANCE message clearly with requested and available figures', async () => {
+      vi.spyOn(authContext, 'useAuth').mockReturnValue({
+        user: { id: 100, role: 'STAFF', departmentId: 10 },
+      });
+      vi.spyOn(window, 'confirm').mockReturnValue(true);
+      vi.spyOn(expensesApi, 'submitExpense').mockRejectedValue({
+        response: {
+          status: 409,
+          data: {
+            error: {
+              code: 'INSUFFICIENT_BALANCE',
+              message: 'Available balance is insufficient for this expense',
+              details: { requested: 700000, available: 650000 },
+            },
+          },
+        },
+      });
+
+      render(<ExpensesPage />);
+
+      await waitFor(() => {
+        expect(screen.getByText('Submit')).toBeInTheDocument();
+      });
+
+      fireEvent.click(screen.getByText('Submit'));
+
+      await waitFor(() => {
+        expect(screen.getByText(/409 INSUFFICIENT_BALANCE/i)).toBeInTheDocument();
+        expect(screen.getByText(/Requested\s*₹\s*7,00,000.*available.*₹\s*6,50,000/i)).toBeInTheDocument();
+      });
+    });
+
+    it('renders Approve and Reject buttons for HOD on STAFF submitted request and handles approval', async () => {
+      const submittedExpenses = [
+        {
+          id: 5,
+          financialYearId: 1,
+          financialYear: { id: 1, year: '2026-27' },
+          departmentId: 10,
+          department: { id: 10, code: 'ET', name: 'Engineering Block' },
+          categoryId: 1,
+          category: { id: 1, name: 'Equipment' },
+          amount: 50000,
+          purpose: 'New Soldering Iron Station',
+          status: 'SUBMITTED',
+          createdBy: 100,
+          creator: { id: 100, role: 'STAFF', name: 'Staff User' },
+        },
+      ];
+      vi.spyOn(expensesApi, 'listExpenses').mockResolvedValue({
+        data: submittedExpenses,
+        meta: { page: 1, limit: 10, total: 1, totalPages: 1 },
+      });
+      vi.spyOn(authContext, 'useAuth').mockReturnValue({
+        user: { id: 200, role: 'HOD', departmentId: 10 },
+      });
+      const approveSpy = vi.spyOn(expensesApi, 'approveExpense').mockResolvedValue({
+        id: 5,
+        status: 'APPROVED',
+      });
+
+      render(<ExpensesPage />);
+
+      await waitFor(() => {
+        expect(screen.getByText('Approve')).toBeInTheDocument();
+        expect(screen.getByText('Reject')).toBeInTheDocument();
+      });
+
+      fireEvent.click(screen.getByText('Approve'));
+
+      await waitFor(() => {
+        expect(screen.getByText(/Approve Expense #5/i)).toBeInTheDocument();
+      });
+
+      const confirmBtn = screen.getByRole('button', { name: /Confirm Approval/i });
+      fireEvent.click(confirmBtn);
+
+      await waitFor(() => {
+        expect(approveSpy).toHaveBeenCalledWith(5, { remark: '' });
+      });
+    });
+
+    it('renders Pay button for FINANCE on APPROVED expense and submits payment modal', async () => {
+      const approvedExpenses = [
+        {
+          id: 8,
+          financialYearId: 1,
+          financialYear: { id: 1, year: '2026-27' },
+          departmentId: 10,
+          department: { id: 10, code: 'ET', name: 'Engineering Block' },
+          categoryId: 1,
+          category: { id: 1, name: 'Equipment' },
+          amount: 75000,
+          purpose: 'Oscilloscope Probes',
+          status: 'APPROVED',
+          createdBy: 100,
+          creator: { id: 100, role: 'STAFF', name: 'Staff User' },
+        },
+      ];
+      vi.spyOn(expensesApi, 'listExpenses').mockResolvedValue({
+        data: approvedExpenses,
+        meta: { page: 1, limit: 10, total: 1, totalPages: 1 },
+      });
+      vi.spyOn(authContext, 'useAuth').mockReturnValue({
+        user: { id: 300, role: 'FINANCE' },
+      });
+      const paySpy = vi.spyOn(expensesApi, 'payExpense').mockResolvedValue({
+        id: 8,
+        status: 'PAID',
+      });
+
+      render(<ExpensesPage />);
+
+      await waitFor(() => {
+        expect(screen.getByText('Pay')).toBeInTheDocument();
+      });
+
+      fireEvent.click(screen.getByText('Pay'));
+
+      await waitFor(() => {
+        expect(screen.getByText(/Record Payment: Expense #8/i)).toBeInTheDocument();
+      });
+
+      const refInput = screen.getByPlaceholderText(/UTR123456789/i);
+      fireEvent.change(refInput, { target: { value: 'UTR-TEST-888' } });
+
+      const markPaidBtn = screen.getByRole('button', { name: /Mark as PAID/i });
+      fireEvent.click(markPaidBtn);
+
+      await waitFor(() => {
+        expect(paySpy).toHaveBeenCalledWith(8, expect.objectContaining({
+          paymentMode: 'NEFT',
+          paymentRef: 'UTR-TEST-888',
+        }));
+      });
+    });
+
+    it('shows approval trail in detail modal', async () => {
+      const detailExpense = {
+        id: 1,
+        financialYear: { year: '2026-27' },
+        department: { code: 'ET', name: 'Engineering' },
+        category: { name: 'Equipment' },
+        amount: 25000,
+        purpose: 'Oscilloscope probes',
+        status: 'APPROVED',
+        creator: { name: 'Staff User', role: 'STAFF' },
+        createdAt: '2026-10-25T10:00:00Z',
+        approvals: [
+          {
+            id: 101,
+            stepNo: 1,
+            decision: 'APPROVED',
+            remark: 'Approved for Semester 1',
+            decidedOn: '2026-10-25T11:00:00Z',
+            approver: { name: 'Dr. ET HOD', role: 'HOD' },
+          },
+        ],
+      };
+      vi.spyOn(expensesApi, 'getExpense').mockResolvedValue(detailExpense);
+      vi.spyOn(authContext, 'useAuth').mockReturnValue({
+        user: { id: 100, role: 'STAFF', departmentId: 10 },
+      });
+
+      render(<ExpensesPage />);
+
+      await waitFor(() => {
+        expect(screen.getAllByText('View')[0]).toBeInTheDocument();
+      });
+
+      fireEvent.click(screen.getAllByText('View')[0]);
+
+      await waitFor(() => {
+        expect(screen.getByText(/Expense #1 Details/i)).toBeInTheDocument();
+        expect(screen.getByText(/Step #1: Dr\. ET HOD \(HOD\)/i)).toBeInTheDocument();
+        expect(screen.getByText(/“Approved for Semester 1”/i)).toBeInTheDocument();
+      });
+    });
   });
 });
+

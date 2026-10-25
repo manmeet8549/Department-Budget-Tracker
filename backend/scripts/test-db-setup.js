@@ -21,7 +21,13 @@ process.env.DIRECT_URL = targetDirectUrl;
 async function setupTestDb() {
   console.log(`--- Preparing Test Database (${targetDbUrl.includes('budget_tracker_test') ? 'budget_tracker_test' : 'isolated target'}) ---`);
 
-  // 1. Run migrations against test database
+  // 1. Clear any stale advisory locks and run migrations against test database
+  try {
+    const { prisma: initPrisma } = await import('../src/config/db.js');
+    await initPrisma.$executeRawUnsafe('SELECT pg_advisory_unlock_all()');
+    await initPrisma.$disconnect();
+  } catch {}
+
   try {
     execSync('npx prisma migrate deploy', {
       stdio: 'inherit',
@@ -42,7 +48,7 @@ async function setupTestDb() {
   // 3. Truncate tables to ensure a clean state
   console.log('Resetting test database tables...');
   await prisma.$executeRawUnsafe(`
-    TRUNCATE TABLE "expenses", "budget_items", "budgets", "audit_logs", "users", "departments", "categories", "financial_years" RESTART IDENTITY CASCADE;
+    TRUNCATE TABLE "approvals", "expenses", "budget_items", "budgets", "audit_logs", "users", "departments", "categories", "financial_years" RESTART IDENTITY CASCADE;
   `);
 
   // 4. Seed baseline test data

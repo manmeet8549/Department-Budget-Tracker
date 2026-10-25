@@ -12,6 +12,10 @@ import {
   createExpense,
   updateExpense,
   deleteExpense,
+  submitExpense,
+  approveExpense,
+  rejectExpense,
+  payExpense,
 } from '../../api/expenses.js';
 import { getCategoryBalances } from '../../api/balances.js';
 import {
@@ -27,6 +31,7 @@ export default function ExpensesPage() {
   const [expenses, setExpenses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [insufficientBalanceAlert, setInsufficientBalanceAlert] = useState(null);
 
   // Pagination & Filters
   const [page, setPage] = useState(1);
@@ -43,7 +48,7 @@ export default function ExpensesPage() {
   const [activeFy, setActiveFy] = useState(null);
   const [financialYears, setFinancialYears] = useState([]);
 
-  // Form modal state
+  // Form modal state (Create / Edit)
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState(null);
   const [formSubmitting, setFormSubmitting] = useState(false);
@@ -60,10 +65,35 @@ export default function ExpensesPage() {
 
   // Balances state for the selected department & category
   const [deptCategoryBalances, setDeptCategoryBalances] = useState([]);
-  const [loadingBalances, setLoadingBalances] = useState(false);
 
   // Detail view modal
   const [viewingExpense, setViewingExpense] = useState(null);
+
+  // Workflow Dialogs State
+  const [actionLoading, setActionLoading] = useState(false);
+
+  const [approveDialog, setApproveDialog] = useState({
+    isOpen: false,
+    expense: null,
+    remark: '',
+    error: '',
+  });
+
+  const [rejectDialog, setRejectDialog] = useState({
+    isOpen: false,
+    expense: null,
+    remark: '',
+    error: '',
+  });
+
+  const [payDialog, setPayDialog] = useState({
+    isOpen: false,
+    expense: null,
+    paidOn: new Date().toISOString().split('T')[0],
+    paymentMode: 'NEFT',
+    paymentRef: '',
+    error: '',
+  });
 
   // Permissions
   const isGlobalRole = useMemo(() => {
@@ -81,6 +111,34 @@ export default function ExpensesPage() {
     return isCreator || isDeptHod;
   };
 
+  const canSubmit = (expense) => {
+    if (expense.status !== 'DRAFT') return false;
+    const isCreator = expense.createdBy === user?.id || expense.creator?.id === user?.id;
+    const isDeptHod = user?.role === 'HOD' && (expense.departmentId === user?.departmentId || expense.department?.id === user?.departmentId);
+    return isCreator || isDeptHod;
+  };
+
+  const canApproveOrReject = (expense) => {
+    if (expense.status !== 'SUBMITTED') return false;
+    const isCreator = expense.createdBy === user?.id || expense.creator?.id === user?.id;
+    if (isCreator) return false; // Requester can never approve own request
+
+    const creatorRole = expense.creator?.role;
+    const deptId = expense.departmentId || expense.department?.id;
+
+    if (creatorRole === 'STAFF') {
+      return user?.role === 'HOD' && user?.departmentId === deptId;
+    }
+    if (creatorRole === 'HOD') {
+      return user?.role === 'FINANCE';
+    }
+    return false;
+  };
+
+  const canPay = (expense) => {
+    return expense.status === 'APPROVED' && user?.role === 'FINANCE';
+  };
+
   // Load master data once
   useEffect(() => {
     async function loadMasterData() {
@@ -95,9 +153,6 @@ export default function ExpensesPage() {
         setFinancialYears(allFys);
         setDepartments(depts);
         setCategories(cats);
-        if (fy) {
-          setFyFilter(String(fy.id));
-        }
       } catch {
         // Master data load error handled gracefully
       }
@@ -134,34 +189,28 @@ export default function ExpensesPage() {
     fetchExpenses();
   }, [fetchExpenses]);
 
-  // Load category balances whenever target department and financial year are determined in the form
+  // Refresh live category balances whenever target department is active
+  const refreshBalances = useCallback(async (deptId, fyId) => {
+    const targetDeptId = deptId || formData.departmentId || user?.departmentId;
+    const targetFyId = fyId || formData.financialYearId || activeFy?.id;
+
+    if (!targetDeptId) return;
+
+    try {
+      const balances = await getCategoryBalances(Number(targetDeptId), {
+        financialYearId: targetFyId ? Number(targetFyId) : undefined,
+      });
+      setDeptCategoryBalances(balances || []);
+    } catch {
+      setDeptCategoryBalances([]);
+    }
+  }, [formData.departmentId, formData.financialYearId, user?.departmentId, activeFy?.id]);
+
   useEffect(() => {
-    async function loadBalances() {
-      const targetDeptId = formData.departmentId || user?.departmentId;
-      const targetFyId = formData.financialYearId || activeFy?.id;
-
-      if (!targetDeptId) {
-        setDeptCategoryBalances([]);
-        return;
-      }
-
-      setLoadingBalances(true);
-      try {
-        const balances = await getCategoryBalances(Number(targetDeptId), {
-          financialYearId: targetFyId ? Number(targetFyId) : undefined,
-        });
-        setDeptCategoryBalances(balances || []);
-      } catch {
-        setDeptCategoryBalances([]);
-      } finally {
-        setLoadingBalances(false);
-      }
-    }
-
     if (isFormOpen) {
-      loadBalances();
+      refreshBalances();
     }
-  }, [isFormOpen, formData.departmentId, formData.financialYearId, user?.departmentId, activeFy?.id]);
+  }, [isFormOpen, refreshBalances]);
 
   // Selected category balance from backend API (Never calculate in UI!)
   const selectedCategoryBalance = useMemo(() => {
@@ -188,34 +237,35 @@ export default function ExpensesPage() {
     setEditingExpense(expense);
     setFormError('');
     setFormData({
-      financialYearId: String(expense.financialYearId || expense.financialYear?.id),
-      departmentId: String(expense.departmentId || expense.department?.id),
-      categoryId: String(expense.categoryId || expense.category?.id),
+      financialYearId: String(expense.financialYearId),
+      departmentId: String(expense.departmentId),
+      categoryId: String(expense.categoryId),
       amount: String(expense.amount),
-      purpose: expense.purpose || '',
+      purpose: expense.purpose,
     });
     setIsFormOpen(true);
   };
 
-  // Save Expense (Create or Edit Draft)
-  const handleSaveExpense = async (e) => {
+  // Save Expense (Create or Edit)
+  const handleSubmitForm = async (e) => {
     e.preventDefault();
-    setFormSubmitting(true);
     setFormError('');
 
-    try {
-      const amountNum = parseFloat(formData.amount);
-      if (isNaN(amountNum) || amountNum <= 0) {
-        throw new Error('Please enter a valid amount greater than zero');
-      }
-      if (!formData.purpose || formData.purpose.trim().length < 3) {
-        throw new Error('Purpose must be at least 3 characters');
-      }
+    if (!formData.amount || Number(formData.amount) <= 0) {
+      setFormError('Amount must be greater than zero');
+      return;
+    }
+    if (!formData.purpose || formData.purpose.trim().length < 3) {
+      setFormError('Purpose must be at least 3 characters');
+      return;
+    }
 
+    setFormSubmitting(true);
+    try {
       if (editingExpense) {
         await updateExpense(editingExpense.id, {
           categoryId: Number(formData.categoryId),
-          amount: amountNum,
+          amount: Number(formData.amount),
           purpose: formData.purpose.trim(),
         });
       } else {
@@ -223,15 +273,15 @@ export default function ExpensesPage() {
           financialYearId: Number(formData.financialYearId),
           departmentId: Number(formData.departmentId),
           categoryId: Number(formData.categoryId),
-          amount: amountNum,
+          amount: Number(formData.amount),
           purpose: formData.purpose.trim(),
         });
       }
-
       setIsFormOpen(false);
       fetchExpenses();
+      refreshBalances();
     } catch (err) {
-      setFormError(err.response?.data?.error?.message || err.message || 'Operation failed');
+      setFormError(err.response?.data?.error?.message || 'Failed to save expense');
     } finally {
       setFormSubmitting(false);
     }
@@ -239,14 +289,15 @@ export default function ExpensesPage() {
 
   // Delete Draft
   const handleDeleteDraft = async (expense) => {
-    if (!window.confirm(`Are you sure you want to delete this draft expense of ₹${formatINR(expense.amount)}?`)) {
+    if (!window.confirm(`Are you sure you want to delete draft expense #${expense.id}?`)) {
       return;
     }
     try {
       await deleteExpense(expense.id);
       fetchExpenses();
+      refreshBalances();
     } catch (err) {
-      alert(err.response?.data?.error?.message || 'Failed to delete expense');
+      alert(err.response?.data?.error?.message || 'Failed to delete expense draft');
     }
   };
 
@@ -257,6 +308,165 @@ export default function ExpensesPage() {
       setViewingExpense(exp);
     } catch (err) {
       alert(err.response?.data?.error?.message || 'Failed to view expense details');
+    }
+  };
+
+  // Workflow Action 1: Submit Draft
+  const handleSubmitExpense = async (expense) => {
+    if (!window.confirm(`Submit draft #${expense.id} for approval? Available balance will be verified.`)) {
+      return;
+    }
+    setActionLoading(true);
+    setInsufficientBalanceAlert(null);
+    try {
+      await submitExpense(expense.id);
+      fetchExpenses();
+      refreshBalances(expense.departmentId, expense.financialYearId);
+      if (viewingExpense?.id === expense.id) {
+        handleViewDetails(expense.id);
+      }
+    } catch (err) {
+      const errData = err.response?.data?.error;
+      if (err.response?.status === 409 && errData?.code === 'INSUFFICIENT_BALANCE') {
+        setInsufficientBalanceAlert({
+          requested: errData.details?.requested || expense.amount,
+          available: errData.details?.available ?? 0,
+        });
+      } else {
+        alert(errData?.message || 'Failed to submit expense');
+      }
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // Workflow Action 2: Approve
+  const handleOpenApproveDialog = (expense) => {
+    setApproveDialog({
+      isOpen: true,
+      expense,
+      remark: '',
+      error: '',
+    });
+  };
+
+  const handleConfirmApprove = async () => {
+    const { expense, remark } = approveDialog;
+    if (!expense) return;
+
+    setActionLoading(true);
+    setApproveDialog((prev) => ({ ...prev, error: '' }));
+    setInsufficientBalanceAlert(null);
+
+    try {
+      await approveExpense(expense.id, { remark });
+      setApproveDialog({ isOpen: false, expense: null, remark: '', error: '' });
+      fetchExpenses();
+      refreshBalances(expense.departmentId, expense.financialYearId);
+      if (viewingExpense?.id === expense.id) {
+        handleViewDetails(expense.id);
+      }
+    } catch (err) {
+      const errData = err.response?.data?.error;
+      if (err.response?.status === 409 && errData?.code === 'INSUFFICIENT_BALANCE') {
+        setApproveDialog({ isOpen: false, expense: null, remark: '', error: '' });
+        setInsufficientBalanceAlert({
+          requested: errData.details?.requested || expense.amount,
+          available: errData.details?.available ?? 0,
+        });
+      } else {
+        setApproveDialog((prev) => ({
+          ...prev,
+          error: errData?.message || 'Failed to approve expense',
+        }));
+      }
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // Workflow Action 3: Reject
+  const handleOpenRejectDialog = (expense) => {
+    setRejectDialog({
+      isOpen: true,
+      expense,
+      remark: '',
+      error: '',
+    });
+  };
+
+  const handleConfirmReject = async () => {
+    const { expense, remark } = rejectDialog;
+    if (!expense) return;
+
+    if (!remark || !remark.trim()) {
+      setRejectDialog((prev) => ({ ...prev, error: 'A rejection remark is required' }));
+      return;
+    }
+
+    setActionLoading(true);
+    try {
+      await rejectExpense(expense.id, { remark });
+      setRejectDialog({ isOpen: false, expense: null, remark: '', error: '' });
+      fetchExpenses();
+      refreshBalances(expense.departmentId, expense.financialYearId);
+      if (viewingExpense?.id === expense.id) {
+        handleViewDetails(expense.id);
+      }
+    } catch (err) {
+      setRejectDialog((prev) => ({
+        ...prev,
+        error: err.response?.data?.error?.message || 'Failed to reject expense',
+      }));
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // Workflow Action 4: Pay (FINANCE only)
+  const handleOpenPayDialog = (expense) => {
+    setPayDialog({
+      isOpen: true,
+      expense,
+      paidOn: new Date().toISOString().split('T')[0],
+      paymentMode: 'NEFT',
+      paymentRef: '',
+      error: '',
+    });
+  };
+
+  const handleConfirmPay = async () => {
+    const { expense, paidOn, paymentMode, paymentRef } = payDialog;
+    if (!expense) return;
+
+    if (!paidOn || !paymentMode || !paymentRef.trim()) {
+      setPayDialog((prev) => ({
+        ...prev,
+        error: 'Please fill in payment date, payment mode, and payment reference',
+      }));
+      return;
+    }
+
+    setActionLoading(true);
+    try {
+      await payExpense(expense.id, {
+        paidOn,
+        paymentMode: paymentMode.trim(),
+        paymentRef: paymentRef.trim(),
+      });
+      setPayDialog({ isOpen: false, expense: null, paidOn: '', paymentMode: 'NEFT', paymentRef: '', error: '' });
+      fetchExpenses();
+      refreshBalances(expense.departmentId, expense.financialYearId);
+      if (viewingExpense?.id === expense.id) {
+        handleViewDetails(expense.id);
+      }
+    } catch (err) {
+      setPayDialog((prev) => ({
+        ...prev,
+        error: err.response?.data?.error?.message || 'Failed to record payment',
+      }));
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -289,7 +499,7 @@ export default function ExpensesPage() {
         <span
           title={row.purpose}
           style={{
-            maxWidth: '220px',
+            maxWidth: '180px',
             display: 'inline-block',
             overflow: 'hidden',
             textOverflow: 'ellipsis',
@@ -323,7 +533,7 @@ export default function ExpensesPage() {
       header: 'Actions',
       accessor: 'actions',
       render: (row) => (
-        <div style={{ display: 'flex', gap: '8px' }}>
+        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
           <Button
             size="sm"
             variant="ghost"
@@ -333,6 +543,20 @@ export default function ExpensesPage() {
             View
           </Button>
 
+          {/* Submit button on own drafts */}
+          {canSubmit(row) && (
+            <Button
+              size="sm"
+              variant="primary"
+              disabled={actionLoading}
+              onClick={() => handleSubmitExpense(row)}
+              id={`btn-submit-${row.id}`}
+            >
+              Submit
+            </Button>
+          )}
+
+          {/* Edit / Delete on drafts */}
           {canEditOrDelete(row) && (
             <>
               <Button
@@ -353,6 +577,43 @@ export default function ExpensesPage() {
               </Button>
             </>
           )}
+
+          {/* Approve / Reject buttons for correct approver */}
+          {canApproveOrReject(row) && (
+            <>
+              <Button
+                size="sm"
+                variant="primary"
+                disabled={actionLoading}
+                onClick={() => handleOpenApproveDialog(row)}
+                id={`btn-approve-${row.id}`}
+              >
+                Approve
+              </Button>
+              <Button
+                size="sm"
+                variant="danger"
+                disabled={actionLoading}
+                onClick={() => handleOpenRejectDialog(row)}
+                id={`btn-reject-${row.id}`}
+              >
+                Reject
+              </Button>
+            </>
+          )}
+
+          {/* Pay button for FINANCE */}
+          {canPay(row) && (
+            <Button
+              size="sm"
+              variant="primary"
+              disabled={actionLoading}
+              onClick={() => handleOpenPayDialog(row)}
+              id={`btn-pay-${row.id}`}
+            >
+              Pay
+            </Button>
+          )}
         </div>
       ),
     },
@@ -360,6 +621,37 @@ export default function ExpensesPage() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      {/* 409 Insufficient Balance Alert Banner */}
+      {insufficientBalanceAlert && (
+        <Card
+          style={{
+            padding: '16px 20px',
+            backgroundColor: 'rgba(239, 68, 68, 0.08)',
+            border: '1px solid var(--dp-color-danger, #ef4444)',
+            color: 'var(--dp-color-danger, #dc2626)',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
+        >
+          <div>
+            <strong style={{ fontSize: '15px', display: 'block', marginBottom: '4px' }}>
+              409 INSUFFICIENT_BALANCE
+            </strong>
+            <span style={{ fontSize: '14px' }}>
+              Requested {formatINR(insufficientBalanceAlert.requested)}, but available ceiling in this category is only {formatINR(insufficientBalanceAlert.available)}.
+            </span>
+          </div>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => setInsufficientBalanceAlert(null)}
+          >
+            Dismiss
+          </Button>
+        </Card>
+      )}
+
       {/* Top Header Card */}
       <Card style={{ padding: '24px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
@@ -368,7 +660,7 @@ export default function ExpensesPage() {
               Expense Claims & Drafts
             </h1>
             <p style={{ margin: 0, color: 'var(--dp-color-ink-secondary)', fontSize: '14px' }}>
-              Create, track, and manage department spending requests. Category available balance is checked live.
+              Submit, review, approve, and record payments for department expenses with live row-lock verification.
             </p>
           </div>
 
@@ -504,10 +796,10 @@ export default function ExpensesPage() {
         </div>
       </Card>
 
-      {/* Expenses Table Card */}
+      {/* Main Expense Table Card */}
       <Card style={{ padding: '0px', overflow: 'hidden' }}>
         {error && (
-          <div style={{ padding: '16px', backgroundColor: 'var(--dp-color-status-critical-bg)', color: 'var(--dp-color-status-critical)', borderBottom: '1px solid var(--dp-color-status-critical-border)' }}>
+          <div style={{ padding: '16px', color: 'var(--dp-color-danger, #ef4444)' }}>
             {error}
           </div>
         )}
@@ -516,44 +808,46 @@ export default function ExpensesPage() {
           columns={columns}
           data={expenses}
           loading={loading}
-          emptyMessage="No expenses found matching the selected filters."
+          emptyMessage="No expenses found matching the current criteria."
         />
 
-        {/* Pagination Footer */}
-        {paginationMeta.totalPages > 1 && (
-          <div
-            style={{
-              padding: '16px 24px',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              borderTop: '1px solid var(--dp-color-rule)',
-              backgroundColor: 'var(--dp-color-panel)',
-            }}
-          >
-            <span style={{ fontSize: '13px', color: 'var(--dp-color-ink-secondary)' }}>
-              Showing Page {paginationMeta.page} of {paginationMeta.totalPages} ({paginationMeta.total} total)
-            </span>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <Button
-                size="sm"
-                variant="secondary"
-                disabled={paginationMeta.page <= 1}
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-              >
-                Previous
-              </Button>
-              <Button
-                size="sm"
-                variant="secondary"
-                disabled={paginationMeta.page >= paginationMeta.totalPages}
-                onClick={() => setPage((p) => p + 1)}
-              >
-                Next
-              </Button>
-            </div>
+        {/* Pagination Controls */}
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            padding: '16px 20px',
+            borderTop: '1px solid var(--dp-color-rule)',
+            fontSize: '13px',
+            color: 'var(--dp-color-ink-secondary)',
+          }}
+        >
+          <div>
+            Showing {expenses.length} of {paginationMeta.total} records
           </div>
-        )}
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <Button
+              size="sm"
+              variant="secondary"
+              disabled={page <= 1}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+            >
+              Previous
+            </Button>
+            <span>
+              Page {paginationMeta.page} of {paginationMeta.totalPages}
+            </span>
+            <Button
+              size="sm"
+              variant="secondary"
+              disabled={page >= paginationMeta.totalPages}
+              onClick={() => setPage((p) => p + 1)}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
       </Card>
 
       {/* Create / Edit Draft Modal */}
@@ -574,63 +868,34 @@ export default function ExpensesPage() {
             style={{
               backgroundColor: 'var(--dp-color-panel)',
               borderRadius: 'var(--dp-radius-panel)',
-              maxWidth: '620px',
+              maxWidth: '520px',
               width: '100%',
-              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1)',
-              overflow: 'hidden',
-              display: 'flex',
-              flexDirection: 'column',
-              maxHeight: '90vh',
+              padding: '24px',
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.2)',
             }}
           >
-            {/* Modal Header */}
-            <div
-              style={{
-                padding: '20px 24px',
-                borderBottom: '1px solid var(--dp-color-rule)',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-              }}
-            >
-              <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 'bold', color: 'var(--dp-color-ink-primary)' }}>
-                {editingExpense ? 'Edit Draft Expense' : 'Create New Expense Draft'}
-              </h2>
-              <button
-                type="button"
-                onClick={() => setIsFormOpen(false)}
+            <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', fontWeight: 'bold' }}>
+              {editingExpense ? `Edit Draft #${editingExpense.id}` : 'Create New Expense Draft'}
+            </h3>
+
+            {formError && (
+              <div
                 style={{
-                  background: 'none',
-                  border: 'none',
-                  fontSize: '20px',
-                  cursor: 'pointer',
-                  color: 'var(--dp-color-ink-secondary)',
+                  padding: '10px 14px',
+                  marginBottom: '16px',
+                  borderRadius: '6px',
+                  backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                  color: 'var(--dp-color-danger, #ef4444)',
+                  fontSize: '13px',
                 }}
               >
-                ✕
-              </button>
-            </div>
+                {formError}
+              </div>
+            )}
 
-            {/* Modal Form */}
-            <form onSubmit={handleSaveExpense} style={{ padding: '24px', overflowY: 'auto' }}>
-              {formError && (
-                <div
-                  style={{
-                    padding: '12px 16px',
-                    borderRadius: '6px',
-                    marginBottom: '16px',
-                    backgroundColor: 'var(--dp-color-status-critical-bg)',
-                    color: 'var(--dp-color-status-critical)',
-                    border: '1px solid var(--dp-color-status-critical-border)',
-                    fontSize: '14px',
-                  }}
-                >
-                  {formError}
-                </div>
-              )}
-
-              {/* Financial Year & Department (read-only in edit mode) */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+            <form onSubmit={handleSubmitForm}>
+              {/* Financial Year Selector */}
+              <div style={{ marginBottom: '16px' }}>
                 <Field label="Financial Year" required>
                   <select
                     disabled={!!editingExpense}
@@ -641,7 +906,8 @@ export default function ExpensesPage() {
                       padding: '8px 12px',
                       borderRadius: '6px',
                       border: '1px solid var(--dp-color-rule)',
-                      backgroundColor: editingExpense ? 'var(--dp-color-bg)' : 'var(--dp-color-panel)',
+                      backgroundColor: 'var(--dp-color-panel)',
+                      fontSize: '14px',
                     }}
                   >
                     {financialYears.map((fy) => (
@@ -651,10 +917,13 @@ export default function ExpensesPage() {
                     ))}
                   </select>
                 </Field>
+              </div>
 
+              {/* Department Selector */}
+              <div style={{ marginBottom: '16px' }}>
                 <Field label="Department" required>
                   <select
-                    disabled={!!editingExpense || !isGlobalRole}
+                    disabled={!isGlobalRole || !!editingExpense}
                     value={formData.departmentId}
                     onChange={(e) => setFormData({ ...formData, departmentId: e.target.value })}
                     style={{
@@ -662,7 +931,8 @@ export default function ExpensesPage() {
                       padding: '8px 12px',
                       borderRadius: '6px',
                       border: '1px solid var(--dp-color-rule)',
-                      backgroundColor: editingExpense || !isGlobalRole ? 'var(--dp-color-bg)' : 'var(--dp-color-panel)',
+                      backgroundColor: 'var(--dp-color-panel)',
+                      fontSize: '14px',
                     }}
                   >
                     {departments.map((d) => (
@@ -674,7 +944,7 @@ export default function ExpensesPage() {
                 </Field>
               </div>
 
-              {/* Category & Live Available Balance Banner */}
+              {/* Category Selector */}
               <div style={{ marginBottom: '16px' }}>
                 <Field label="Budget Category" required>
                   <select
@@ -686,6 +956,7 @@ export default function ExpensesPage() {
                       borderRadius: '6px',
                       border: '1px solid var(--dp-color-rule)',
                       backgroundColor: 'var(--dp-color-panel)',
+                      fontSize: '14px',
                     }}
                   >
                     {categories.map((c) => (
@@ -695,29 +966,27 @@ export default function ExpensesPage() {
                     ))}
                   </select>
                 </Field>
+              </div>
 
-                {/* LIVE Available Balance from Balances API */}
+              {/* Category Live Balance Banner */}
+              <div style={{ marginBottom: '16px' }}>
                 <div
-                  id="category-available-balance-display"
                   style={{
-                    marginTop: '8px',
-                    padding: '10px 14px',
-                    borderRadius: '8px',
-                    backgroundColor: 'var(--dp-color-status-submitted-bg)',
-                    border: '1px solid var(--dp-color-status-submitted-border)',
+                    padding: '12px 14px',
+                    borderRadius: '6px',
+                    backgroundColor: 'var(--dp-color-status-submitted-bg, rgba(2, 132, 199, 0.08))',
+                    border: '1px solid var(--dp-color-status-submitted-border, rgba(2, 132, 199, 0.2))',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
                   }}
                 >
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                    <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--dp-color-status-submitted)' }}>
+                    <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--dp-color-status-submitted, #0284c7)' }}>
                       Category Available Balance (from Balances API):
                     </span>
                     <span style={{ fontSize: '11px', color: 'var(--dp-color-ink-secondary)' }}>
-                      {loadingBalances
-                        ? 'Fetching balance from server...'
-                        : selectedCategoryBalance
+                      {selectedCategoryBalance
                         ? `Allocated: ₹${formatINR(selectedCategoryBalance.allocated)}  |  Committed: ₹${formatINR(selectedCategoryBalance.committed)}  |  Spent: ₹${formatINR(selectedCategoryBalance.spent)}`
                         : 'No approved allocation found for this category'}
                     </span>
@@ -728,8 +997,8 @@ export default function ExpensesPage() {
                       fontSize: '16px',
                       fontWeight: 'bold',
                       color: selectedCategoryBalance && selectedCategoryBalance.available > 0
-                        ? 'var(--dp-color-status-approved)'
-                        : 'var(--dp-color-status-critical)',
+                        ? 'var(--dp-color-status-approved, #16a34a)'
+                        : 'var(--dp-color-status-critical, #dc2626)',
                       fontVariantNumeric: 'tabular-nums',
                     }}
                   >
@@ -738,7 +1007,7 @@ export default function ExpensesPage() {
                 </div>
               </div>
 
-              {/* Amount Field with Balance Cross-Check indicator */}
+              {/* Amount Field with Live Available Ceiling */}
               <div style={{ marginBottom: '16px' }}>
                 <Field label="Expense Amount (₹)" required>
                   <input
@@ -798,7 +1067,299 @@ export default function ExpensesPage() {
         </div>
       )}
 
-      {/* Read-Only Details Modal */}
+      {/* Approve Dialog */}
+      {approveDialog.isOpen && approveDialog.expense && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: '16px',
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: 'var(--dp-color-panel)',
+              borderRadius: 'var(--dp-radius-panel)',
+              maxWidth: '460px',
+              width: '100%',
+              padding: '24px',
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.2)',
+            }}
+          >
+            <h3 style={{ margin: '0 0 8px 0', fontSize: '18px', fontWeight: 'bold' }}>
+              Approve Expense #{approveDialog.expense.id}
+            </h3>
+            <p style={{ margin: '0 0 16px 0', fontSize: '13px', color: 'var(--dp-color-ink-secondary)' }}>
+              Approving commits ₹{formatINR(approveDialog.expense.amount)} from Available funds to Committed with a database row lock.
+            </p>
+
+            {approveDialog.error && (
+              <div
+                style={{
+                  padding: '10px 14px',
+                  marginBottom: '16px',
+                  borderRadius: '6px',
+                  backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                  color: 'var(--dp-color-danger, #ef4444)',
+                  fontSize: '13px',
+                }}
+              >
+                {approveDialog.error}
+              </div>
+            )}
+
+            <div style={{ marginBottom: '20px' }}>
+              <Field label="Approval Remark (Optional)">
+                <textarea
+                  rows={2}
+                  placeholder="e.g. Approved for semester procurement..."
+                  value={approveDialog.remark}
+                  onChange={(e) => setApproveDialog({ ...approveDialog, remark: e.target.value })}
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    borderRadius: '6px',
+                    border: '1px solid var(--dp-color-rule)',
+                    fontSize: '14px',
+                  }}
+                />
+              </Field>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+              <Button
+                variant="secondary"
+                onClick={() => setApproveDialog({ isOpen: false, expense: null, remark: '', error: '' })}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="primary"
+                disabled={actionLoading}
+                onClick={handleConfirmApprove}
+                id="btn-confirm-approve"
+              >
+                {actionLoading ? 'Approving...' : 'Confirm Approval'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Reject Dialog */}
+      {rejectDialog.isOpen && rejectDialog.expense && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: '16px',
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: 'var(--dp-color-panel)',
+              borderRadius: 'var(--dp-radius-panel)',
+              maxWidth: '460px',
+              width: '100%',
+              padding: '24px',
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.2)',
+            }}
+          >
+            <h3 style={{ margin: '0 0 8px 0', fontSize: '18px', fontWeight: 'bold', color: 'var(--dp-color-danger, #dc2626)' }}>
+              Reject Expense #{rejectDialog.expense.id}
+            </h3>
+            <p style={{ margin: '0 0 16px 0', fontSize: '13px', color: 'var(--dp-color-ink-secondary)' }}>
+              Rejection is final and immutable. Please provide a clear reason for the requester.
+            </p>
+
+            {rejectDialog.error && (
+              <div
+                style={{
+                  padding: '10px 14px',
+                  marginBottom: '16px',
+                  borderRadius: '6px',
+                  backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                  color: 'var(--dp-color-danger, #ef4444)',
+                  fontSize: '13px',
+                }}
+              >
+                {rejectDialog.error}
+              </div>
+            )}
+
+            <div style={{ marginBottom: '20px' }}>
+              <Field label="Rejection Reason (Required)" required>
+                <textarea
+                  rows={3}
+                  placeholder="State the reason why this expense cannot be approved..."
+                  value={rejectDialog.remark}
+                  onChange={(e) => setRejectDialog({ ...rejectDialog, remark: e.target.value })}
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    borderRadius: '6px',
+                    border: '1px solid var(--dp-color-rule)',
+                    fontSize: '14px',
+                  }}
+                />
+              </Field>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+              <Button
+                variant="secondary"
+                onClick={() => setRejectDialog({ isOpen: false, expense: null, remark: '', error: '' })}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="danger"
+                disabled={actionLoading}
+                onClick={handleConfirmReject}
+                id="btn-confirm-reject"
+              >
+                {actionLoading ? 'Rejecting...' : 'Reject Expense'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Pay Dialog (FINANCE only) */}
+      {payDialog.isOpen && payDialog.expense && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: '16px',
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: 'var(--dp-color-panel)',
+              borderRadius: 'var(--dp-radius-panel)',
+              maxWidth: '480px',
+              width: '100%',
+              padding: '24px',
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.2)',
+            }}
+          >
+            <h3 style={{ margin: '0 0 8px 0', fontSize: '18px', fontWeight: 'bold' }}>
+              Record Payment: Expense #{payDialog.expense.id}
+            </h3>
+            <p style={{ margin: '0 0 16px 0', fontSize: '13px', color: 'var(--dp-color-ink-secondary)' }}>
+              Total payable: <strong style={{ color: 'var(--dp-color-ink-primary)' }}>₹{formatINR(payDialog.expense.amount)}</strong>. Committed becomes Spent, Available remains unchanged.
+            </p>
+
+            {payDialog.error && (
+              <div
+                style={{
+                  padding: '10px 14px',
+                  marginBottom: '16px',
+                  borderRadius: '6px',
+                  backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                  color: 'var(--dp-color-danger, #ef4444)',
+                  fontSize: '13px',
+                }}
+              >
+                {payDialog.error}
+              </div>
+            )}
+
+            <div style={{ marginBottom: '16px' }}>
+              <Field label="Payment Date (paid_on)" required>
+                <input
+                  type="date"
+                  value={payDialog.paidOn}
+                  onChange={(e) => setPayDialog({ ...payDialog, paidOn: e.target.value })}
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    borderRadius: '6px',
+                    border: '1px solid var(--dp-color-rule)',
+                    fontSize: '14px',
+                  }}
+                />
+              </Field>
+            </div>
+
+            <div style={{ marginBottom: '16px' }}>
+              <Field label="Payment Mode" required>
+                <select
+                  value={payDialog.paymentMode}
+                  onChange={(e) => setPayDialog({ ...payDialog, paymentMode: e.target.value })}
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    borderRadius: '6px',
+                    border: '1px solid var(--dp-color-rule)',
+                    backgroundColor: 'var(--dp-color-panel)',
+                    fontSize: '14px',
+                  }}
+                >
+                  <option value="NEFT">NEFT</option>
+                  <option value="RTGS">RTGS</option>
+                  <option value="CHEQUE">CHEQUE</option>
+                  <option value="CASH">CASH</option>
+                  <option value="UPI">UPI</option>
+                </select>
+              </Field>
+            </div>
+
+            <div style={{ marginBottom: '20px' }}>
+              <Field label="Payment Reference / UTR Number" required>
+                <input
+                  type="text"
+                  placeholder="e.g. UTR123456789 or Cheque #450912"
+                  value={payDialog.paymentRef}
+                  onChange={(e) => setPayDialog({ ...payDialog, paymentRef: e.target.value })}
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    borderRadius: '6px',
+                    border: '1px solid var(--dp-color-rule)',
+                    fontSize: '14px',
+                  }}
+                />
+              </Field>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+              <Button
+                variant="secondary"
+                onClick={() => setPayDialog({ isOpen: false, expense: null, paidOn: '', paymentMode: 'NEFT', paymentRef: '', error: '' })}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="primary"
+                disabled={actionLoading}
+                onClick={handleConfirmPay}
+                id="btn-confirm-pay"
+              >
+                {actionLoading ? 'Recording...' : 'Mark as PAID'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Read-Only Details Modal with Approval Trail */}
       {viewingExpense && (
         <div
           style={{
@@ -816,8 +1377,10 @@ export default function ExpensesPage() {
             style={{
               backgroundColor: 'var(--dp-color-panel)',
               borderRadius: 'var(--dp-radius-panel)',
-              maxWidth: '540px',
+              maxWidth: '580px',
               width: '100%',
+              maxHeight: '90vh',
+              overflowY: 'auto',
               padding: '24px',
               boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.2)',
             }}
@@ -870,11 +1433,74 @@ export default function ExpensesPage() {
               </div>
             </div>
 
-            <div style={{ marginBottom: '24px', fontSize: '13px', color: 'var(--dp-color-ink-secondary)' }}>
-              Created by: <strong>{viewingExpense.creator?.name}</strong> ({viewingExpense.creator?.email})
+            <div style={{ marginBottom: '16px', fontSize: '13px', color: 'var(--dp-color-ink-secondary)' }}>
+              Created by: <strong>{viewingExpense.creator?.name}</strong> ({viewingExpense.creator?.email} - {viewingExpense.creator?.role})
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+            {/* Payment Details if PAID */}
+            {viewingExpense.status === 'PAID' && (
+              <div
+                style={{
+                  padding: '12px 16px',
+                  borderRadius: '6px',
+                  backgroundColor: 'rgba(16, 185, 129, 0.08)',
+                  border: '1px solid var(--dp-color-success, #10b981)',
+                  marginBottom: '16px',
+                  fontSize: '13px',
+                }}
+              >
+                <strong style={{ display: 'block', marginBottom: '4px', color: 'var(--dp-color-success, #059669)' }}>
+                  Payment Details
+                </strong>
+                <div>Date: {viewingExpense.paidOn ? new Date(viewingExpense.paidOn).toLocaleDateString() : '-'}</div>
+                <div>Mode: {viewingExpense.paymentMode || '-'}</div>
+                <div>Reference: {viewingExpense.paymentRef || '-'}</div>
+              </div>
+            )}
+
+            {/* Approval Trail */}
+            <div style={{ marginBottom: '24px' }}>
+              <h4 style={{ fontSize: '14px', fontWeight: 'bold', margin: '0 0 10px 0', color: 'var(--dp-color-ink-primary)' }}>
+                Approval Trail
+              </h4>
+              {viewingExpense.approvals && viewingExpense.approvals.length > 0 ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {viewingExpense.approvals.map((appr) => (
+                    <div
+                      key={appr.id}
+                      style={{
+                        padding: '10px 14px',
+                        borderRadius: '6px',
+                        border: '1px solid var(--dp-color-rule)',
+                        backgroundColor: 'var(--dp-color-bg)',
+                        fontSize: '13px',
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                        <span style={{ fontWeight: 600 }}>
+                          Step #{appr.stepNo}: {appr.approver?.name} ({appr.approver?.role})
+                        </span>
+                        <StatusBadge status={appr.decision} />
+                      </div>
+                      <div style={{ fontSize: '12px', color: 'var(--dp-color-ink-secondary)' }}>
+                        {new Date(appr.decidedOn).toLocaleString()}
+                      </div>
+                      {appr.remark && (
+                        <div style={{ marginTop: '6px', fontStyle: 'italic', color: 'var(--dp-color-ink-primary)' }}>
+                          “{appr.remark}”
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div style={{ fontSize: '13px', color: 'var(--dp-color-ink-secondary)', fontStyle: 'italic' }}>
+                  No approval actions recorded yet.
+                </div>
+              )}
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
               <Button variant="secondary" onClick={() => setViewingExpense(null)}>
                 Close
               </Button>

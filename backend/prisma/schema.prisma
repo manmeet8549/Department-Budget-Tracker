@@ -78,6 +78,7 @@ model User {
   auditLogs        AuditLog[]
   approvedBudgets  Budget[]     @relation("BudgetApprover")
   createdExpenses  Expense[]    @relation("ExpenseCreator")
+  approvals        Approval[]   @relation("UserApprovals")
 
   @@map("users")
 }
@@ -162,4 +163,20 @@ model Expense {
 
   @@index([departmentId, financialYearId, categoryId, status, createdAt])
   @@map("expenses")
+}
+
+model Approval {
+  id         Int      @id @default(autoincrement())
+  entityType String   @map("entity_type")
+  entityId   Int      @map("entity_id")
+  stepNo     Int      @default(1) @map("step_no")
+  approverId Int      @map("approver_id")
+  decision   String
+  remark     String?
+  decidedOn  DateTime @default(now()) @map("decided_on")
+
+  approver   User     @relation("UserApprovals", fields: [approverId], references: [id])
+
+  @@index([entityType, entityId])
+  @@map("approvals")
 }

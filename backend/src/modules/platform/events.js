@@ -9,9 +9,13 @@
  * - Event names: entity.action format, e.g. 'budget.approved'.
  *
  * Documented Event Payloads:
- * - user.created:     { userId, email, role, departmentId }
- * - user.disabled:    { userId }
- * - budget.approved:  { budgetId, fyId, departmentId, totalAmount, approvedBy, approvedOn }
+ * - user.created:        { userId, email, role, departmentId }
+ * - user.disabled:       { userId }
+ * - budget.approved:     { budgetId, fyId, departmentId, totalAmount, approvedBy, approvedOn }
+ * - expense.submitted:   { expenseId, financialYearId, departmentId, categoryId, amount, submittedBy, submittedOn }
+ * - expense.approved:    { expenseId, financialYearId, departmentId, categoryId, amount, approvedBy, approvedOn }
+ * - expense.rejected:    { expenseId, financialYearId, departmentId, categoryId, amount, rejectedBy, rejectedOn, remark }
+ * - expense.paid:        { expenseId, financialYearId, departmentId, categoryId, amount, paidBy, paidOn, paymentMode, paymentRef }
  */
 import { EventEmitter } from 'events';
 

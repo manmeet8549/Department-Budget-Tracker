@@ -663,6 +663,115 @@
           "409": { "description": "Expense is not in DRAFT status" }
         }
       }
+    },
+    "/expenses/{id}/submit": {
+      "post": {
+        "summary": "Submit a DRAFT expense",
+        "description": "Submits a draft expense. Allowed for creator or department HOD. Checks balance against available category funds; if insufficient returns 409.",
+        "tags": ["Expenses"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "description": "Expense submitted" },
+          "403": { "description": "Forbidden (not creator or department HOD)" },
+          "409": { "description": "Invalid state or insufficient balance" }
+        }
+      }
+    },
+    "/expenses/{id}/approve": {
+      "post": {
+        "summary": "Approve a SUBMITTED expense",
+        "description": "Approves an expense. Only authorized approver via ApprovalPolicy (HOD approves STAFF request, FINANCE approves HOD request, requester can never approve). Commits available balance with a database row lock.",
+        "tags": ["Expenses"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "remark": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Expense approved and committed" },
+          "403": { "description": "Forbidden (not authorized approver)" },
+          "409": { "description": "Invalid state or insufficient balance" }
+        }
+      }
+    },
+    "/expenses/{id}/reject": {
+      "post": {
+        "summary": "Reject a SUBMITTED expense",
+        "description": "Rejects an expense. Only authorized approver. Requires non-empty remark. Rejected expenses never count toward committed funds.",
+        "tags": ["Expenses"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["remark"],
+                "properties": {
+                  "remark": { "type": "string", "example": "Exceeds planned quarterly spending" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Expense rejected" },
+          "400": { "description": "Remark is required" },
+          "403": { "description": "Forbidden (not authorized approver)" },
+          "409": { "description": "Invalid state" }
+        }
+      }
+    },
+    "/expenses/{id}/pay": {
+      "post": {
+        "summary": "Mark an APPROVED expense as PAID",
+        "description": "Records payment for an approved expense. FINANCE only. Requires paid_on, payment_mode, payment_ref. Money moves from Committed to Spent.",
+        "tags": ["Expenses"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["paid_on", "payment_mode", "payment_ref"],
+                "properties": {
+                  "paid_on": { "type": "string", "format": "date", "example": "2026-10-25" },
+                  "payment_mode": { "type": "string", "example": "NEFT" },
+                  "payment_ref": { "type": "string", "example": "TXN987654321" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Expense marked paid" },
+          "400": { "description": "Missing payment details" },
+          "403": { "description": "Forbidden (FINANCE only)" },
+          "409": { "description": "Expense is not in APPROVED status" }
+        }
+      }
     }
   },
   "components": {
