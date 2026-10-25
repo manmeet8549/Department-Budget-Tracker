@@ -11,23 +11,28 @@ try {
   // Ignore if .env missing
 }
 
-const targetDbUrl = process.env.DATABASE_URL_TEST || process.env.DATABASE_URL;
+if (!process.env.DATABASE_URL_TEST) {
+  console.error('FATAL: DATABASE_URL_TEST is not set. Tests must run exclusively against an isolated test database.');
+  process.exit(1);
+}
+
+if (process.env.DATABASE_URL && process.env.DATABASE_URL_TEST === process.env.DATABASE_URL) {
+  console.error('FATAL: DATABASE_URL_TEST is identical to DATABASE_URL. Aborting to protect development/production database.');
+  process.exit(1);
+}
+
+const targetDbUrl = process.env.DATABASE_URL_TEST;
 const targetDirectUrl = process.env.DIRECT_URL_TEST || targetDbUrl;
 
 // Set env vars so any child processes and db connections inherit test database
 process.env.DATABASE_URL = targetDbUrl;
 process.env.DIRECT_URL = targetDirectUrl;
+process.env.DATABASE_URL_SWITCHED_FOR_TEST = 'true';
 
 async function setupTestDb() {
   console.log(`--- Preparing Test Database (${targetDbUrl.includes('budget_tracker_test') ? 'budget_tracker_test' : 'isolated target'}) ---`);
 
-  // 1. Clear any stale advisory locks and run migrations against test database
-  try {
-    const { prisma: initPrisma } = await import('../src/config/db.js');
-    await initPrisma.$executeRawUnsafe('SELECT pg_advisory_unlock_all()');
-    await initPrisma.$disconnect();
-  } catch {}
-
+  // Run migrations against test database
   try {
     execSync('npx prisma migrate deploy', {
       stdio: 'inherit',

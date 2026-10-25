@@ -139,6 +139,15 @@ describe('Iteration 2: Master Data Module (Financial Years, Departments, Categor
         },
       });
       expect(audit).toBeDefined();
+
+      // Restore baseline seeded FY 2026-27 as active and clean up
+      await prisma.financialYear.updateMany({
+        where: { year: '2026-27' },
+        data: { isActive: true },
+      });
+      await prisma.financialYear.deleteMany({
+        where: { id: { in: [fy1Id, fy2Id] } },
+      });
     });
 
     it('rejects duplicate financial year name with 409', async () => {

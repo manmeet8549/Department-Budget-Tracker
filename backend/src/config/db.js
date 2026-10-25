@@ -13,8 +13,19 @@ try {
   // Ignore if .env is not present (e.g. in containerized CI environments)
 }
 
-if (process.env.NODE_ENV === 'test' && process.env.DATABASE_URL_TEST) {
+if (process.env.NODE_ENV === 'test') {
+  if (!process.env.DATABASE_URL_TEST) {
+    throw new Error('FATAL: DATABASE_URL_TEST is not set in test environment. Tests must connect only to DATABASE_URL_TEST.');
+  }
+  if (
+    process.env.DATABASE_URL &&
+    process.env.DATABASE_URL_TEST === process.env.DATABASE_URL &&
+    !process.env.DATABASE_URL_SWITCHED_FOR_TEST
+  ) {
+    throw new Error('FATAL: DATABASE_URL_TEST is identical to DATABASE_URL. Aborting to protect development database.');
+  }
   process.env.DATABASE_URL = process.env.DATABASE_URL_TEST;
+  process.env.DATABASE_URL_SWITCHED_FOR_TEST = 'true';
   if (process.env.DIRECT_URL_TEST) {
     process.env.DIRECT_URL = process.env.DIRECT_URL_TEST;
   }

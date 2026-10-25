@@ -3,6 +3,7 @@ import request from 'supertest';
 import { createApp } from '../src/app.js';
 import { prisma } from '../src/config/db.js';
 import { events } from '../src/modules/platform/events.js';
+import { setTestApprovalDelay } from '../src/modules/expenses/index.js';
 
 describe('Iteration 4b: Expenses Workflow (Submit, Approve, Reject, Pay, Concurrency)', () => {
   jest.setTimeout(40000);
@@ -20,15 +21,15 @@ describe('Iteration 4b: Expenses Workflow (Submit, Approve, Reject, Pay, Concurr
   let hodEtUser;
   let financeUser;
 
+  const login = async (email) => {
+    const res = await request(app)
+      .post('/api/v1/auth/login')
+      .send({ email, password: 'Password@123' });
+    return res.body.data.accessToken;
+  };
+
   beforeAll(async () => {
     app = createApp();
-
-    const login = async (email) => {
-      const res = await request(app)
-        .post('/api/v1/auth/login')
-        .send({ email, password: 'Password@123' });
-      return res.body.data.accessToken;
-    };
 
     financeToken = await login('finance@college.edu');
     hodEtToken = await login('hod_et@college.edu');
@@ -36,7 +37,11 @@ describe('Iteration 4b: Expenses Workflow (Submit, Approve, Reject, Pay, Concurr
     staffEtToken = await login('staff_et@college.edu');
 
     etDept = await prisma.department.findUnique({ where: { code: 'ET' } });
-    activeFy = await prisma.financialYear.findFirst({ where: { status: 'OPEN' } });
+    await prisma.financialYear.updateMany({
+      where: { year: '2026-27' },
+      data: { isActive: true, status: 'OPEN' },
+    });
+    activeFy = await prisma.financialYear.findFirst({ where: { isActive: true, status: 'OPEN' } });
     eqCat = await prisma.category.findUnique({ where: { name: 'Equipment' } });
 
     staffEtUser = await prisma.user.findUnique({ where: { email: 'staff_et@college.edu' } });
@@ -85,6 +90,7 @@ describe('Iteration 4b: Expenses Workflow (Submit, Approve, Reject, Pay, Concurr
     await prisma.budget.deleteMany({
       where: { financialYearId: activeFy.id, departmentId: etDept.id },
     });
+    await prisma.$disconnect();
   });
 
   describe('Full Expense Lifecycle (STAFF draft -> Submit -> HOD approve -> FINANCE pay)', () => {
@@ -446,6 +452,119 @@ describe('Iteration 4b: Expenses Workflow (Submit, Approve, Reject, Pay, Concurr
       expect(subPay.status).toBe(409);
       expect(subPay.body.error.code).toBe('INVALID_STATE');
     });
+
+    it('a STAFF request in HM and in MT can be approved by that department HOD', async () => {
+      // 1. Hotel Management (HM)
+      const staffHmToken = await login('staff_hm@college.edu');
+      const hodHmToken = await login('hod_hm@college.edu');
+      const hmDept = await prisma.department.findUnique({ where: { code: 'HM' } });
+      const consumablesCat = await prisma.category.findUnique({ where: { name: 'Consumables' } });
+
+      const hmBudget = await prisma.budget.upsert({
+        where: { financialYearId_departmentId: { financialYearId: activeFy.id, departmentId: hmDept.id } },
+        update: { status: 'APPROVED', totalAmount: 100000.0 },
+        create: {
+          financialYearId: activeFy.id,
+          departmentId: hmDept.id,
+          totalAmount: 100000.0,
+          status: 'APPROVED',
+          approvedBy: financeUser.id,
+          approvedOn: new Date(),
+          items: {
+            create: [{ categoryId: consumablesCat.id, amount: 100000.0, justification: 'HM Consumables' }],
+          },
+        },
+        include: { items: true },
+      });
+      if (!hmBudget.items || hmBudget.items.length === 0) {
+        await prisma.budgetItem.upsert({
+          where: { budgetId_categoryId: { budgetId: hmBudget.id, categoryId: consumablesCat.id } },
+          update: { amount: 100000.0 },
+          create: { budgetId: hmBudget.id, categoryId: consumablesCat.id, amount: 100000.0 },
+        });
+      }
+
+      const hmDraft = await request(app)
+        .post('/api/v1/expenses')
+        .set('Authorization', `Bearer ${staffHmToken}`)
+        .send({
+          financialYearId: activeFy.id,
+          departmentId: hmDept.id,
+          categoryId: consumablesCat.id,
+          amount: 12000.0,
+          purpose: 'Culinary baking supplies',
+        });
+      expect(hmDraft.status).toBe(201);
+      const hmExpId = hmDraft.body.data.id;
+
+      await request(app)
+        .post(`/api/v1/expenses/${hmExpId}/submit`)
+        .set('Authorization', `Bearer ${staffHmToken}`);
+
+      const hmApprove = await request(app)
+        .post(`/api/v1/expenses/${hmExpId}/approve`)
+        .set('Authorization', `Bearer ${hodHmToken}`)
+        .send({ remark: 'Approved for culinary workshop' });
+      expect(hmApprove.status).toBe(200);
+      expect(hmApprove.body.data.status).toBe('APPROVED');
+
+      // 2. Management & Technology (MT)
+      const staffMtToken = await login('staff_mt@college.edu');
+      const hodMtToken = await login('hod_mt@college.edu');
+      const mtDept = await prisma.department.findUnique({ where: { code: 'MT' } });
+
+      const mtBudget = await prisma.budget.upsert({
+        where: { financialYearId_departmentId: { financialYearId: activeFy.id, departmentId: mtDept.id } },
+        update: { status: 'APPROVED', totalAmount: 100000.0 },
+        create: {
+          financialYearId: activeFy.id,
+          departmentId: mtDept.id,
+          totalAmount: 100000.0,
+          status: 'APPROVED',
+          approvedBy: financeUser.id,
+          approvedOn: new Date(),
+          items: {
+            create: [{ categoryId: consumablesCat.id, amount: 100000.0, justification: 'MT Consumables' }],
+          },
+        },
+        include: { items: true },
+      });
+      if (!mtBudget.items || mtBudget.items.length === 0) {
+        await prisma.budgetItem.upsert({
+          where: { budgetId_categoryId: { budgetId: mtBudget.id, categoryId: consumablesCat.id } },
+          update: { amount: 100000.0 },
+          create: { budgetId: mtBudget.id, categoryId: consumablesCat.id, amount: 100000.0 },
+        });
+      }
+
+      const mtDraft = await request(app)
+        .post('/api/v1/expenses')
+        .set('Authorization', `Bearer ${staffMtToken}`)
+        .send({
+          financialYearId: activeFy.id,
+          departmentId: mtDept.id,
+          categoryId: consumablesCat.id,
+          amount: 8500.0,
+          purpose: 'Case study printouts and folders',
+        });
+      expect(mtDraft.status).toBe(201);
+      const mtExpId = mtDraft.body.data.id;
+
+      await request(app)
+        .post(`/api/v1/expenses/${mtExpId}/submit`)
+        .set('Authorization', `Bearer ${staffMtToken}`);
+
+      const mtApprove = await request(app)
+        .post(`/api/v1/expenses/${mtExpId}/approve`)
+        .set('Authorization', `Bearer ${hodMtToken}`)
+        .send({ remark: 'Approved for MBA seminar' });
+      expect(mtApprove.status).toBe(200);
+      expect(mtApprove.body.data.status).toBe('APPROVED');
+
+      // Cleanup
+      await prisma.approval.deleteMany({ where: { entityId: { in: [hmExpId, mtExpId] } } });
+      await prisma.expense.deleteMany({ where: { id: { in: [hmExpId, mtExpId] } } });
+    });
   });
 
   describe('State Machine Invariants & Immutability', () => {
@@ -537,6 +656,30 @@ describe('Iteration 4b: Expenses Workflow (Submit, Approve, Reject, Pay, Concurr
 
   describe('CONCURRENCY GATE: Two Simultaneous Approvals', () => {
     it('two simultaneous approvals that together exceed available balance: exactly one succeeds, the other gets 409 INSUFFICIENT_BALANCE, Committed never exceeds Allocated', async () => {
+      // Ensure ET Equipment has Spent 1,50,000.50 so Available is 6,49,999.50 even if test is run standalone
+      const initBal = await request(app)
+        .get(`/api/v1/balances?financialYearId=${activeFy.id}&departmentId=${etDept.id}`)
+        .set('Authorization', `Bearer ${financeToken}`);
+      let baselineExpId = null;
+      if (initBal.body.data.spent === 0) {
+        const seedExp = await prisma.expense.create({
+          data: {
+            financialYearId: activeFy.id,
+            departmentId: etDept.id,
+            categoryId: eqCat.id,
+            amount: 150000.50,
+            purpose: 'Baseline seed expense for concurrency test',
+            status: 'PAID',
+            createdBy: staffEtUser.id,
+            paidBy: financeUser.id,
+            paidOn: new Date(),
+            paymentMode: 'NEFT',
+            paymentRef: 'SEED_CONCURRENCY',
+          },
+        });
+        baselineExpId = seedExp.id;
+      }
+
       // In ET Equipment: Allocated is 8,00,000, Spent is 1,50,000.50 -> Available is 6,49,999.50
       // Create two SUBMITTED expenses of 4,00,000 each (Total = 8,00,000 > Available 6,49,999.50)
       const exp1Res = await request(app)
@@ -572,16 +715,23 @@ describe('Iteration 4b: Expenses Workflow (Submit, Approve, Reject, Pay, Concurr
         .set('Authorization', `Bearer ${staffEtToken}`);
 
       // Now approve both simultaneously with Promise.all
-      const [res1, res2] = await Promise.all([
-        request(app)
-          .post(`/api/v1/expenses/${exp1Id}/approve`)
-          .set('Authorization', `Bearer ${hodEtToken}`)
-          .send({ remark: 'Order A approve' }),
-        request(app)
-          .post(`/api/v1/expenses/${exp2Id}/approve`)
-          .set('Authorization', `Bearer ${hodEtToken}`)
-          .send({ remark: 'Order B approve' }),
-      ]);
+      // Uses a test concurrency delay hook (400ms) to ensure race overlap
+      setTestApprovalDelay(400);
+      let res1, res2;
+      try {
+        [res1, res2] = await Promise.all([
+          request(app)
+            .post(`/api/v1/expenses/${exp1Id}/approve`)
+            .set('Authorization', `Bearer ${hodEtToken}`)
+            .send({ remark: 'Order A approve' }),
+          request(app)
+            .post(`/api/v1/expenses/${exp2Id}/approve`)
+            .set('Authorization', `Bearer ${hodEtToken}`)
+            .send({ remark: 'Order B approve' }),
+        ]);
+      } finally {
+        setTestApprovalDelay(0);
+      }
 
       const statuses = [res1.status, res2.status].sort();
       expect(statuses).toEqual([200, 409]);
@@ -613,7 +763,9 @@ describe('Iteration 4b: Expenses Workflow (Submit, Approve, Reject, Pay, Concurr
 
       // Clean up
       await prisma.approval.deleteMany({ where: { entityId: { in: [exp1Id, exp2Id] } } });
-      await prisma.expense.deleteMany({ where: { id: { in: [exp1Id, exp2Id] } } });
+      const idsToDelete = [exp1Id, exp2Id];
+      if (baselineExpId) idsToDelete.push(baselineExpId);
+      await prisma.expense.deleteMany({ where: { id: { in: idsToDelete } } });
     });
   });
 

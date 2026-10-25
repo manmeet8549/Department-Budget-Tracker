@@ -296,6 +296,13 @@ export async function submitExpense(id, user) {
   };
 }
 
+let testApprovalDelayMs = 0;
+export function setTestApprovalDelay(ms) {
+  if (process.env.NODE_ENV === 'test') {
+    testApprovalDelayMs = ms;
+  }
+}
+
 export async function approveExpense(id, user, { remark } = {}) {
   const expenseId = Number(id);
   if (!expenseId || isNaN(expenseId)) {
@@ -341,6 +348,14 @@ export async function approveExpense(id, user, { remark } = {}) {
           requested,
           available,
         });
+      }
+    }
+
+    // Test-only concurrency hook to prove row-locking under race conditions
+    if (process.env.NODE_ENV === 'test') {
+      const delay = testApprovalDelayMs || (process.env.TEST_CONCURRENCY_DELAY_MS ? Number(process.env.TEST_CONCURRENCY_DELAY_MS) : 0);
+      if (delay > 0) {
+        await new Promise((resolve) => setTimeout(resolve, delay));
       }
     }
 

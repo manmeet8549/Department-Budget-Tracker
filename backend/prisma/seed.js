@@ -131,6 +131,34 @@ export async function seed() {
       isActive: true,
     },
     {
+      email: 'hod_hm@college.edu',
+      name: 'HoD Hotel Management',
+      role: 'HOD',
+      departmentId: deptMap.HM,
+      isActive: true,
+    },
+    {
+      email: 'staff_hm@college.edu',
+      name: 'Staff Hotel Management',
+      role: 'STAFF',
+      departmentId: deptMap.HM,
+      isActive: true,
+    },
+    {
+      email: 'hod_mt@college.edu',
+      name: 'HoD Management',
+      role: 'HOD',
+      departmentId: deptMap.MT,
+      isActive: true,
+    },
+    {
+      email: 'staff_mt@college.edu',
+      name: 'Staff Management',
+      role: 'STAFF',
+      departmentId: deptMap.MT,
+      isActive: true,
+    },
+    {
       email: 'auditor@college.edu',
       name: 'External Auditor',
       role: 'AUDITOR',
@@ -180,6 +208,18 @@ export async function seed() {
     await prisma.department.update({
       where: { id: deptMap.PHARMA },
       data: { hodUserId: userMap['hod_pharma@college.edu'] },
+    });
+  }
+  if (userMap['hod_hm@college.edu']) {
+    await prisma.department.update({
+      where: { id: deptMap.HM },
+      data: { hodUserId: userMap['hod_hm@college.edu'] },
+    });
+  }
+  if (userMap['hod_mt@college.edu']) {
+    await prisma.department.update({
+      where: { id: deptMap.MT },
+      data: { hodUserId: userMap['hod_mt@college.edu'] },
     });
   }
 

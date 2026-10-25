@@ -26,7 +26,11 @@ All seeded test accounts share the password: **`Password@123`**
 | **FINANCE** | `finance@college.edu` | `Password@123` | College-wide (Unrestricted) |
 | **HOD** | `hod_et@college.edu` | `Password@123` | Engineering Block (`ET`) |
 | **HOD** | `hod_pharma@college.edu` | `Password@123` | Pharmacy Block (`PHARMA`) |
+| **HOD** | `hod_hm@college.edu` | `Password@123` | Hotel Management (`HM`) |
+| **HOD** | `hod_mt@college.edu` | `Password@123` | Management & Technology (`MT`) |
 | **STAFF** | `staff_et@college.edu` | `Password@123` | Engineering Block (`ET`) |
+| **STAFF** | `staff_hm@college.edu` | `Password@123` | Hotel Management (`HM`) |
+| **STAFF** | `staff_mt@college.edu` | `Password@123` | Management & Technology (`MT`) |
 | **AUDITOR** | `auditor@college.edu` | `Password@123` | College-wide (Read-only) |
 | *Disabled User* | `disabled_user@college.edu` | `Password@123` | Inactive (Cannot log in) |
 

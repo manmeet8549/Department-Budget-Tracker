@@ -1,5 +1,6 @@
 export {
   getExpense,
+  setTestApprovalDelay,
 } from './service.js';
 
 export { expensesRouter } from './routes.js';
