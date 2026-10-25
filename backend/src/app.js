@@ -16,6 +16,7 @@ import { errorHandler } from './modules/platform/index.js';
 import { healthRouter } from './routes/health.js';
 import { authRouter, usersRouter } from './modules/auth/index.js';
 import { auditRouter } from './modules/audit/index.js';
+import { masterRouter } from './modules/master/index.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -38,6 +39,7 @@ export function createApp() {
   app.use('/api/v1/auth', authRouter);
   app.use('/api/v1/users', usersRouter);
   app.use('/api/v1', auditRouter);
+  app.use('/api/v1', masterRouter);
 
   // ── Swagger UI ──────────────────────────────────────────────────────────────
   try {

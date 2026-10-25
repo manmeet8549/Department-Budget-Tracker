@@ -4,6 +4,9 @@ import LoginPage from './features/auth/LoginPage.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 import AppLayout from './components/AppLayout.jsx';
 import DashboardPage from './features/dashboard/DashboardPage.jsx';
+import FinancialYearsPage from './features/master/FinancialYearsPage.jsx';
+import DepartmentsPage from './features/master/DepartmentsPage.jsx';
+import CategoriesPage from './features/master/CategoriesPage.jsx';
 
 export default function App() {
   return (
@@ -17,6 +20,30 @@ export default function App() {
           <Route element={<ProtectedRoute />}>
             <Route element={<AppLayout />}>
               <Route path="/" element={<DashboardPage />} />
+              <Route
+                path="/financial-years"
+                element={
+                  <ProtectedRoute allowedRoles={['SUPER_ADMIN']}>
+                    <FinancialYearsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/departments"
+                element={
+                  <ProtectedRoute allowedRoles={['SUPER_ADMIN']}>
+                    <DepartmentsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/categories"
+                element={
+                  <ProtectedRoute allowedRoles={['SUPER_ADMIN']}>
+                    <CategoriesPage />
+                  </ProtectedRoute>
+                }
+              />
               <Route
                 path="/users"
                 element={

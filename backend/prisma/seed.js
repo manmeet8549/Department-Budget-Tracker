@@ -2,32 +2,91 @@ import bcrypt from 'bcryptjs';
 import { prisma } from '../src/config/db.js';
 
 export async function seed() {
-  console.log('Seeding initial departments and users...');
+  console.log('Seeding master data (financial year, departments, categories) and users...');
 
-  // 1. Seed Placeholder Departments (will be expanded in Iteration 2)
-  const departments = [
+  // 1. Seed Financial Year
+  const fy = await prisma.financialYear.upsert({
+    where: { year: '2024-2025' },
+    update: {
+      startDate: new Date('2024-04-01T00:00:00.000Z'),
+      endDate: new Date('2025-03-31T23:59:59.999Z'),
+      isActive: true,
+      status: 'OPEN',
+    },
+    create: {
+      year: '2024-2025',
+      startDate: new Date('2024-04-01T00:00:00.000Z'),
+      endDate: new Date('2025-03-31T23:59:59.999Z'),
+      isActive: true,
+      status: 'OPEN',
+    },
+  });
+
+  // Ensure only one active FY
+  await prisma.financialYear.updateMany({
+    where: { id: { not: fy.id } },
+    data: { isActive: false },
+  });
+
+  // 2. Seed Parent Departments
+  const parentDepartments = [
     { code: 'ET', name: 'Engineering Block' },
     { code: 'PHARMA', name: 'Pharmacy Block' },
     { code: 'HM', name: 'Hotel Management Block' },
-    { code: 'MT', name: 'MT Block' },
+    { code: 'MT', name: 'Management and Technology Block' },
   ];
 
   const deptMap = {};
-  for (const dept of departments) {
+  for (const dept of parentDepartments) {
     const record = await prisma.department.upsert({
       where: { code: dept.code },
-      update: { name: dept.name },
-      create: { code: dept.code, name: dept.name },
+      update: { name: dept.name, isActive: true },
+      create: { code: dept.code, name: dept.name, isActive: true },
     });
     deptMap[dept.code] = record.id;
   }
 
-  // 2. Default Test Password for all seeded users
+  // Seed Sub-Units under MT
+  const subUnits = [
+    { code: 'BBA', name: 'Bachelor of Business Administration', parentId: deptMap.MT },
+    { code: 'BCOM', name: 'Bachelor of Commerce', parentId: deptMap.MT },
+  ];
+
+  for (const sub of subUnits) {
+    const record = await prisma.department.upsert({
+      where: { code: sub.code },
+      update: { name: sub.name, parentId: sub.parentId, isActive: true },
+      create: { code: sub.code, name: sub.name, parentId: sub.parentId, isActive: true },
+    });
+    deptMap[sub.code] = record.id;
+  }
+
+  // 3. Seed Categories
+  const categories = [
+    'Equipment',
+    'Consumables',
+    'Maintenance',
+    'Events and Seminars',
+    'Books and Journals',
+    'Travel and Tours',
+    'Software',
+    'Miscellaneous',
+  ];
+
+  for (const name of categories) {
+    await prisma.category.upsert({
+      where: { name },
+      update: { isActive: true },
+      create: { name, isActive: true },
+    });
+  }
+
+  // 4. Default Test Password for all seeded users
   const defaultPassword = 'Password@123';
   const salt = await bcrypt.genSalt(10);
   const passwordHash = await bcrypt.hash(defaultPassword, salt);
 
-  // 3. Seed One User Per Role
+  // 5. Seed Users
   const users = [
     {
       email: 'superadmin@college.edu',
@@ -87,8 +146,9 @@ export async function seed() {
     },
   ];
 
+  const userMap = {};
   for (const u of users) {
-    await prisma.user.upsert({
+    const record = await prisma.user.upsert({
       where: { email: u.email },
       update: {
         name: u.name,
@@ -106,9 +166,24 @@ export async function seed() {
         passwordHash,
       },
     });
+    userMap[u.email] = record.id;
   }
 
-  console.log('Seeding completed successfully!');
+  // Link HoDs to their departments
+  if (userMap['hod_et@college.edu']) {
+    await prisma.department.update({
+      where: { id: deptMap.ET },
+      data: { hodUserId: userMap['hod_et@college.edu'] },
+    });
+  }
+  if (userMap['hod_pharma@college.edu']) {
+    await prisma.department.update({
+      where: { id: deptMap.PHARMA },
+      data: { hodUserId: userMap['hod_pharma@college.edu'] },
+    });
+  }
+
+  console.log('Master data and user seeding completed successfully!');
 }
 
 // Allow direct CLI execution

@@ -11,6 +11,9 @@ export default function AppLayout() {
       case 'SUPER_ADMIN':
         return [
           { label: 'Overview', path: '/' },
+          { label: 'Financial Years', path: '/financial-years' },
+          { label: 'Departments', path: '/departments' },
+          { label: 'Categories', path: '/categories' },
           { label: 'User Directory', path: '/users' },
           { label: 'Audit Logs', path: '/audit-logs' },
         ];
