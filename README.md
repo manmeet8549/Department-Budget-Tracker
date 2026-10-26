@@ -155,9 +155,10 @@ Follow these steps to demonstrate the complete Release 1 (MVP) flow from initial
 ### Backend Tests (Isolated Test Database)
 ```bash
 cd backend
-npm test                # Runs all 24 Jest test suites (unit, contract, concurrency, e2e)
+npm test                # Runs all 25 Jest test suites (196 tests: unit, contract, concurrency, e2e)
 npm run lint            # Verifies ESLint zero errors/warnings
 npx prisma migrate status # Verifies zero database schema drift
+
 ```
 
 ### Frontend Tests (Vitest + Testing Library)
