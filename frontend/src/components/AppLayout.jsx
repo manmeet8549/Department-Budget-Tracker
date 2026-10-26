@@ -140,23 +140,6 @@ export default function AppLayout() {
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div
-              style={{
-                width: '38px',
-                height: '38px',
-                borderRadius: 'var(--dp-radius-md)',
-                background: 'var(--dp-gradient-tile)',
-                color: 'var(--dp-color-on-accent)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontWeight: '800',
-                fontSize: '19px',
-                boxShadow: 'var(--dp-shadow-glow)',
-              }}
-            >
-              ₹
-            </div>
             <div>
               <div
                 style={{
