@@ -742,6 +742,24 @@ export async function setCollegeCeiling(financialYearId, amount, user) {
   const ceilingAmount = Number(amount);
 
   return prisma.$transaction(async (tx) => {
+    const approvedAgg = await tx.budget.aggregate({
+      where: {
+        financialYearId: fyId,
+        status: 'APPROVED',
+      },
+      _sum: { totalAmount: true },
+    });
+    const approvedTotal = Number(approvedAgg._sum.totalAmount || 0);
+
+    if (ceilingAmount < approvedTotal) {
+      throw new AppError(
+        'CEILING_BELOW_APPROVED',
+        `Ceiling amount (₹${ceilingAmount}) cannot be lower than the already approved total (₹${approvedTotal})`,
+        409,
+        { ceiling: ceilingAmount, approvedTotal }
+      );
+    }
+
     const existing = await tx.collegeCeiling.findUnique({
       where: { financialYearId: fyId },
     });

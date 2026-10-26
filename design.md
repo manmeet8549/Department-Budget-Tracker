@@ -149,7 +149,7 @@ Use a single content width for the whole app (for example `max-width: 1200px`, c
 
 Budget thresholds and document statuses (DRAFT, APPROVED, Warning, Critical) must be distinguishable. Keep this contained:
 
-- **Design Decision (Option A Chosen):** Defined controlled, muted status tokens in `tokens.css` (`--dp-color-status-draft`, `--dp-color-status-draft-bg`, `--dp-color-status-approved`, `--dp-color-status-approved-bg`, `--dp-color-status-warning`, `--dp-color-status-critical`). These tokens are used exclusively within the shared `StatusBadge` component.
+- **Design Decision (Option A Chosen):** Defined controlled, muted status tokens in `tokens.css` (`--dp-color-status-draft`, `--dp-color-status-draft-bg`, `--dp-color-status-approved`, `--dp-color-status-approved-bg`, `--dp-color-status-submitted`, `--dp-color-status-submitted-bg`, `--dp-color-status-review`, `--dp-color-status-review-bg`, `--dp-color-status-warning`, `--dp-color-status-critical`). These tokens are used exclusively within the shared `StatusBadge` component.
 - Never rely on color alone. Every status badge always displays a clear text label and an indicator icon/dot.
 - Progress bars use accent for Normal. For Warning, Critical and Exceeded use the same accent bar plus a distinct icon, a text badge, and a heavier border or pattern on the badge.
 - Do not tint whole cards or table rows with status color.
