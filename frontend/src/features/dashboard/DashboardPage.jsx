@@ -1,4 +1,15 @@
 import { useState, useEffect } from 'react';
+import {
+  Wallet,
+  Clock,
+  Receipt,
+  Coins,
+  TrendingUp,
+  FolderOpen,
+  Loader2,
+  Building2,
+  AlertTriangle,
+} from 'lucide-react';
 import { useAuth } from '../auth/AuthContext.jsx';
 import { getDashboardSummary } from '../../api/dashboard.js';
 import { formatINR } from '../../utils/currency.js';
@@ -35,37 +46,73 @@ export default function DashboardPage() {
     user?.role
   );
 
+  const getUtilisationColor = (percent) => {
+    if (percent >= 95) return 'var(--dp-color-status-critical)';
+    if (percent >= 80) return 'var(--dp-color-status-warning)';
+    return 'var(--dp-color-accent)';
+  };
+
   return (
-    <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-      {/* Loading state */}
+    <div style={{ maxWidth: 'var(--dp-spacing-content-max)', margin: '0 auto' }}>
+      {/* Loading state with Skeletons */}
       {loading && (
         <div
           role="status"
           aria-live="polite"
           style={{
-            padding: '48px',
-            textAlign: 'center',
+            padding: '36px',
             backgroundColor: 'var(--dp-color-panel)',
-            borderRadius: 'var(--dp-radius-panel)',
+            borderRadius: 'var(--dp-radius-lg)',
             border: '1px solid var(--dp-color-rule)',
-            marginTop: '24px',
+            marginTop: '12px',
           }}
         >
           <div
             style={{
-              display: 'inline-block',
-              width: '32px',
-              height: '32px',
-              border: '3px solid var(--dp-color-rule)',
-              borderTopColor: 'var(--dp-color-accent)',
-              borderRadius: '50%',
-              animation: 'spin 0.8s linear infinite',
-              marginBottom: '16px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              marginBottom: '28px',
             }}
+          >
+            <Loader2
+              size={24}
+              color="var(--dp-color-accent)"
+              style={{ animation: 'spin 1s linear infinite' }}
+            />
+            <p
+              style={{
+                color: 'var(--dp-color-ink-secondary)',
+                margin: 0,
+                fontSize: 'var(--dp-typography-interface)',
+                fontWeight: '500',
+              }}
+            >
+              Loading dashboard data...
+            </p>
+          </div>
+
+          {/* Skeletons */}
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+              gap: '16px',
+              marginBottom: '24px',
+            }}
+          >
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div
+                key={i}
+                className="dp-skeleton"
+                style={{ height: '90px', borderRadius: 'var(--dp-radius-md)' }}
+              />
+            ))}
+          </div>
+          <div
+            className="dp-skeleton"
+            style={{ height: '220px', borderRadius: 'var(--dp-radius-md)' }}
           />
-          <p style={{ color: 'var(--dp-color-ink-secondary)', margin: 0 }}>
-            Loading dashboard data...
-          </p>
         </div>
       )}
 
@@ -77,19 +124,24 @@ export default function DashboardPage() {
             padding: '24px',
             backgroundColor: 'var(--dp-color-panel)',
             border: '1px solid var(--dp-color-status-critical-border)',
-            borderRadius: 'var(--dp-radius-panel)',
-            marginTop: '24px',
+            borderRadius: 'var(--dp-radius-lg)',
+            marginTop: '12px',
+            boxShadow: 'var(--dp-shadow-sm)',
           }}
         >
-          <h2
-            style={{
-              color: 'var(--dp-color-status-critical)',
-              fontSize: '18px',
-              marginBottom: '8px',
-            }}
-          >
-            Unable to Load Dashboard
-          </h2>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+            <AlertTriangle size={20} color="var(--dp-color-status-critical)" />
+            <h2
+              style={{
+                color: 'var(--dp-color-status-critical)',
+                fontSize: '18px',
+                fontWeight: '700',
+                margin: 0,
+              }}
+            >
+              Unable to Load Dashboard
+            </h2>
+          </div>
           <p style={{ color: 'var(--dp-color-ink-secondary)', marginBottom: '16px' }}>
             {error}
           </p>
@@ -102,245 +154,377 @@ export default function DashboardPage() {
       {/* Main Content */}
       {!loading && !error && data && (
         <div>
-          {/* Header Area with 1.45 : 1 Ratio for Global Roles */}
-          {isGlobalRole ? (
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'minmax(0, 1.45fr) minmax(0, 1fr)',
-                gap: 'var(--dp-spacing-grid-gap)',
-                alignItems: 'center',
-                marginBottom: '32px',
-              }}
-              className="dashboard-header-split"
-            >
-              <div>
-                <div
-                  style={{
-                    display: 'inline-block',
-                    padding: '3px 8px',
-                    borderRadius: '4px',
-                    backgroundColor: 'var(--dp-color-ground-muted)',
-                    color: 'var(--dp-color-ink-secondary)',
-                    fontSize: 'var(--dp-typography-label)',
-                    fontWeight: '600',
-                    marginBottom: '8px',
-                  }}
-                >
-                  FINANCIAL YEAR {data.financialYear?.year || '2026-27'}
-                </div>
-                <h1
-                  style={{
-                    fontSize: '28px',
-                    fontWeight: '700',
-                    color: 'var(--dp-color-ink)',
-                    marginBottom: '8px',
-                  }}
-                >
-                  College Budget & Spending Overview
-                </h1>
-                <p
-                  style={{
-                    fontSize: 'var(--dp-typography-body)',
-                    color: 'var(--dp-color-ink-secondary)',
-                    lineHeight: 'var(--dp-typography-body-leading)',
-                    maxWidth: '54ch',
-                    margin: 0,
-                  }}
-                >
-                  Live budget allocations, commitments, and actual expenditures
-                  across college academic and operational blocks. All money figures
-                  are enforced in real time against approved limits.
-                </p>
-              </div>
-
-              {/* Product Diagram (Right side) */}
-              <div
-                style={{
-                  backgroundColor: 'var(--dp-color-panel)',
-                  padding: '16px',
-                  borderRadius: 'var(--dp-radius-panel)',
-                  border: '1px solid var(--dp-color-rule)',
-                  display: 'flex',
-                  justifyContent: 'center',
-                }}
-              >
-                <ProductDiagram departments={data.departments} />
-              </div>
-            </div>
-          ) : (
-            /* Header for HOD and STAFF */
-            <div style={{ marginBottom: '28px' }}>
+          {/* Tightened Header Area */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '24px',
+              marginBottom: '28px',
+              flexWrap: 'wrap',
+            }}
+          >
+            <div style={{ maxWidth: '640px' }}>
               <div
                 style={{
                   display: 'inline-block',
-                  padding: '3px 8px',
-                  borderRadius: '4px',
+                  padding: '3px 10px',
+                  borderRadius: 'var(--dp-radius-pill)',
                   backgroundColor: 'var(--dp-color-ground-muted)',
                   color: 'var(--dp-color-ink-secondary)',
                   fontSize: 'var(--dp-typography-label)',
                   fontWeight: '600',
                   marginBottom: '8px',
+                  border: '1px solid var(--dp-color-rule-subtle)',
                 }}
               >
                 FINANCIAL YEAR {data.financialYear?.year || '2026-27'}
               </div>
               <h1
                 style={{
-                  fontSize: '26px',
-                  fontWeight: '700',
+                  fontSize: '30px',
+                  fontWeight: '800',
+                  letterSpacing: 'var(--dp-tracking-tightest)',
                   color: 'var(--dp-color-ink)',
-                  marginBottom: '6px',
+                  marginBottom: '8px',
+                  lineHeight: 1.15,
                 }}
               >
-                Department Budget Overview
+                {isGlobalRole ? (
+                  <>
+                    <span className="sr-only">College Budget & Spending Overview</span>
+                    <span aria-hidden="true">
+                      College Budget & Spending <span className="dp-title-accent">Overview</span>
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <span className="sr-only">Department Budget Overview</span>
+                    <span aria-hidden="true">
+                      Department Budget <span className="dp-title-accent">Overview</span>
+                    </span>
+                  </>
+                )}
               </h1>
               <p
                 style={{
-                  fontSize: 'var(--dp-typography-body)',
+                  fontSize: 'var(--dp-typography-interface)',
                   color: 'var(--dp-color-ink-secondary)',
+                  lineHeight: 1.5,
                   margin: 0,
                 }}
               >
-                Spending and balance tracking for your assigned department in{' '}
-                {data.financialYear?.year || '2026-27'}.
+                {isGlobalRole
+                  ? 'Live budget allocations, commitments, and actual expenditures across college departments.'
+                  : `Spending and balance tracking for your assigned department in ${data.financialYear?.year || '2026-27'}.`}
               </p>
             </div>
-          )}
 
-          {/* Ruled Facts Strip with College Totals (Global Roles Only) */}
+            {/* Compact Header Diagram (Global Roles Only) */}
+            {isGlobalRole && (
+              <div
+                style={{
+                  backgroundColor: 'var(--dp-color-panel)',
+                  padding: '10px 16px',
+                  borderRadius: 'var(--dp-radius-lg)',
+                  border: '1px solid var(--dp-color-rule)',
+                  boxShadow: 'var(--dp-shadow-sm)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <ProductDiagram departments={data.departments} />
+              </div>
+            )}
+          </div>
+
+          {/* 5 Distinct Stat Cards (Global Roles Only) */}
           {isGlobalRole && data.college && (
             <div
               data-testid="college-facts-strip"
               style={{
-                backgroundColor: 'var(--dp-color-panel)',
-                borderTop: '1px solid var(--dp-color-rule)',
-                borderBottom: '1px solid var(--dp-color-rule)',
-                padding: '20px 24px',
-                marginBottom: '32px',
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-                gap: '20px',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                gap: '16px',
+                marginBottom: '28px',
               }}
             >
-              <div>
+              {/* Stat 1: Total Allocated */}
+              <div
+                style={{
+                  backgroundColor: 'var(--dp-color-panel)',
+                  borderRadius: 'var(--dp-radius-lg)',
+                  border: '1px solid var(--dp-color-rule)',
+                  padding: '18px 20px',
+                  boxShadow: 'var(--dp-shadow-sm)',
+                }}
+              >
                 <div
                   style={{
-                    fontSize: 'var(--dp-typography-label)',
-                    fontWeight: '600',
-                    color: 'var(--dp-color-ink-secondary)',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.04em',
-                    marginBottom: '4px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    marginBottom: '10px',
                   }}
                 >
-                  Total Allocated
+                  <span
+                    style={{
+                      fontSize: 'var(--dp-typography-label)',
+                      fontWeight: '600',
+                      color: 'var(--dp-color-ink-secondary)',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.04em',
+                    }}
+                  >
+                    Total Allocated
+                  </span>
+                  <div
+                    style={{
+                      width: '32px',
+                      height: '32px',
+                      borderRadius: 'var(--dp-radius-md)',
+                      backgroundColor: 'var(--dp-color-ground-muted)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <Wallet size={16} color="var(--dp-color-ink)" />
+                  </div>
                 </div>
                 <div
                   className="numeric"
                   style={{
-                    fontSize: '22px',
-                    fontWeight: '700',
+                    fontSize: '24px',
+                    fontWeight: '800',
                     color: 'var(--dp-color-ink)',
+                    letterSpacing: 'var(--dp-tracking-tight)',
                   }}
                 >
                   {formatINR(data.college.allocated)}
                 </div>
               </div>
 
-              <div>
+              {/* Stat 2: Total Committed */}
+              <div
+                style={{
+                  backgroundColor: 'var(--dp-color-panel)',
+                  borderRadius: 'var(--dp-radius-lg)',
+                  border: '1px solid var(--dp-color-rule)',
+                  padding: '18px 20px',
+                  boxShadow: 'var(--dp-shadow-sm)',
+                }}
+              >
                 <div
                   style={{
-                    fontSize: 'var(--dp-typography-label)',
-                    fontWeight: '600',
-                    color: 'var(--dp-color-ink-secondary)',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.04em',
-                    marginBottom: '4px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    marginBottom: '10px',
                   }}
                 >
-                  Total Committed
+                  <span
+                    style={{
+                      fontSize: 'var(--dp-typography-label)',
+                      fontWeight: '600',
+                      color: 'var(--dp-color-ink-secondary)',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.04em',
+                    }}
+                  >
+                    Total Committed
+                  </span>
+                  <div
+                    style={{
+                      width: '32px',
+                      height: '32px',
+                      borderRadius: 'var(--dp-radius-md)',
+                      backgroundColor: 'var(--dp-color-ground-muted)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <Clock size={16} color="var(--dp-color-ink-secondary)" />
+                  </div>
                 </div>
                 <div
                   className="numeric"
                   style={{
-                    fontSize: '22px',
-                    fontWeight: '700',
+                    fontSize: '24px',
+                    fontWeight: '800',
                     color: 'var(--dp-color-ink)',
+                    letterSpacing: 'var(--dp-tracking-tight)',
                   }}
                 >
                   {formatINR(data.college.committed)}
                 </div>
               </div>
 
-              <div>
+              {/* Stat 3: Total Spent */}
+              <div
+                style={{
+                  backgroundColor: 'var(--dp-color-panel)',
+                  borderRadius: 'var(--dp-radius-lg)',
+                  border: '1px solid var(--dp-color-rule)',
+                  padding: '18px 20px',
+                  boxShadow: 'var(--dp-shadow-sm)',
+                }}
+              >
                 <div
                   style={{
-                    fontSize: 'var(--dp-typography-label)',
-                    fontWeight: '600',
-                    color: 'var(--dp-color-ink-secondary)',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.04em',
-                    marginBottom: '4px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    marginBottom: '10px',
                   }}
                 >
-                  Total Spent
+                  <span
+                    style={{
+                      fontSize: 'var(--dp-typography-label)',
+                      fontWeight: '600',
+                      color: 'var(--dp-color-ink-secondary)',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.04em',
+                    }}
+                  >
+                    Total Spent
+                  </span>
+                  <div
+                    style={{
+                      width: '32px',
+                      height: '32px',
+                      borderRadius: 'var(--dp-radius-md)',
+                      backgroundColor: 'var(--dp-color-ground-muted)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <Receipt size={16} color="var(--dp-color-ink-secondary)" />
+                  </div>
                 </div>
                 <div
                   className="numeric"
                   style={{
-                    fontSize: '22px',
-                    fontWeight: '700',
+                    fontSize: '24px',
+                    fontWeight: '800',
                     color: 'var(--dp-color-ink)',
+                    letterSpacing: 'var(--dp-tracking-tight)',
                   }}
                 >
                   {formatINR(data.college.spent)}
                 </div>
               </div>
 
-              <div>
+              {/* Stat 4: Total Available (Uses Accent Colour) */}
+              <div
+                style={{
+                  backgroundColor: 'var(--dp-color-panel)',
+                  borderRadius: 'var(--dp-radius-lg)',
+                  border: '1px solid var(--dp-color-rule)',
+                  padding: '18px 20px',
+                  boxShadow: 'var(--dp-shadow-sm)',
+                }}
+              >
                 <div
                   style={{
-                    fontSize: 'var(--dp-typography-label)',
-                    fontWeight: '600',
-                    color: 'var(--dp-color-ink-secondary)',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.04em',
-                    marginBottom: '4px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    marginBottom: '10px',
                   }}
                 >
-                  Total Available
+                  <span
+                    style={{
+                      fontSize: 'var(--dp-typography-label)',
+                      fontWeight: '600',
+                      color: 'var(--dp-color-ink-secondary)',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.04em',
+                    }}
+                  >
+                    Total Available
+                  </span>
+                  <div
+                    style={{
+                      width: '32px',
+                      height: '32px',
+                      borderRadius: 'var(--dp-radius-md)',
+                      backgroundColor: 'var(--dp-color-accent-subtle)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <Coins size={16} color="var(--dp-color-accent)" />
+                  </div>
                 </div>
                 <div
                   className="numeric"
                   style={{
-                    fontSize: '22px',
-                    fontWeight: '700',
+                    fontSize: '24px',
+                    fontWeight: '800',
                     color: 'var(--dp-color-accent)',
+                    letterSpacing: 'var(--dp-tracking-tight)',
                   }}
                 >
                   {formatINR(data.college.available)}
                 </div>
               </div>
 
-              <div>
+              {/* Stat 5: College Utilisation */}
+              <div
+                style={{
+                  backgroundColor: 'var(--dp-color-panel)',
+                  borderRadius: 'var(--dp-radius-lg)',
+                  border: '1px solid var(--dp-color-rule)',
+                  padding: '18px 20px',
+                  boxShadow: 'var(--dp-shadow-sm)',
+                }}
+              >
                 <div
                   style={{
-                    fontSize: 'var(--dp-typography-label)',
-                    fontWeight: '600',
-                    color: 'var(--dp-color-ink-secondary)',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.04em',
-                    marginBottom: '4px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    marginBottom: '10px',
                   }}
                 >
-                  College Utilisation
+                  <span
+                    style={{
+                      fontSize: 'var(--dp-typography-label)',
+                      fontWeight: '600',
+                      color: 'var(--dp-color-ink-secondary)',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.04em',
+                    }}
+                  >
+                    College Utilisation
+                  </span>
+                  <div
+                    style={{
+                      width: '32px',
+                      height: '32px',
+                      borderRadius: 'var(--dp-radius-md)',
+                      backgroundColor: 'var(--dp-color-ground-muted)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <TrendingUp size={16} color="var(--dp-color-ink)" />
+                  </div>
                 </div>
                 <div
+                  className="numeric"
                   style={{
-                    fontSize: '22px',
-                    fontWeight: '700',
+                    fontSize: '24px',
+                    fontWeight: '800',
                     color: 'var(--dp-color-ink)',
+                    letterSpacing: 'var(--dp-tracking-tight)',
                   }}
                 >
                   {data.college.utilisationPercent}%
@@ -353,8 +537,8 @@ export default function DashboardPage() {
           <div
             style={{
               backgroundColor: 'var(--dp-color-ground-muted)',
-              borderRadius: 'var(--dp-radius-panel)',
-              padding: '24px',
+              borderRadius: 'var(--dp-radius-xl)',
+              padding: '28px',
               border: '1px solid var(--dp-color-rule)',
             }}
           >
@@ -364,24 +548,30 @@ export default function DashboardPage() {
                 justifyContent: 'space-between',
                 alignItems: 'center',
                 marginBottom: '20px',
+                flexWrap: 'wrap',
+                gap: '12px',
               }}
             >
-              <h2
-                style={{
-                  fontSize: '18px',
-                  fontWeight: '700',
-                  color: 'var(--dp-color-ink)',
-                  margin: 0,
-                }}
-              >
-                {isGlobalRole
-                  ? 'Department Budget Summaries'
-                  : 'My Department Budget'}
-              </h2>
+              <div>
+                <h2
+                  style={{
+                    fontSize: '20px',
+                    fontWeight: '800',
+                    letterSpacing: 'var(--dp-tracking-tight)',
+                    color: 'var(--dp-color-ink)',
+                    margin: 0,
+                  }}
+                >
+                  {isGlobalRole
+                    ? 'Department Budget Summaries'
+                    : 'My Department Budget'}
+                </h2>
+              </div>
               <span
                 style={{
                   fontSize: 'var(--dp-typography-metadata)',
                   color: 'var(--dp-color-ink-secondary)',
+                  fontWeight: '500',
                 }}
               >
                 {data.departments?.length || 0}{' '}
@@ -390,22 +580,50 @@ export default function DashboardPage() {
               </span>
             </div>
 
-            {/* Empty state */}
+            {/* Empty state with friendly icon and message */}
             {(!data.departments || data.departments.length === 0) && (
               <div
                 style={{
-                  padding: '40px 24px',
+                  padding: '48px 24px',
                   textAlign: 'center',
                   backgroundColor: 'var(--dp-color-panel)',
-                  borderRadius: 'var(--dp-radius-panel)',
+                  borderRadius: 'var(--dp-radius-lg)',
                   border: '1px solid var(--dp-color-rule)',
+                  boxShadow: 'var(--dp-shadow-sm)',
                 }}
               >
+                <div
+                  style={{
+                    width: '56px',
+                    height: '56px',
+                    borderRadius: '50%',
+                    backgroundColor: 'var(--dp-color-ground-muted)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    margin: '0 auto 16px auto',
+                  }}
+                >
+                  <FolderOpen size={28} color="var(--dp-color-ink-muted)" />
+                </div>
+                <h3
+                  style={{
+                    fontSize: '16px',
+                    fontWeight: '700',
+                    color: 'var(--dp-color-ink)',
+                    marginBottom: '6px',
+                  }}
+                >
+                  No Approved Budgets
+                </h3>
                 <p
                   style={{
                     color: 'var(--dp-color-ink-secondary)',
-                    fontSize: 'var(--dp-typography-body)',
+                    fontSize: 'var(--dp-typography-interface)',
                     margin: 0,
+                    maxWidth: '44ch',
+                    marginLeft: 'auto',
+                    marginRight: 'auto',
                   }}
                 >
                   No approved department budgets found for this financial year.
@@ -424,227 +642,245 @@ export default function DashboardPage() {
                 }}
                 className="department-cards-grid"
               >
-                {data.departments.map((dept) => (
-                  <div
-                    key={dept.id}
-                    data-testid={`department-card-${dept.code}`}
-                    style={{
-                      backgroundColor: 'var(--dp-color-panel)',
-                      borderRadius: 'var(--dp-radius-panel)',
-                      border: '1px solid var(--dp-color-rule)',
-                      padding: '20px',
-                      boxShadow: '0 1px 2px rgb(22 25 31 / 0.06), 0 8px 24px rgb(22 25 31 / 0.06)',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      justifyContent: 'space-between',
-                    }}
-                  >
-                    {/* Card Header */}
-                    <div>
-                      <div
-                        style={{
-                          display: 'flex',
-                          alignItems: 'flex-start',
-                          justifyContent: 'space-between',
-                          marginBottom: '16px',
-                        }}
-                      >
-                        <div>
-                          <h3
+                {data.departments.map((dept) => {
+                  const utilColor = getUtilisationColor(dept.utilisationPercent);
+                  return (
+                    <div
+                      key={dept.id}
+                      data-testid={`department-card-${dept.code}`}
+                      style={{
+                        backgroundColor: 'var(--dp-color-panel)',
+                        borderRadius: 'var(--dp-radius-lg)',
+                        border: '1px solid var(--dp-color-rule)',
+                        padding: '22px',
+                        boxShadow: 'var(--dp-shadow-sm)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'space-between',
+                        transition: 'box-shadow var(--dp-motion-interaction) var(--dp-motion-easing)',
+                      }}
+                    >
+                      {/* Card Header */}
+                      <div>
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'flex-start',
+                            justifyContent: 'space-between',
+                            marginBottom: '16px',
+                          }}
+                        >
+                          <div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                              <Building2 size={16} color="var(--dp-color-accent)" />
+                              <h3
+                                style={{
+                                  fontSize: '17px',
+                                  fontWeight: '800',
+                                  letterSpacing: 'var(--dp-tracking-tight)',
+                                  color: 'var(--dp-color-ink)',
+                                  margin: 0,
+                                }}
+                              >
+                                {dept.name}
+                              </h3>
+                            </div>
+                            {dept.parentCode && (
+                              <div
+                                style={{
+                                  fontSize: '12px',
+                                  color: 'var(--dp-color-ink-secondary)',
+                                  marginLeft: '24px',
+                                }}
+                              >
+                                Sub-unit of {dept.parentCode}
+                              </div>
+                            )}
+                          </div>
+                          <span
                             style={{
-                              fontSize: '17px',
+                              display: 'inline-block',
+                              backgroundColor: 'var(--dp-color-ground-muted)',
+                              border: '1px solid var(--dp-color-rule)',
+                              padding: '2px 8px',
+                              borderRadius: 'var(--dp-radius-sm)',
+                              fontSize: 'var(--dp-typography-label)',
                               fontWeight: '700',
                               color: 'var(--dp-color-ink)',
-                              margin: 0,
                             }}
                           >
-                            {dept.name}
-                          </h3>
-                          {dept.parentCode && (
+                            {dept.code}
+                          </span>
+                        </div>
+
+                        {/* Metrics: Allocated, Committed, Spent, Available */}
+                        <div
+                          style={{
+                            display: 'grid',
+                            gridTemplateColumns: '1fr 1fr',
+                            gap: '12px',
+                            marginBottom: '20px',
+                          }}
+                        >
+                          <div>
                             <div
                               style={{
                                 fontSize: '11px',
                                 color: 'var(--dp-color-ink-secondary)',
-                                marginTop: '2px',
+                                textTransform: 'uppercase',
+                                fontWeight: '600',
+                                marginBottom: '2px',
                               }}
                             >
-                              Sub-unit of {dept.parentCode}
+                              Allocated
                             </div>
-                          )}
-                        </div>
-                        <span
-                          style={{
-                            display: 'inline-block',
-                            backgroundColor: 'var(--dp-color-ground-muted)',
-                            border: '1px solid var(--dp-color-rule)',
-                            padding: '3px 8px',
-                            borderRadius: '6px',
-                            fontSize: 'var(--dp-typography-label)',
-                            fontWeight: '700',
-                            color: 'var(--dp-color-ink)',
-                          }}
-                        >
-                          {dept.code}
-                        </span>
-                      </div>
+                            <div
+                              className="numeric"
+                              style={{
+                                fontSize: '16px',
+                                fontWeight: '700',
+                                color: 'var(--dp-color-ink)',
+                              }}
+                            >
+                              {formatINR(dept.allocated)}
+                            </div>
+                          </div>
 
-                      {/* Four Metric Rows in Tabular Figures with Indian Grouping */}
-                      <div
-                        style={{
-                          display: 'grid',
-                          gridTemplateColumns: '1fr 1fr',
-                          gap: '12px',
-                          marginBottom: '20px',
-                        }}
-                      >
-                        <div>
-                          <div
-                            style={{
-                              fontSize: '11px',
-                              color: 'var(--dp-color-ink-secondary)',
-                              textTransform: 'uppercase',
-                              fontWeight: '600',
-                              marginBottom: '2px',
-                            }}
-                          >
-                            Allocated
+                          <div>
+                            <div
+                              style={{
+                                fontSize: '11px',
+                                color: 'var(--dp-color-ink-secondary)',
+                                textTransform: 'uppercase',
+                                fontWeight: '600',
+                                marginBottom: '2px',
+                              }}
+                            >
+                              Committed
+                            </div>
+                            <div
+                              className="numeric"
+                              style={{
+                                fontSize: '16px',
+                                fontWeight: '600',
+                                color: 'var(--dp-color-ink)',
+                              }}
+                            >
+                              {formatINR(dept.committed)}
+                            </div>
                           </div>
-                          <div
-                            className="numeric"
-                            style={{
-                              fontSize: '15px',
-                              fontWeight: '700',
-                              color: 'var(--dp-color-ink)',
-                            }}
-                          >
-                            {formatINR(dept.allocated)}
-                          </div>
-                        </div>
 
-                        <div>
-                          <div
-                            style={{
-                              fontSize: '11px',
-                              color: 'var(--dp-color-ink-secondary)',
-                              textTransform: 'uppercase',
-                              fontWeight: '600',
-                              marginBottom: '2px',
-                            }}
-                          >
-                            Committed
+                          <div>
+                            <div
+                              style={{
+                                fontSize: '11px',
+                                color: 'var(--dp-color-ink-secondary)',
+                                textTransform: 'uppercase',
+                                fontWeight: '600',
+                                marginBottom: '2px',
+                              }}
+                            >
+                              Spent
+                            </div>
+                            <div
+                              className="numeric"
+                              style={{
+                                fontSize: '16px',
+                                fontWeight: '600',
+                                color: 'var(--dp-color-ink)',
+                              }}
+                            >
+                              {formatINR(dept.spent)}
+                            </div>
                           </div>
-                          <div
-                            className="numeric"
-                            style={{
-                              fontSize: '15px',
-                              fontWeight: '600',
-                              color: 'var(--dp-color-ink)',
-                            }}
-                          >
-                            {formatINR(dept.committed)}
-                          </div>
-                        </div>
 
-                        <div>
-                          <div
-                            style={{
-                              fontSize: '11px',
-                              color: 'var(--dp-color-ink-secondary)',
-                              textTransform: 'uppercase',
-                              fontWeight: '600',
-                              marginBottom: '2px',
-                            }}
-                          >
-                            Spent
-                          </div>
-                          <div
-                            className="numeric"
-                            style={{
-                              fontSize: '15px',
-                              fontWeight: '600',
-                              color: 'var(--dp-color-ink)',
-                            }}
-                          >
-                            {formatINR(dept.spent)}
-                          </div>
-                        </div>
-
-                        <div>
-                          <div
-                            style={{
-                              fontSize: '11px',
-                              color: 'var(--dp-color-ink-secondary)',
-                              textTransform: 'uppercase',
-                              fontWeight: '600',
-                              marginBottom: '2px',
-                            }}
-                          >
-                            Available
-                          </div>
-                          <div
-                            className="numeric"
-                            style={{
-                              fontSize: '15px',
-                              fontWeight: '700',
-                              color: 'var(--dp-color-accent)',
-                            }}
-                          >
-                            {formatINR(dept.available)}
+                          <div>
+                            <div
+                              style={{
+                                fontSize: '11px',
+                                color: 'var(--dp-color-ink-secondary)',
+                                textTransform: 'uppercase',
+                                fontWeight: '600',
+                                marginBottom: '2px',
+                              }}
+                            >
+                              Available
+                            </div>
+                            <div
+                              className="numeric"
+                              style={{
+                                fontSize: '16px',
+                                fontWeight: '800',
+                                color: 'var(--dp-color-accent)',
+                              }}
+                            >
+                              {formatINR(dept.available)}
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
 
-                    {/* Progress Bar in Accent Color: "x% used" */}
-                    <div style={{ marginTop: 'auto', paddingTop: '12px', borderTop: '1px solid var(--dp-color-rule)' }}>
+                      {/* Utilisation Progress Bar with Thresholds and Text */}
                       <div
                         style={{
-                          display: 'flex',
-                          justifyContent: 'space-between',
-                          alignItems: 'center',
-                          marginBottom: '6px',
-                          fontSize: 'var(--dp-typography-metadata)',
+                          marginTop: 'auto',
+                          paddingTop: '12px',
+                          borderTop: '1px solid var(--dp-color-rule-subtle)',
                         }}
-                      >
-                        <span style={{ color: 'var(--dp-color-ink-secondary)' }}>
-                          Budget utilisation
-                        </span>
-                        <span
-                          style={{
-                            fontWeight: '700',
-                            color: 'var(--dp-color-ink)',
-                          }}
-                        >
-                          {dept.utilisationPercent}% used
-                        </span>
-                      </div>
-                      <div
-                        style={{
-                          width: '100%',
-                          height: '8px',
-                          backgroundColor: 'var(--dp-color-ground-muted)',
-                          borderRadius: '4px',
-                          overflow: 'hidden',
-                          border: '1px solid var(--dp-color-rule)',
-                        }}
-                        role="progressbar"
-                        aria-valuenow={dept.utilisationPercent}
-                        aria-valuemin="0"
-                        aria-valuemax="100"
-                        aria-label={`${dept.name} budget utilisation ${dept.utilisationPercent}%`}
                       >
                         <div
                           style={{
-                            width: `${Math.min(dept.utilisationPercent, 100)}%`,
-                            height: '100%',
-                            backgroundColor: 'var(--dp-color-accent)',
-                            transition: 'width var(--dp-motion-interaction) var(--dp-motion-easing)',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            marginBottom: '6px',
+                            fontSize: 'var(--dp-typography-metadata)',
                           }}
-                        />
+                        >
+                          <span style={{ color: 'var(--dp-color-ink-secondary)' }}>
+                            Budget utilisation
+                          </span>
+                          <span
+                            data-testid="utilisation-text"
+                            style={{
+                              fontWeight: '700',
+                              color: 'var(--dp-color-ink)',
+                              fontVariantNumeric: 'tabular-nums',
+                            }}
+                          >
+                            {dept.utilisationPercent}% used
+                          </span>
+                        </div>
+                        <div
+                          style={{
+                            width: '100%',
+                            height: '8px',
+                            backgroundColor: 'var(--dp-color-ground-muted)',
+                            borderRadius: 'var(--dp-radius-pill)',
+                            overflow: 'hidden',
+                            border: '1px solid var(--dp-color-rule-subtle)',
+                          }}
+                          role="progressbar"
+                          aria-valuenow={dept.utilisationPercent}
+                          aria-valuemin="0"
+                          aria-valuemax="100"
+                          aria-label={`${dept.name} budget utilisation ${dept.utilisationPercent}%`}
+                        >
+                          <div
+                            style={{
+                              width: `${Math.min(dept.utilisationPercent, 100)}%`,
+                              height: '100%',
+                              borderRadius: 'var(--dp-radius-pill)',
+                              backgroundColor: utilColor,
+                              transition:
+                                'width var(--dp-motion-interaction) var(--dp-motion-easing)',
+                            }}
+                          />
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>

@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { AlertCircle } from 'lucide-react';
 import { useAuth } from './AuthContext.jsx';
-import ProductDiagram from '../../components/ProductDiagram.jsx';
+import LoginIllustration from './components/LoginIllustration.jsx';
+import Button from '../../components/Button.jsx';
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -37,13 +39,6 @@ export default function LoginPage() {
     setPassword('Password@123');
   };
 
-  const demoDepartments = [
-    { code: 'ET', name: 'Engineering Block' },
-    { code: 'PHARMA', name: 'Pharmacy Block' },
-    { code: 'HM', name: 'Hotel Management' },
-    { code: 'MT', name: 'Management & Tech' },
-  ];
-
   return (
     <div
       style={{
@@ -54,21 +49,26 @@ export default function LoginPage() {
         alignItems: 'center',
         justifyContent: 'center',
         padding: '32px 24px',
+        position: 'relative',
+        overflow: 'hidden',
       }}
     >
       <div
         style={{
           width: '100%',
-          maxWidth: '1100px',
+          maxWidth: '1180px',
           display: 'grid',
-          gridTemplateColumns: 'minmax(0, 1.45fr) minmax(0, 1fr)',
-          gap: '48px',
+          gridTemplateColumns: 'minmax(0, 1.4fr) minmax(0, 1fr)',
+          gap: '56px',
           alignItems: 'center',
+          position: 'relative',
+          zIndex: 2,
         }}
         className="login-layout-split"
       >
-        {/* Left Column: Product Explanation & Diagram */}
+        {/* Left Column: Heavy Headline with Accent Word & Floating Illustration */}
         <div>
+          {/* Logo Tile with Glow */}
           <div
             style={{
               display: 'inline-flex',
@@ -76,12 +76,13 @@ export default function LoginPage() {
               justifyContent: 'center',
               width: '44px',
               height: '44px',
-              borderRadius: '10px',
-              backgroundColor: 'var(--dp-color-accent)',
+              borderRadius: 'var(--dp-radius-lg)',
+              background: 'var(--dp-gradient-tile)',
+              boxShadow: 'var(--dp-shadow-glow)',
               color: 'var(--dp-color-on-accent)',
-              fontWeight: '700',
+              fontWeight: '800',
               fontSize: '22px',
-              marginBottom: '20px',
+              marginBottom: '24px',
             }}
           >
             ₹
@@ -89,15 +90,15 @@ export default function LoginPage() {
 
           <h1
             style={{
-              fontSize: '36px',
-              fontWeight: '700',
+              fontSize: '42px',
+              fontWeight: '800',
               color: 'var(--dp-color-on-field)',
-              lineHeight: 1.15,
+              lineHeight: 1.1,
               marginBottom: '16px',
-              letterSpacing: '-0.02em',
+              letterSpacing: 'var(--dp-tracking-tightest)',
             }}
           >
-            Department Budget Spending Tracker
+            Department Budget Spending <span className="dp-title-accent">Tracker</span>
           </h1>
 
           <p
@@ -111,21 +112,11 @@ export default function LoginPage() {
           >
             An authoritative, real-time budget control engine for academic institutions.
             Track allocations, automate workflow approvals, protect financial ceilings,
-            and maintain an immutable audit trail across every department.
+            and maintain an immutable audit trail.
           </p>
 
-          {/* Diagram preview on dark backdrop */}
-          <div
-            style={{
-              backgroundColor: 'rgba(255, 255, 255, 0.04)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              borderRadius: 'var(--dp-radius-panel)',
-              padding: '24px',
-              maxWidth: '440px',
-            }}
-          >
-            <ProductDiagram departments={demoDepartments} />
-          </div>
+          {/* New Floating Tilted Cards Illustration */}
+          <LoginIllustration />
         </div>
 
         {/* Right Column: Sign In Card */}
@@ -133,22 +124,23 @@ export default function LoginPage() {
           style={{
             backgroundColor: 'var(--dp-color-panel)',
             color: 'var(--dp-color-ink)',
-            borderRadius: 'var(--dp-radius-panel)',
+            borderRadius: 'var(--dp-radius-xl)',
             border: '1px solid var(--dp-color-rule)',
-            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 24px 38px 3px rgba(0, 0, 0, 0.14)',
+            boxShadow: 'var(--dp-shadow-card-float)',
             padding: '36px',
           }}
         >
           <div style={{ marginBottom: '24px' }}>
             <h2
               style={{
-                fontSize: '22px',
-                fontWeight: '700',
+                fontSize: '24px',
+                fontWeight: '800',
+                letterSpacing: 'var(--dp-tracking-tight)',
                 color: 'var(--dp-color-ink)',
                 marginBottom: '6px',
               }}
             >
-              Sign In to Your Account
+              Sign In to Your <span className="dp-title-accent">Account</span>
             </h2>
             <p
               style={{
@@ -165,8 +157,11 @@ export default function LoginPage() {
             <div
               role="alert"
               style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
                 padding: '12px 14px',
-                borderRadius: '8px',
+                borderRadius: 'var(--dp-radius-md)',
                 backgroundColor: 'var(--dp-color-status-critical-bg)',
                 border: '1px solid var(--dp-color-status-critical-border)',
                 color: 'var(--dp-color-status-critical)',
@@ -174,7 +169,8 @@ export default function LoginPage() {
                 marginBottom: '20px',
               }}
             >
-              {error}
+              <AlertCircle size={16} />
+              <span>{error}</span>
             </div>
           )}
 
@@ -205,15 +201,16 @@ export default function LoginPage() {
                   width: '100%',
                   padding: '10px 14px',
                   fontSize: 'var(--dp-typography-interface)',
-                  borderRadius: '8px',
+                  borderRadius: 'var(--dp-radius-md)',
                   border: '1px solid var(--dp-color-rule)',
                   backgroundColor: 'var(--dp-color-panel)',
                   color: 'var(--dp-color-ink)',
                   outline: 'none',
+                  transition: 'border-color var(--dp-motion-interaction) var(--dp-motion-easing), box-shadow var(--dp-motion-interaction) var(--dp-motion-easing)',
                 }}
                 onFocus={(e) => {
                   e.target.style.borderColor = 'var(--dp-color-accent)';
-                  e.target.style.boxShadow = '0 0 0 3px rgba(7, 76, 224, 0.15)';
+                  e.target.style.boxShadow = 'var(--dp-shadow-focus)';
                 }}
                 onBlur={(e) => {
                   e.target.style.borderColor = 'var(--dp-color-rule)';
@@ -248,15 +245,16 @@ export default function LoginPage() {
                   width: '100%',
                   padding: '10px 14px',
                   fontSize: 'var(--dp-typography-interface)',
-                  borderRadius: '8px',
+                  borderRadius: 'var(--dp-radius-md)',
                   border: '1px solid var(--dp-color-rule)',
                   backgroundColor: 'var(--dp-color-panel)',
                   color: 'var(--dp-color-ink)',
                   outline: 'none',
+                  transition: 'border-color var(--dp-motion-interaction) var(--dp-motion-easing), box-shadow var(--dp-motion-interaction) var(--dp-motion-easing)',
                 }}
                 onFocus={(e) => {
                   e.target.style.borderColor = 'var(--dp-color-accent)';
-                  e.target.style.boxShadow = '0 0 0 3px rgba(7, 76, 224, 0.15)';
+                  e.target.style.boxShadow = 'var(--dp-shadow-focus)';
                 }}
                 onBlur={(e) => {
                   e.target.style.borderColor = 'var(--dp-color-rule)';
@@ -265,26 +263,15 @@ export default function LoginPage() {
               />
             </div>
 
-            <button
+            <Button
               type="submit"
               disabled={isSubmitting}
-              style={{
-                width: '100%',
-                padding: '12px 18px',
-                minHeight: '44px',
-                fontSize: 'var(--dp-typography-interface)',
-                fontWeight: '600',
-                borderRadius: '8px',
-                border: 'none',
-                backgroundColor: 'var(--dp-color-accent)',
-                color: 'var(--dp-color-on-accent)',
-                cursor: isSubmitting ? 'not-allowed' : 'pointer',
-                opacity: isSubmitting ? 0.7 : 1,
-                transition: 'background var(--dp-motion-interaction) var(--dp-motion-easing)',
-              }}
+              loading={isSubmitting}
+              trailingIcon={true}
+              style={{ width: '100%', minHeight: '44px' }}
             >
-              {isSubmitting ? 'Signing in...' : 'Sign In'}
-            </button>
+              Sign In
+            </Button>
           </form>
 
           {/* Quick-fill demo account pills (development only) */}
@@ -293,7 +280,7 @@ export default function LoginPage() {
               style={{
                 marginTop: '28px',
                 paddingTop: '20px',
-                borderTop: '1px solid var(--dp-color-rule)',
+                borderTop: '1px solid var(--dp-color-rule-subtle)',
               }}
             >
               <div
@@ -303,6 +290,7 @@ export default function LoginPage() {
                   fontWeight: '600',
                   marginBottom: '10px',
                   textAlign: 'center',
+                  letterSpacing: '0.03em',
                 }}
               >
                 DEMO SEED ROLES (Password: Password@123)
@@ -330,12 +318,24 @@ export default function LoginPage() {
                     onClick={() => handleFillDemo(role.email)}
                     style={{
                       fontSize: '11px',
-                      padding: '4px 8px',
-                      borderRadius: '6px',
+                      padding: '4px 10px',
+                      borderRadius: 'var(--dp-radius-pill)',
                       border: '1px solid var(--dp-color-rule)',
                       backgroundColor: 'var(--dp-color-ground-muted)',
                       color: 'var(--dp-color-ink)',
                       cursor: 'pointer',
+                      fontWeight: '500',
+                      transition: 'all var(--dp-motion-interaction) var(--dp-motion-easing)',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = 'var(--dp-color-accent-subtle)';
+                      e.currentTarget.style.borderColor = 'var(--dp-color-accent)';
+                      e.currentTarget.style.color = 'var(--dp-color-accent)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = 'var(--dp-color-ground-muted)';
+                      e.currentTarget.style.borderColor = 'var(--dp-color-rule)';
+                      e.currentTarget.style.color = 'var(--dp-color-ink)';
                     }}
                   >
                     {role.label}

@@ -129,7 +129,7 @@ export default function DepartmentsPage() {
           <div style={{ fontWeight: '600', color: 'var(--dp-color-ink)' }}>{row.name}</div>
           {row.parent && (
             <div style={{ fontSize: '12px', color: 'var(--dp-color-ink-secondary)', marginTop: '2px' }}>
-              ↳ Sub-unit of <strong>{row.parent.name} ({row.parent.code})</strong>
+              Sub-unit of <strong>{row.parent.name} ({row.parent.code})</strong>
             </div>
           )}
         </div>

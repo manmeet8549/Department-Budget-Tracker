@@ -14,10 +14,11 @@ export default function Card({
       className={`dp-card ${className}`}
       style={{
         backgroundColor: 'var(--dp-color-panel)',
-        borderRadius: 'var(--dp-radius-panel)',
+        borderRadius: 'var(--dp-radius-lg)',
         border: '1px solid var(--dp-color-rule)',
         padding: '24px',
-        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.02)',
+        boxShadow: 'var(--dp-shadow-sm)',
+        transition: 'box-shadow var(--dp-motion-interaction) var(--dp-motion-easing)',
         ...style,
       }}
       {...props}
@@ -30,7 +31,7 @@ export default function Card({
             justifyContent: 'space-between',
             marginBottom: children ? '20px' : '0',
             paddingBottom: children ? '16px' : '0',
-            borderBottom: children ? '1px solid var(--dp-color-rule)' : 'none',
+            borderBottom: children ? '1px solid var(--dp-color-rule-subtle)' : 'none',
           }}
         >
           <div>
@@ -38,7 +39,8 @@ export default function Card({
               <h3
                 style={{
                   fontSize: '18px',
-                  fontWeight: '700',
+                  fontWeight: '800',
+                  letterSpacing: 'var(--dp-tracking-tight)',
                   color: 'var(--dp-color-ink)',
                   margin: 0,
                 }}
@@ -58,7 +60,11 @@ export default function Card({
               </p>
             )}
           </div>
-          {actions && <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>{actions}</div>}
+          {actions && (
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              {actions}
+            </div>
+          )}
         </div>
       )}
       {children}
