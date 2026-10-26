@@ -163,8 +163,51 @@ npx prisma migrate status # Verifies zero database schema drift
 ### Frontend Tests (Vitest + Testing Library)
 ```bash
 cd frontend
-npm test                # Runs 6 Vitest test suites (39 tests)
+npm test                # Runs 7 Vitest test suites (57 tests)
 npm run lint            # Verifies ESLint zero errors/warnings
+npm run check:colors    # Verifies zero hardcoded hex/rgba outside tokens.css
+```
+
+---
+
+## Continuous Integration (CI) Pipeline & Local Setup
+
+### How CI Runs Tests
+GitHub Actions runs the `.github/workflows/ci.yml` pipeline on every push and pull request:
+1. **PostgreSQL Service Container**: Spins up a `postgres:16` container with a health check (`pg_isready`), port forwarding `5432:5432`, and throwaway credentials (`POSTGRES_USER: test_user`, `POSTGRES_PASSWORD: test_password`, `POSTGRES_DB: budget_tracker_test`).
+2. **Safety Environment Isolation**: Job-level variables configure `DATABASE_URL` (`.../budget_tracker_dev`) and `DATABASE_URL_TEST` (`.../budget_tracker_test`) to two distinct databases on the container, satisfying the safety guard in `src/config/db.js`.
+3. **Execution Sequence**:
+   - `actions/checkout@v4`
+   - `actions/setup-node@v4` with Node 24 matching local environment and npm cache
+   - `npm ci`
+   - `npx prisma generate`
+   - `node scripts/test-db-setup.js` (executes `prisma migrate deploy` against the test database, truncates tables, and seeds baseline data)
+   - `npm run lint`
+   - `npm run test:ci` (runs all 25 Jest test suites in band with `--ci --forceExit --testTimeout=30000`)
+4. **Parallel Frontend Job**: Runs dependencies, ESLint, and Vitest test suites.
+
+### How to Run the Same Setup Locally (Docker)
+To replicate the CI test environment locally without using remote database providers:
+```bash
+# 1. Start a local PostgreSQL 16 container:
+docker run -d --name budget-tracker-test-db \
+  -e POSTGRES_USER=test_user \
+  -e POSTGRES_PASSWORD=test_password \
+  -e POSTGRES_DB=budget_tracker_test \
+  -p 5432:5432 \
+  postgres:16
+
+# 2. Set environment variables (or place in backend/.env):
+export NODE_ENV=test
+export DATABASE_URL="postgresql://test_user:test_password@localhost:5432/budget_tracker_dev"
+export DATABASE_URL_TEST="postgresql://test_user:test_password@localhost:5432/budget_tracker_test"
+export JWT_SECRET="dummy_ci_jwt_secret_token_at_least_32_chars_long"
+
+# 3. Run migrations and tests:
+cd backend
+npx prisma generate
+node scripts/test-db-setup.js
+npm run test:ci
 ```
 
 ---
