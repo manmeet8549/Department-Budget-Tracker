@@ -11,11 +11,13 @@
     "test:watch": "vitest",
     "lint": "eslint src --ext .js,.jsx",
     "lint:fix": "eslint src --ext .js,.jsx --fix",
+    "check:colors": "node scripts/check-no-hardcoded-colors.mjs",
     "format": "prettier --write \"src/**/*.{js,jsx,css}\""
   },
   "dependencies": {
     "@tanstack/react-query": "^5.45.1",
     "axios": "^1.7.2",
+    "lucide-react": "^1.61.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-hook-form": "^7.52.1",

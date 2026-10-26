@@ -34,42 +34,42 @@ export default function CeilingPanel({ user, activeFy, onCeilingChanged }) {
 
   return (
     <>
-      <Card style={{ borderLeft: '4px solid var(--dp-color-accent)' }}>
+      <Card style={{ borderLeft: '4px solid var(--dp-color-accent)', boxShadow: 'var(--dp-shadow-sm)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--dp-color-accent)' }}>
+              <span style={{ fontSize: '12px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--dp-color-accent)' }}>
                 College Budget Ceiling
               </span>
-              <span style={{ fontSize: '12px', color: 'var(--dp-color-ink-secondary)' }}>
+              <span style={{ fontSize: '12px', color: 'var(--dp-color-ink-secondary)', fontWeight: '500' }}>
                 (FY {activeFy.year})
               </span>
             </div>
 
-            <div style={{ display: 'flex', gap: '28px', marginTop: '10px', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: '32px', marginTop: '12px', flexWrap: 'wrap' }}>
               <div>
-                <div style={{ fontSize: '11px', color: 'var(--dp-color-ink-secondary)', textTransform: 'uppercase' }}>
+                <div style={{ fontSize: '11px', color: 'var(--dp-color-ink-secondary)', textTransform: 'uppercase', fontWeight: '600', letterSpacing: '0.03em' }}>
                   Institutional Ceiling
                 </div>
-                <div id="ceiling-amount" style={{ fontSize: '18px', fontWeight: '700', color: 'var(--dp-color-ink)' }}>
+                <div id="ceiling-amount" className="numeric" style={{ fontSize: '20px', fontWeight: '800', color: 'var(--dp-color-ink)' }}>
                   {loading ? '...' : ceilingData?.ceiling ? formatINR(ceilingData.ceiling) : 'Not Set'}
                 </div>
               </div>
 
               <div>
-                <div style={{ fontSize: '11px', color: 'var(--dp-color-ink-secondary)', textTransform: 'uppercase' }}>
+                <div style={{ fontSize: '11px', color: 'var(--dp-color-ink-secondary)', textTransform: 'uppercase', fontWeight: '600', letterSpacing: '0.03em' }}>
                   Approved Total
                 </div>
-                <div id="ceiling-approved-total" style={{ fontSize: '18px', fontWeight: '700', color: '#15803d' }}>
+                <div id="ceiling-approved-total" className="numeric" style={{ fontSize: '20px', fontWeight: '800', color: 'var(--dp-color-status-approved)' }}>
                   {loading ? '...' : formatINR(ceilingData?.approvedTotal || 0)}
                 </div>
               </div>
 
               <div>
-                <div style={{ fontSize: '11px', color: 'var(--dp-color-ink-secondary)', textTransform: 'uppercase' }}>
+                <div style={{ fontSize: '11px', color: 'var(--dp-color-ink-secondary)', textTransform: 'uppercase', fontWeight: '600', letterSpacing: '0.03em' }}>
                   Remaining Headroom
                 </div>
-                <div id="ceiling-remaining" style={{ fontSize: '18px', fontWeight: '700', color: ceilingData?.remaining ? 'var(--dp-color-ink)' : 'var(--dp-color-ink-secondary)' }}>
+                <div id="ceiling-remaining" className="numeric" style={{ fontSize: '20px', fontWeight: '800', color: ceilingData?.remaining ? 'var(--dp-color-ink)' : 'var(--dp-color-ink-secondary)' }}>
                   {loading ? '...' : ceilingData?.remaining ? formatINR(ceilingData.remaining) : '— (No Ceiling)'}
                 </div>
               </div>
@@ -98,7 +98,7 @@ export default function CeilingPanel({ user, activeFy, onCeilingChanged }) {
           onClose={() => setIsModalOpen(false)}
           onSuccess={(updated) => {
             setCeilingData(updated);
-            if (onCeilingChanged) onCeilingChanged(updated);
+            onCeilingChanged?.();
           }}
         />
       )}

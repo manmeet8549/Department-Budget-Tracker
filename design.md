@@ -227,3 +227,79 @@ Budget thresholds and document statuses (DRAFT, APPROVED, Warning, Critical) mus
 - Do not fill empty space with fabricated statistics, endorsements or fake screens.
 - Do not add entrance animations or looping motion.
 - Do not choose sections the content does not need. Select patterns from what each screen actually shows.
+
+---
+
+## 14. UI-1 refinements
+
+### 14.1 Audit: Current Implementation vs. Target Visual Language
+
+Audit conducted comparing existing screenshots (`docs/design-reference/current-*.png`) against target references (`docs/design-reference/target-*.png`):
+
+| Area | Current State (`current-*.png`) | Target Visual Language (`target-*.png`) | UI-1 Refinement Required |
+| :--- | :--- | :--- | :--- |
+| **Typography** | Generic bold weights, loose default letter-spacing, plain monochrome titles. | Ultra-tight, heavy headlines (Host Grotesk, weight 800, tracking `-0.035em`/`-0.045em`) with **one vivid accent-coloured word**. Body in Instrument Sans. | Update typography tokens; add `.dp-title-accent` (`var(--dp-color-accent)`); ensure tabular figures on all numbers. |
+| **Gradients & Glow** | Flat solid blue `#074ce0` tiles and buttons; no layered glow or depth. | Subtle dimensional gradients (`--dp-gradient-accent`, `--dp-gradient-dark`) and soft luminous glows (`--dp-shadow-glow`). | Introduce `--dp-gradient-accent`, `--dp-gradient-dark`, `--dp-gradient-active`, `--dp-gradient-tile`, `--dp-shadow-glow`. |
+| **Elevation & Shadows** | Flat hairline borders or harsh single-layer drop shadows (`0 8px 24px rgba(...)`). | Soft, multi-layered shadows (`--dp-shadow-sm`, `md`, `lg`, `card-float`) providing elevation without dirtying light surfaces. | Introduce comprehensive shadow tokens; eliminate nested card borders. |
+| **App Shell & Sidebar** | Plain text sidebar nav; solid blue active block; "Release 1 (MVP) • v1.5" in header; raw enum `Role: SUPER_ADMIN` in top bar; user card has bare sign-out. | Outline icons per item (`lucide-react`); gradient active pill with accent indicator; glowing rupee squircle tile; muted version `v1.6` in sidebar footer; human-friendly role labels ("Super Admin", "HoD — Engineering"); avatar initials. | Restyle App Shell, integrate Lucide icons, friendly role helper, and avatar initials. |
+| **Page Header** | Inconsistent header spacing; missing unified page intro pattern. | Standardized pattern across all screens: strong title with accent word, one-line supporting description, primary action button on the right. | Standardize page headers across all feature pages. |
+| **Login Illustration** | Outdated `ProductDiagram` with truncated text ("Engineering Blo...", "Hotel Manage..."). | Floating slightly tilted cards joined by dashed connector lines over faint concentric circular orbit lines around a glowing central gradient rupee tile. Cards show real concepts: department budget card with utilisation bar, approval tick card, mini bar chart card. Dev quick-fills as small pills. | Replace `ProductDiagram` on Login page with the floating tilted card system; restyle dev quick-fill buttons to compact pill chips. |
+| **Overview Page** | Cluttered header with empty/broken diagram card; stat strip is bare text; nested card wrappers. | Clean tightened header; 5 distinct stat cards with outline icons, clear labels, and large tabular numbers; Available highlighted in accent; Department summary cards with thresholded utilisation progress bars and explicit percentage text; skeleton loaders. | Remove empty diagram from overview; convert stat strip to 5 stat cards; polish department cards and utilisation bar. |
+| **Data Tables** | Nested borders (card-in-a-card); basic borders; harsh rectangular action buttons; numeric columns sometimes unaligned; potential mobile clipping. | Single card container (no nested borders); sticky header; subtle row hover; right-aligned tabular figures; status chips with dot + label; ghost icon+text row actions; friendly empty state; responsive horizontal scroll wrapper. | Restyle `DataTable` component to enforce single-card rhythm, sticky headers, ghost actions, and responsive scrolling. |
+| **Formatting & Glyphs** | Stray glyph `"↳"` before sub-unit descriptions; inconsistent dates (`25/10/2026`). | Clean metadata hierarchy without stray glyphs; standard `"1 Apr 2026"` date formatting via shared `formatDate` helper; Indian rupee grouping (`₹ 20,00,000`). | Remove `"↳"`; implement `formatDate` utility and enforce across all tables and modals. |
+| **Modals & Forms** | Generic dialog styles; lack unified header/body/footer structure. | Layered shadows (`--dp-shadow-lg`), rounded corners (`--dp-radius-lg`), clean footer action buttons, inline error messages with icons, loading and disabled button states. | Refactor modals (Ceiling, Review, Reject, Detail, Expense) and form fields to match design tokens. |
+
+### 14.2 UI-1 Token Specifications
+
+All tokens must be added to `frontend/src/styles/tokens.css` and used across components. No hardcoded hex or rgba values are permitted in components.
+
+```css
+:root {
+  /* UI-1 Gradients */
+  --dp-gradient-accent:       linear-gradient(135deg, #1d68f2 0%, #074ce0 100%);
+  --dp-gradient-accent-hover: linear-gradient(135deg, #2575fc 0%, #0a56f5 100%);
+  --dp-gradient-dark:         linear-gradient(180deg, #16191f 0%, #0d0f13 100%);
+  --dp-gradient-active:       linear-gradient(90deg, rgba(7, 76, 224, 0.10) 0%, rgba(7, 76, 224, 0.02) 100%);
+  --dp-gradient-tile:         linear-gradient(135deg, #2563eb 0%, #074ce0 100%);
+
+  /* UI-1 Shadow Scale */
+  --dp-shadow-sm:             0 1px 2px 0 rgba(22, 25, 31, 0.05);
+  --dp-shadow-md:             0 4px 6px -1px rgba(22, 25, 31, 0.07), 0 2px 4px -2px rgba(22, 25, 31, 0.05);
+  --dp-shadow-lg:             0 10px 15px -3px rgba(22, 25, 31, 0.08), 0 4px 6px -4px rgba(22, 25, 31, 0.04);
+  --dp-shadow-glow:           0 0 24px -2px rgba(7, 76, 224, 0.35);
+  --dp-shadow-card-float:     0 12px 28px -4px rgba(22, 25, 31, 0.12), 0 4px 8px -2px rgba(22, 25, 31, 0.06);
+
+  /* UI-1 Radius Scale */
+  --dp-radius-xs:             4px;
+  --dp-radius-sm:             6px;
+  --dp-radius-md:             8px;
+  --dp-radius-lg:             12px;
+  --dp-radius-xl:             16px;
+  --dp-radius-pill:           9999px;
+
+  /* UI-1 Typography & Letter-spacing Tokens */
+  --dp-tracking-tight:        -0.02em;
+  --dp-tracking-tighter:      -0.035em;
+  --dp-tracking-tightest:     -0.045em;
+
+  /* UI-1 Page Gutters & Spacing */
+  --dp-spacing-gutter-mobile:  16px;
+  --dp-spacing-gutter-tablet:  24px;
+  --dp-spacing-gutter-desktop: 32px;
+  --dp-spacing-content-max:    1280px;
+  /* UI-1 Semantic UI State Tokens */
+  --dp-color-danger:          var(--dp-color-status-critical);
+  --dp-color-danger-subtle:   var(--dp-color-status-critical-bg);
+  --dp-color-danger-border:   var(--dp-color-status-critical-border);
+  --dp-color-success:         var(--dp-color-status-approved);
+  --dp-color-success-subtle:  var(--dp-color-status-approved-bg);
+  --dp-color-success-border:  var(--dp-color-status-approved-border);
+  --dp-color-warning:         var(--dp-color-status-warning);
+  --dp-color-warning-subtle:  var(--dp-color-status-warning-bg);
+  --dp-color-warning-border:  var(--dp-color-status-warning-border);
+  --dp-color-info:            var(--dp-color-status-submitted);
+  --dp-color-info-subtle:     var(--dp-color-status-submitted-bg);
+  --dp-color-info-border:     var(--dp-color-status-submitted-border);
+}
+```
+

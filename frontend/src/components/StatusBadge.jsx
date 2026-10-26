@@ -1,8 +1,8 @@
 /**
  * StatusBadge.jsx
- * Standard status badge component per design.md §7 (Option A).
+ * Standard status badge component per design.md §7 (Option A) and UI-1 refinements.
  * Uses muted status tokens defined in tokens.css.
- * Always renders with a text label and an indicator icon/dot (never color alone).
+ * Always renders with a text label and an indicator dot (never color alone).
  */
 
 export default function StatusBadge({
@@ -12,7 +12,7 @@ export default function StatusBadge({
   style = {},
   id,
 }) {
-  const normalizedStatus = String(status).toUpperCase();
+  const normalizedStatus = String(status || 'DRAFT').toUpperCase();
 
   const getStatusStyles = () => {
     switch (normalizedStatus) {
@@ -22,15 +22,13 @@ export default function StatusBadge({
           backgroundColor: 'var(--dp-color-status-approved-bg)',
           borderColor: 'var(--dp-color-status-approved-border)',
           dotColor: 'var(--dp-color-status-approved-dot)',
-          icon: '✓',
         };
       case 'WARNING':
         return {
           color: 'var(--dp-color-status-warning)',
           backgroundColor: 'var(--dp-color-status-warning-bg)',
           borderColor: 'var(--dp-color-status-warning-border)',
-          dotColor: 'var(--dp-color-status-warning)',
-          icon: '⚠',
+          dotColor: 'var(--dp-color-status-warning-dot)',
         };
       case 'PAID':
         return {
@@ -38,7 +36,6 @@ export default function StatusBadge({
           backgroundColor: 'var(--dp-color-status-paid-bg)',
           borderColor: 'var(--dp-color-status-paid-border)',
           dotColor: 'var(--dp-color-status-paid-dot)',
-          icon: '✓',
         };
       case 'SUBMITTED':
         return {
@@ -46,7 +43,6 @@ export default function StatusBadge({
           backgroundColor: 'var(--dp-color-status-submitted-bg)',
           borderColor: 'var(--dp-color-status-submitted-border)',
           dotColor: 'var(--dp-color-status-submitted-dot)',
-          icon: '↗',
         };
       case 'UNDER_REVIEW':
         return {
@@ -54,7 +50,6 @@ export default function StatusBadge({
           backgroundColor: 'var(--dp-color-status-review-bg)',
           borderColor: 'var(--dp-color-status-review-border)',
           dotColor: 'var(--dp-color-status-review-dot)',
-          icon: '⊙',
         };
       case 'CANCELLED':
         return {
@@ -62,7 +57,6 @@ export default function StatusBadge({
           backgroundColor: 'var(--dp-color-status-cancelled-bg)',
           borderColor: 'var(--dp-color-status-cancelled-border)',
           dotColor: 'var(--dp-color-status-cancelled-dot)',
-          icon: '⊘',
         };
       case 'CRITICAL':
       case 'REJECTED':
@@ -70,8 +64,7 @@ export default function StatusBadge({
           color: 'var(--dp-color-status-critical)',
           backgroundColor: 'var(--dp-color-status-critical-bg)',
           borderColor: 'var(--dp-color-status-critical-border)',
-          dotColor: 'var(--dp-color-status-critical)',
-          icon: '✕',
+          dotColor: 'var(--dp-color-status-critical-dot)',
         };
       case 'DRAFT':
       default:
@@ -80,13 +73,12 @@ export default function StatusBadge({
           backgroundColor: 'var(--dp-color-status-draft-bg)',
           borderColor: 'var(--dp-color-status-draft-border)',
           dotColor: 'var(--dp-color-status-draft-dot)',
-          icon: '●',
         };
     }
   };
 
   const statusStyle = getStatusStyles();
-  const displayLabel = label || normalizedStatus;
+  const displayLabel = (label && String(label).trim().length > 0) ? label : normalizedStatus;
   const isSm = size === 'sm';
 
   return (
@@ -97,8 +89,8 @@ export default function StatusBadge({
         display: 'inline-flex',
         alignItems: 'center',
         gap: isSm ? '4px' : '6px',
-        padding: isSm ? '2px 8px' : '4px 10px',
-        borderRadius: '999px',
+        padding: isSm ? '2px 8px' : '3px 10px',
+        borderRadius: 'var(--dp-radius-pill)',
         fontSize: isSm ? '11px' : '12px',
         fontWeight: '600',
         backgroundColor: statusStyle.backgroundColor,
@@ -110,6 +102,7 @@ export default function StatusBadge({
       }}
     >
       <span
+        className="dp-status-badge-dot"
         style={{
           display: 'inline-block',
           width: isSm ? '5px' : '6px',
@@ -120,7 +113,7 @@ export default function StatusBadge({
         }}
         aria-hidden="true"
       />
-      <span>{displayLabel}</span>
+      <span data-testid="status-badge-text">{displayLabel}</span>
     </span>
   );
 }

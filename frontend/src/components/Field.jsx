@@ -1,3 +1,5 @@
+import { AlertCircle } from 'lucide-react';
+
 export default function Field({
   label,
   id,
@@ -24,17 +26,30 @@ export default function Field({
     padding: '9px 12px',
     fontSize: 'var(--dp-typography-interface)',
     color: 'var(--dp-color-ink)',
-    backgroundColor: disabled ? 'var(--dp-color-ground-muted)' : 'var(--dp-color-panel)',
-    border: `1px solid ${error ? '#dc2626' : 'var(--dp-color-rule)'}`,
-    borderRadius: '6px',
+    backgroundColor: disabled
+      ? 'var(--dp-color-ground-muted)'
+      : 'var(--dp-color-panel)',
+    border: `1px solid ${
+      error ? 'var(--dp-color-status-critical)' : 'var(--dp-color-rule)'
+    }`,
+    borderRadius: 'var(--dp-radius-md)',
     outline: 'none',
     boxSizing: 'border-box',
-    transition: 'border-color var(--dp-motion-interaction) var(--dp-motion-easing)',
+    transition:
+      'border-color var(--dp-motion-interaction) var(--dp-motion-easing), box-shadow var(--dp-motion-interaction) var(--dp-motion-easing)',
     ...inputStyle,
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '16px', ...style }}>
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '6px',
+        marginBottom: '16px',
+        ...style,
+      }}
+    >
       {label && (
         <label
           htmlFor={inputId}
@@ -42,11 +57,14 @@ export default function Field({
             fontSize: 'var(--dp-typography-label)',
             fontWeight: '600',
             color: 'var(--dp-color-ink-secondary)',
-            letterSpacing: '0.01em',
+            letterSpacing: '0.02em',
             textTransform: 'uppercase',
           }}
         >
-          {label} {required && <span style={{ color: 'var(--dp-color-accent)' }}>*</span>}
+          {label}{' '}
+          {required && (
+            <span style={{ color: 'var(--dp-color-accent)' }}>*</span>
+          )}
         </label>
       )}
 
@@ -61,13 +79,18 @@ export default function Field({
           disabled={disabled}
           required={required}
           aria-describedby={error ? errorId : hint ? hintId : undefined}
-          style={{ ...baseInputStyles, cursor: disabled ? 'not-allowed' : 'pointer' }}
+          style={{
+            ...baseInputStyles,
+            cursor: disabled ? 'not-allowed' : 'pointer',
+          }}
           onFocus={(e) => {
             e.currentTarget.style.borderColor = 'var(--dp-color-accent)';
-            e.currentTarget.style.boxShadow = '0 0 0 2px rgba(7, 76, 224, 0.15)';
+            e.currentTarget.style.boxShadow = 'var(--dp-shadow-focus)';
           }}
           onBlur={(e) => {
-            e.currentTarget.style.borderColor = error ? '#dc2626' : 'var(--dp-color-rule)';
+            e.currentTarget.style.borderColor = error
+              ? 'var(--dp-color-status-critical)'
+              : 'var(--dp-color-rule)';
             e.currentTarget.style.boxShadow = 'none';
           }}
           {...props}
@@ -92,10 +115,12 @@ export default function Field({
           style={baseInputStyles}
           onFocus={(e) => {
             e.currentTarget.style.borderColor = 'var(--dp-color-accent)';
-            e.currentTarget.style.boxShadow = '0 0 0 2px rgba(7, 76, 224, 0.15)';
+            e.currentTarget.style.boxShadow = 'var(--dp-shadow-focus)';
           }}
           onBlur={(e) => {
-            e.currentTarget.style.borderColor = error ? '#dc2626' : 'var(--dp-color-rule)';
+            e.currentTarget.style.borderColor = error
+              ? 'var(--dp-color-status-critical)'
+              : 'var(--dp-color-rule)';
             e.currentTarget.style.boxShadow = 'none';
           }}
           {...props}
@@ -108,14 +133,15 @@ export default function Field({
           role="alert"
           style={{
             fontSize: 'var(--dp-typography-metadata)',
-            color: '#dc2626',
+            color: 'var(--dp-color-status-critical)',
             display: 'flex',
             alignItems: 'center',
-            gap: '4px',
+            gap: '6px',
             marginTop: '2px',
           }}
         >
-          ⚠️ {error}
+          <AlertCircle size={14} color="var(--dp-color-status-critical)" />
+          <span>{error}</span>
         </span>
       )}
 

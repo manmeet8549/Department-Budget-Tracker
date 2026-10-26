@@ -10,19 +10,16 @@ export default function ProductDiagram({ departments = [], className = '', style
     ? `Budget control system connected to departments: ${deptList.map((d) => d.name ? `${d.name} (${d.code})` : d.code).join(', ')}.`
     : 'Budget control system with no connected departments.';
 
-  // Radius and center coordinates for SVG and layout
-  const width = 340;
-  const height = 220;
+  const width = 280;
+  const height = 140;
   const cx = width / 2;
   const cy = height / 2;
 
-  // Calculate coordinates for department tiles arranged in an ellipse around the center
   const tilesWithCoords = deptList.map((dept, index) => {
     const total = deptList.length;
-    // Offset angle so tiles distribute pleasantly around the center
     const angle = (2 * Math.PI * index) / total - Math.PI / 2;
-    const rx = 125;
-    const ry = 72;
+    const rx = 105;
+    const ry = 48;
     const x = cx + rx * Math.cos(angle);
     const y = cy + ry * Math.sin(angle);
     return { dept, x, y };
@@ -43,10 +40,8 @@ export default function ProductDiagram({ departments = [], className = '', style
       role="img"
       aria-label="College Budget Control Diagram"
     >
-      {/* Visually hidden text alternative */}
       <span className="sr-only">{textAlternative}</span>
 
-      {/* SVG Connecting Lines and Rings */}
       <svg
         width="100%"
         height="100%"
@@ -57,8 +52,8 @@ export default function ProductDiagram({ departments = [], className = '', style
         <ellipse
           cx={cx}
           cy={cy}
-          rx="125"
-          ry="72"
+          rx="105"
+          ry="48"
           fill="none"
           stroke="var(--dp-color-rule)"
           strokeWidth="1"
@@ -72,39 +67,37 @@ export default function ProductDiagram({ departments = [], className = '', style
             x2={x}
             y2={y}
             stroke="var(--dp-color-rule)"
-            strokeWidth="1.5"
+            strokeWidth="1.2"
           />
         ))}
       </svg>
 
-      {/* Center Node: Budget Control */}
+      {/* Center Node */}
       <div
         style={{
           position: 'absolute',
           top: `${cy}px`,
           left: `${cx}px`,
           transform: 'translate(-50%, -50%)',
-          background: 'linear-gradient(135deg, var(--dp-color-accent) 0%, #053bb0 100%)',
+          background: 'var(--dp-gradient-tile)',
           color: 'var(--dp-color-on-accent)',
-          borderRadius: '24px',
-          padding: '10px 18px',
-          boxShadow: '0 4px 14px rgba(7, 76, 224, 0.28)',
+          borderRadius: 'var(--dp-radius-pill)',
+          padding: '6px 14px',
+          boxShadow: 'var(--dp-shadow-glow)',
           textAlign: 'center',
           zIndex: 3,
           display: 'flex',
           alignItems: 'center',
-          gap: '8px',
-          border: '2px solid rgba(255, 255, 255, 0.3)',
+          gap: '6px',
         }}
         aria-hidden="true"
       >
-        <span style={{ fontSize: '15px', fontWeight: '700' }}>₹</span>
+        <span style={{ fontSize: '13px', fontWeight: '800' }}>₹</span>
         <span
           style={{
-            fontFamily: "'Host Grotesk', var(--dp-typography-fallback)",
+            fontFamily: 'Host Grotesk, sans-serif',
             fontWeight: '700',
-            fontSize: '13px',
-            letterSpacing: '-0.01em',
+            fontSize: '11px',
             whiteSpace: 'nowrap',
           }}
         >
@@ -112,7 +105,7 @@ export default function ProductDiagram({ departments = [], className = '', style
         </span>
       </div>
 
-      {/* Dynamic Department Tiles from API */}
+      {/* Dynamic Department Tiles */}
       {tilesWithCoords.map(({ dept, x, y }) => (
         <div
           key={`tile-${dept.id || dept.code}`}
@@ -124,24 +117,23 @@ export default function ProductDiagram({ departments = [], className = '', style
             transform: 'translate(-50%, -50%)',
             backgroundColor: 'var(--dp-color-panel)',
             border: '1px solid var(--dp-color-rule)',
-            borderRadius: '8px',
-            padding: '4px 10px',
-            boxShadow: '0 2px 6px rgba(22, 25, 31, 0.06)',
+            borderRadius: 'var(--dp-radius-sm)',
+            padding: '3px 8px',
+            boxShadow: 'var(--dp-shadow-sm)',
             zIndex: 2,
             textAlign: 'center',
-            minWidth: '54px',
-            pointerEvents: 'default',
+            minWidth: '46px',
           }}
           title={dept.name || dept.code}
           aria-hidden="true"
         >
           <div
             style={{
-              fontFamily: "'Host Grotesk', var(--dp-typography-fallback)",
-              fontWeight: '700',
-              fontSize: '12px',
+              fontFamily: 'Host Grotesk, sans-serif',
+              fontWeight: '800',
+              fontSize: '11px',
               color: 'var(--dp-color-ink)',
-              lineHeight: 1.2,
+              lineHeight: 1.1,
             }}
           >
             {dept.code}
@@ -149,13 +141,12 @@ export default function ProductDiagram({ departments = [], className = '', style
           {dept.name && (
             <div
               style={{
-                fontSize: '10px',
+                fontSize: '9px',
                 color: 'var(--dp-color-ink-secondary)',
-                maxWidth: '80px',
+                maxWidth: '65px',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
                 whiteSpace: 'nowrap',
-                marginTop: '1px',
               }}
             >
               {dept.name}

@@ -1,4 +1,3 @@
-import Card from '../../../components/Card';
 import Button from '../../../components/Button';
 import DataTable from '../../../components/DataTable';
 import StatusBadge from '../../../components/StatusBadge';
@@ -28,7 +27,11 @@ export default function ExpenseList({
     {
       header: 'ID',
       accessor: 'id',
-      render: (row) => `#${row.id}`,
+      render: (row) => (
+        <span style={{ fontVariantNumeric: 'tabular-nums', fontWeight: '600' }}>
+          #{row.id}
+        </span>
+      ),
     },
     {
       header: 'Financial Year',
@@ -38,7 +41,18 @@ export default function ExpenseList({
     {
       header: 'Department',
       accessor: 'department',
-      render: (row) => row.department?.code || row.department?.name || '-',
+      render: (row) => (
+        <div>
+          <span style={{ fontWeight: '600', color: 'var(--dp-color-ink)' }}>
+            {row.department?.code || '-'}
+          </span>
+          {row.department?.name && (
+            <div style={{ fontSize: 'var(--dp-typography-metadata)', color: 'var(--dp-color-ink-secondary)' }}>
+              {row.department.name}
+            </div>
+          )}
+        </div>
+      ),
     },
     {
       header: 'Category',
@@ -66,8 +80,9 @@ export default function ExpenseList({
     {
       header: 'Amount',
       accessor: 'amount',
+      align: 'right',
       render: (row) => (
-        <span style={{ fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>
+        <span style={{ fontWeight: 700, fontVariantNumeric: 'tabular-nums', color: 'var(--dp-color-ink)' }}>
           ₹{formatINR(row.amount)}
         </span>
       ),
@@ -75,18 +90,23 @@ export default function ExpenseList({
     {
       header: 'Status',
       accessor: 'status',
-      render: (row) => <StatusBadge status={row.status} />,
+      render: (row) => <StatusBadge status={row.status} size="sm" />,
     },
     {
       header: 'Created By',
       accessor: 'creator',
-      render: (row) => row.creator?.name || row.creator?.email || '-',
+      render: (row) => (
+        <span style={{ fontSize: 'var(--dp-typography-metadata)', color: 'var(--dp-color-ink-secondary)' }}>
+          {row.creator?.name || row.creator?.email || '-'}
+        </span>
+      ),
     },
     {
       header: 'Actions',
       accessor: 'actions',
+      align: 'right',
       render: (row) => (
-        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
           <Button
             size="sm"
             variant="ghost"
@@ -172,58 +192,61 @@ export default function ExpenseList({
     },
   ];
 
+  const paginationFooter = (
+    <>
+      <div style={{ fontSize: 'var(--dp-typography-metadata)', color: 'var(--dp-color-ink-secondary)' }}>
+        Showing <strong style={{ color: 'var(--dp-color-ink)' }}>{expenses.length}</strong> of{' '}
+        <strong style={{ color: 'var(--dp-color-ink)' }}>{paginationMeta.total}</strong> records
+      </div>
+      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+        <Button
+          size="sm"
+          variant="secondary"
+          disabled={page <= 1}
+          onClick={() => setPage((p) => Math.max(1, p - 1))}
+        >
+          Previous
+        </Button>
+        <span style={{ fontSize: 'var(--dp-typography-metadata)', color: 'var(--dp-color-ink-secondary)', padding: '0 4px' }}>
+          Page {paginationMeta.page} of {paginationMeta.totalPages}
+        </span>
+        <Button
+          size="sm"
+          variant="secondary"
+          disabled={page >= paginationMeta.totalPages}
+          onClick={() => setPage((p) => p + 1)}
+        >
+          Next
+        </Button>
+      </div>
+    </>
+  );
+
   return (
-    <Card style={{ padding: '0px', overflow: 'hidden' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
       {error && (
-        <div style={{ padding: '16px', color: 'var(--dp-color-danger, #ef4444)' }}>
+        <div
+          style={{
+            padding: '12px 16px',
+            borderRadius: 'var(--dp-radius-md)',
+            backgroundColor: 'var(--dp-color-danger-subtle)',
+            border: '1px solid var(--dp-color-danger-border)',
+            color: 'var(--dp-color-danger)',
+            fontSize: '14px',
+          }}
+        >
           {error}
         </div>
       )}
 
       <DataTable
+        id="table-expenses"
         columns={columns}
         data={expenses}
         loading={loading}
         emptyMessage="No expenses found matching the current criteria."
+        footer={paginationFooter}
       />
-
-      {/* Pagination Controls */}
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          padding: '16px 20px',
-          borderTop: '1px solid var(--dp-color-rule)',
-          fontSize: '13px',
-          color: 'var(--dp-color-ink-secondary)',
-        }}
-      >
-        <div>
-          Showing {expenses.length} of {paginationMeta.total} records
-        </div>
-        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-          <Button
-            size="sm"
-            variant="secondary"
-            disabled={page <= 1}
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-          >
-            Previous
-          </Button>
-          <span>
-            Page {paginationMeta.page} of {paginationMeta.totalPages}
-          </span>
-          <Button
-            size="sm"
-            variant="secondary"
-            disabled={page >= paginationMeta.totalPages}
-            onClick={() => setPage((p) => p + 1)}
-          >
-            Next
-          </Button>
-        </div>
-      </div>
-    </Card>
+    </div>
   );
 }

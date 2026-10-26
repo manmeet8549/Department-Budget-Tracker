@@ -45,7 +45,7 @@ export default function ProtectedRoute({ allowedRoles, children }) {
             borderRadius: 'var(--dp-radius-panel)',
           }}
         >
-          <h2 style={{ color: '#cf1322', marginBottom: '12px' }}>Access Restricted (403)</h2>
+          <h2 style={{ color: 'var(--dp-color-danger)', marginBottom: '12px' }}>Access Restricted (403)</h2>
           <p style={{ color: 'var(--dp-color-ink-secondary)', marginBottom: '16px' }}>
             Your role <strong>({user?.role})</strong> is not authorized to view this screen.
           </p>
