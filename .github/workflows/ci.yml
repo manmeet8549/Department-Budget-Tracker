@@ -62,12 +62,7 @@ jobs:
         run: npm run lint
 
       - name: Test
-        run: |
-          npm run test:ci 2>&1 | tee test.log || {
-            ERR=$(tail -n 25 test.log | tr '\n' ' ')
-            echo "::error file=backend/tests::$ERR"
-            exit 1
-          }
+        run: npm run test:ci
 
   frontend:
     name: Frontend — lint & test
