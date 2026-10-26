@@ -287,6 +287,19 @@ All tokens must be added to `frontend/src/styles/tokens.css` and used across com
   --dp-spacing-gutter-tablet:  24px;
   --dp-spacing-gutter-desktop: 32px;
   --dp-spacing-content-max:    1280px;
+  /* UI-1 Semantic UI State Tokens */
+  --dp-color-danger:          var(--dp-color-status-critical);
+  --dp-color-danger-subtle:   var(--dp-color-status-critical-bg);
+  --dp-color-danger-border:   var(--dp-color-status-critical-border);
+  --dp-color-success:         var(--dp-color-status-approved);
+  --dp-color-success-subtle:  var(--dp-color-status-approved-bg);
+  --dp-color-success-border:  var(--dp-color-status-approved-border);
+  --dp-color-warning:         var(--dp-color-status-warning);
+  --dp-color-warning-subtle:  var(--dp-color-status-warning-bg);
+  --dp-color-warning-border:  var(--dp-color-status-warning-border);
+  --dp-color-info:            var(--dp-color-status-submitted);
+  --dp-color-info-subtle:     var(--dp-color-status-submitted-bg);
+  --dp-color-info-border:     var(--dp-color-status-submitted-border);
 }
 ```
 

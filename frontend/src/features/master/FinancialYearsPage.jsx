@@ -1,9 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
-import Card from '../../components/Card.jsx';
+import { Plus, Check } from 'lucide-react';
 import Button from '../../components/Button.jsx';
 import Field from '../../components/Field.jsx';
 import DataTable from '../../components/DataTable.jsx';
+import Modal from '../../components/Modal.jsx';
 import { getFinancialYears, createFinancialYear, activateFinancialYear } from '../../api/master.js';
+import { formatDate } from '../../utils/dates.js';
 
 export default function FinancialYearsPage() {
   const [years, setYears] = useState([]);
@@ -77,19 +79,25 @@ export default function FinancialYearsPage() {
       accessor: 'year',
       render: (row) => (
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span style={{ fontWeight: '600', color: 'var(--dp-color-ink)' }}>{row.year}</span>
+          <span style={{ fontWeight: '700', color: 'var(--dp-color-ink)', fontVariantNumeric: 'tabular-nums' }}>
+            {row.year}
+          </span>
           {row.isActive && (
             <span
               style={{
                 fontSize: '11px',
                 fontWeight: '700',
                 padding: '2px 8px',
-                borderRadius: '12px',
-                backgroundColor: 'rgba(7, 76, 224, 0.1)',
+                borderRadius: 'var(--dp-radius-pill)',
+                backgroundColor: 'var(--dp-color-accent-subtle)',
                 color: 'var(--dp-color-accent)',
-                border: '1px solid rgba(7, 76, 224, 0.25)',
+                border: '1px solid var(--dp-color-rule)',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
               }}
             >
+              <Check size={12} />
               ACTIVE
             </span>
           )}
@@ -99,12 +107,20 @@ export default function FinancialYearsPage() {
     {
       header: 'Start Date',
       accessor: 'startDate',
-      render: (row) => new Date(row.startDate).toLocaleDateString(),
+      render: (row) => (
+        <span style={{ fontVariantNumeric: 'tabular-nums', color: 'var(--dp-color-ink)' }}>
+          {formatDate(row.startDate)}
+        </span>
+      ),
     },
     {
       header: 'End Date',
       accessor: 'endDate',
-      render: (row) => new Date(row.endDate).toLocaleDateString(),
+      render: (row) => (
+        <span style={{ fontVariantNumeric: 'tabular-nums', color: 'var(--dp-color-ink)' }}>
+          {formatDate(row.endDate)}
+        </span>
+      ),
     },
     {
       header: 'Status',
@@ -114,10 +130,21 @@ export default function FinancialYearsPage() {
           style={{
             fontSize: '12px',
             fontWeight: '600',
-            padding: '2px 8px',
-            borderRadius: '4px',
-            backgroundColor: row.status === 'OPEN' ? '#f0fdf4' : 'var(--dp-color-ground-muted)',
-            color: row.status === 'OPEN' ? '#166534' : 'var(--dp-color-ink-secondary)',
+            padding: '3px 10px',
+            borderRadius: 'var(--dp-radius-pill)',
+            backgroundColor:
+              row.status === 'OPEN'
+                ? 'var(--dp-color-status-approved-bg)'
+                : 'var(--dp-color-ground-muted)',
+            color:
+              row.status === 'OPEN'
+                ? 'var(--dp-color-status-approved)'
+                : 'var(--dp-color-ink-secondary)',
+            border: `1px solid ${
+              row.status === 'OPEN'
+                ? 'var(--dp-color-status-approved-border)'
+                : 'var(--dp-color-rule)'
+            }`,
           }}
         >
           {row.status}
@@ -145,114 +172,125 @@ export default function FinancialYearsPage() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-        <div>
-          <h1 style={{ fontSize: '24px', fontWeight: '700', color: 'var(--dp-color-ink)' }}>
-            Financial Years
+      {/* Standard Page Header Pattern */}
+      <div className="dp-page-header">
+        <div className="dp-page-header-text">
+          <h1 className="dp-page-title">
+            Financial <span className="dp-title-accent">Years</span>
           </h1>
-          <p style={{ color: 'var(--dp-color-ink-secondary)', fontSize: 'var(--dp-typography-small)', margin: '4px 0 0 0' }}>
+          <p className="dp-page-subtitle">
             Manage accounting financial periods. Only one financial year can be active at a time.
           </p>
         </div>
-        <Button id="btn-add-fy" onClick={() => setIsModalOpen(true)}>
-          + Add Financial Year
-        </Button>
+        <div className="dp-page-action">
+          <Button
+            id="btn-add-fy"
+            onClick={() => setIsModalOpen(true)}
+            trailingIcon={<Plus size={16} />}
+          >
+            Add Financial Year
+          </Button>
+        </div>
       </div>
 
       {error && (
-        <div style={{ padding: '12px 16px', backgroundColor: '#fef2f2', border: '1px solid #fecaca', borderRadius: '6px', color: '#991b1b' }}>
+        <div
+          role="alert"
+          style={{
+            padding: '12px 16px',
+            backgroundColor: 'var(--dp-color-status-critical-bg)',
+            border: '1px solid var(--dp-color-status-critical-border)',
+            borderRadius: 'var(--dp-radius-md)',
+            color: 'var(--dp-color-status-critical)',
+            fontSize: 'var(--dp-typography-small)',
+          }}
+        >
           {error}
         </div>
       )}
 
-      <Card>
-        <DataTable
-          id="table-financial-years"
-          columns={columns}
-          data={years}
-          loading={loading}
-          emptyMessage="No financial years found. Create one above."
-        />
-      </Card>
+      {/* Single Card DataTable (No card inside card) */}
+      <DataTable
+        id="table-financial-years"
+        columns={columns}
+        data={years}
+        loading={loading}
+        emptyMessage="No financial years found. Create one above."
+      />
 
-      {/* Modal Dialog for Add Financial Year */}
-      {isModalOpen && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="modal-fy-title"
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            width: '100vw',
-            height: '100vh',
-            backgroundColor: 'rgba(0, 0, 0, 0.4)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000,
-          }}
-        >
+      {/* Shared Modal Dialog for Add Financial Year */}
+      <Modal
+        id="modal-add-fy"
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title="Add Financial Year"
+        subtitle="Define a new accounting period for institutional budgeting and spending controls."
+        footer={
+          <>
+            <Button
+              variant="secondary"
+              onClick={() => setIsModalOpen(false)}
+              disabled={submitting}
+            >
+              Cancel
+            </Button>
+            <Button
+              id="btn-submit-fy"
+              type="submit"
+              form="form-add-fy"
+              loading={submitting}
+              trailingIcon={true}
+            >
+              Save Financial Year
+            </Button>
+          </>
+        }
+      >
+        {formError && (
           <div
+            role="alert"
             style={{
-              backgroundColor: 'var(--dp-color-panel)',
-              borderRadius: 'var(--dp-radius-panel)',
-              padding: '24px',
-              width: '100%',
-              maxWidth: '480px',
-              border: '1px solid var(--dp-color-rule)',
-              boxShadow: '0 8px 30px rgba(0, 0, 0, 0.12)',
+              padding: '10px 14px',
+              backgroundColor: 'var(--dp-color-status-critical-bg)',
+              color: 'var(--dp-color-status-critical)',
+              border: '1px solid var(--dp-color-status-critical-border)',
+              borderRadius: 'var(--dp-radius-md)',
+              marginBottom: '16px',
+              fontSize: 'var(--dp-typography-small)',
             }}
           >
-            <h2 id="modal-fy-title" style={{ fontSize: '18px', fontWeight: '700', marginBottom: '16px' }}>
-              Add Financial Year
-            </h2>
-
-            {formError && (
-              <div style={{ padding: '8px 12px', backgroundColor: '#fef2f2', color: '#991b1b', borderRadius: '4px', marginBottom: '12px', fontSize: '14px' }}>
-                {formError}
-              </div>
-            )}
-
-            <form onSubmit={handleCreate}>
-              <Field
-                id="input-fy-year"
-                label="Year Label / Name"
-                placeholder="e.g. 2025-2026"
-                value={formData.year}
-                onChange={(e) => setFormData({ ...formData, year: e.target.value })}
-                required
-              />
-              <Field
-                id="input-fy-start-date"
-                label="Start Date"
-                type="date"
-                value={formData.startDate}
-                onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                required
-              />
-              <Field
-                id="input-fy-end-date"
-                label="End Date"
-                type="date"
-                value={formData.endDate}
-                onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-                required
-              />
-
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '20px' }}>
-                <Button variant="secondary" onClick={() => setIsModalOpen(false)} disabled={submitting}>
-                  Cancel
-                </Button>
-                <Button id="btn-submit-fy" type="submit" loading={submitting}>
-                  Save Financial Year
-                </Button>
-              </div>
-            </form>
+            {formError}
           </div>
-        </div>
-      )}
+        )}
+
+        <form id="form-add-fy" onSubmit={handleCreate}>
+          <Field
+            id="input-fy-year"
+            label="Year Label / Name"
+            placeholder="e.g. 2026-2027"
+            value={formData.year}
+            onChange={(e) => setFormData({ ...formData, year: e.target.value })}
+            required
+            hint="Format: YYYY-YYYY or YYYY-YY (e.g. 2026-27)"
+          />
+          <Field
+            id="input-fy-start-date"
+            label="Start Date"
+            type="date"
+            value={formData.startDate}
+            onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+            required
+          />
+          <Field
+            id="input-fy-end-date"
+            label="End Date"
+            type="date"
+            value={formData.endDate}
+            onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+            required
+          />
+        </form>
+      </Modal>
     </div>
   );
 }

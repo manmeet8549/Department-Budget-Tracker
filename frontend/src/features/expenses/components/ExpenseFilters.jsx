@@ -1,4 +1,3 @@
-
 export default function ExpenseFilters({
   fyFilter,
   setFyFilter,
@@ -14,20 +13,33 @@ export default function ExpenseFilters({
   departments,
   setPage,
 }) {
+  const selectStyle = {
+    padding: '6px 12px',
+    borderRadius: 'var(--dp-radius-sm)',
+    border: '1px solid var(--dp-color-rule)',
+    backgroundColor: 'var(--dp-color-panel)',
+    color: 'var(--dp-color-ink)',
+    fontSize: 'var(--dp-typography-metadata)',
+    fontFamily: 'inherit',
+  };
+
+  const labelStyle = {
+    fontSize: 'var(--dp-typography-metadata)',
+    fontWeight: '600',
+    color: 'var(--dp-color-ink-secondary)',
+  };
+
   return (
     <div
       style={{
         display: 'flex',
         flexWrap: 'wrap',
         gap: '16px',
-        marginTop: '20px',
-        paddingTop: '16px',
-        borderTop: '1px solid var(--dp-color-rule)',
         alignItems: 'center',
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <label style={{ fontSize: '13px', fontWeight: '600', color: 'var(--dp-color-ink-secondary)' }}>
+        <label style={labelStyle}>
           Financial Year:
         </label>
         <select
@@ -36,13 +48,7 @@ export default function ExpenseFilters({
             setFyFilter(e.target.value);
             setPage(1);
           }}
-          style={{
-            padding: '6px 12px',
-            borderRadius: '6px',
-            border: '1px solid var(--dp-color-rule)',
-            backgroundColor: 'var(--dp-color-panel)',
-            fontSize: '13px',
-          }}
+          style={selectStyle}
         >
           <option value="">All Years</option>
           {financialYears.map((fy) => (
@@ -55,7 +61,7 @@ export default function ExpenseFilters({
 
       {isGlobalRole && (
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <label style={{ fontSize: '13px', fontWeight: '600', color: 'var(--dp-color-ink-secondary)' }}>
+          <label style={labelStyle}>
             Department:
           </label>
           <select
@@ -64,13 +70,7 @@ export default function ExpenseFilters({
               setDeptFilter(e.target.value);
               setPage(1);
             }}
-            style={{
-              padding: '6px 12px',
-              borderRadius: '6px',
-              border: '1px solid var(--dp-color-rule)',
-              backgroundColor: 'var(--dp-color-panel)',
-              fontSize: '13px',
-            }}
+            style={selectStyle}
           >
             <option value="">All Departments</option>
             {departments.map((dept) => (
@@ -83,7 +83,7 @@ export default function ExpenseFilters({
       )}
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <label style={{ fontSize: '13px', fontWeight: '600', color: 'var(--dp-color-ink-secondary)' }}>
+        <label style={labelStyle}>
           Category:
         </label>
         <select
@@ -92,13 +92,7 @@ export default function ExpenseFilters({
             setCategoryFilter(e.target.value);
             setPage(1);
           }}
-          style={{
-            padding: '6px 12px',
-            borderRadius: '6px',
-            border: '1px solid var(--dp-color-rule)',
-            backgroundColor: 'var(--dp-color-panel)',
-            fontSize: '13px',
-          }}
+          style={selectStyle}
         >
           <option value="">All Categories</option>
           {categories.map((cat) => (
@@ -110,7 +104,7 @@ export default function ExpenseFilters({
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <label style={{ fontSize: '13px', fontWeight: '600', color: 'var(--dp-color-ink-secondary)' }}>
+        <label style={labelStyle}>
           Status:
         </label>
         <select
@@ -119,13 +113,7 @@ export default function ExpenseFilters({
             setStatusFilter(e.target.value);
             setPage(1);
           }}
-          style={{
-            padding: '6px 12px',
-            borderRadius: '6px',
-            border: '1px solid var(--dp-color-rule)',
-            backgroundColor: 'var(--dp-color-panel)',
-            fontSize: '13px',
-          }}
+          style={selectStyle}
         >
           <option value="">All Statuses</option>
           <option value="DRAFT">DRAFT</option>

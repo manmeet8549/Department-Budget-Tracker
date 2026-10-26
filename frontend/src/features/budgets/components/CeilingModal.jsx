@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import Button from '../../../components/Button.jsx';
 import Field from '../../../components/Field.jsx';
+import Modal from '../../../components/Modal.jsx';
 import { setCollegeCeiling } from '../../../api/budgets.js';
+import { formatINR } from '../../../utils/currency.js';
 
 export default function CeilingModal({ financialYear, currentCeiling, onClose, onSuccess }) {
   const [amount, setAmount] = useState(currentCeiling?.ceiling ? String(currentCeiling.ceiling) : '');
@@ -30,122 +32,79 @@ export default function CeilingModal({ financialYear, currentCeiling, onClose, o
   };
 
   return (
-    <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 1100,
-        padding: '20px',
-      }}
+    <Modal
+      id="modal-ceiling"
+      isOpen={true}
+      onClose={onClose}
+      title="Set College Budget Ceiling"
+      subtitle={`Financial Year: ${financialYear?.year || financialYear?.id}`}
+      footer={
+        <>
+          <Button variant="secondary" onClick={onClose} disabled={loading}>
+            Cancel
+          </Button>
+          <Button id="btn-submit-ceiling" type="submit" form="form-ceiling" loading={loading} trailingIcon={true}>
+            Confirm Ceiling
+          </Button>
+        </>
+      }
     >
-      <div
-        style={{
-          backgroundColor: 'var(--dp-color-panel)',
-          borderRadius: 'var(--dp-radius-panel)',
-          border: '1px solid var(--dp-color-rule)',
-          width: '100%',
-          maxWidth: '480px',
-          boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
-        }}
-      >
+      {error && (
         <div
+          role="alert"
           style={{
-            padding: '20px 24px',
-            borderBottom: '1px solid var(--dp-color-rule)',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
+            padding: '10px 14px',
+            borderRadius: 'var(--dp-radius-md)',
+            backgroundColor: 'var(--dp-color-status-critical-bg)',
+            color: 'var(--dp-color-status-critical)',
+            border: '1px solid var(--dp-color-status-critical-border)',
+            fontSize: 'var(--dp-typography-small)',
+            marginBottom: '16px',
           }}
         >
-          <div>
-            <h2 style={{ margin: 0, fontSize: '18px', fontWeight: '700', color: 'var(--dp-color-ink)' }}>
-              Set College Budget Ceiling
-            </h2>
-            <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: 'var(--dp-color-ink-secondary)' }}>
-              Financial Year: <strong>{financialYear?.year || financialYear?.id}</strong>
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            style={{
-              background: 'none',
-              border: 'none',
-              fontSize: '22px',
-              color: 'var(--dp-color-ink-secondary)',
-              cursor: 'pointer',
-            }}
-          >
-            &times;
-          </button>
+          {error}
         </div>
+      )}
 
-        <form onSubmit={handleSubmit}>
-          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            {error && (
-              <div
-                style={{
-                  padding: '10px 14px',
-                  borderRadius: '6px',
-                  backgroundColor: '#fee2e2',
-                  color: '#dc2626',
-                  fontSize: '13px',
-                }}
-              >
-                {error}
-              </div>
-            )}
-
-            <Field
-              label="Annual College Ceiling (₹) *"
-              helpText="Institutes an aggregate cap across all department budgets for this financial year."
-            >
-              <input
-                id="input-college-ceiling"
-                type="number"
-                step="0.01"
-                min="0.01"
-                required
-                placeholder="e.g. 50000000.00"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '8px 12px',
-                  borderRadius: '6px',
-                  border: '1px solid var(--dp-color-rule)',
-                  backgroundColor: 'var(--dp-color-panel)',
-                  color: 'var(--dp-color-ink)',
-                  fontSize: '16px',
-                  fontWeight: '600',
-                }}
-              />
-            </Field>
+      {currentCeiling && (
+        <div
+          style={{
+            padding: '14px 16px',
+            backgroundColor: 'var(--dp-color-ground-muted)',
+            borderRadius: 'var(--dp-radius-md)',
+            marginBottom: '18px',
+            fontSize: 'var(--dp-typography-small)',
+            border: '1px solid var(--dp-color-rule)',
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+            <span style={{ color: 'var(--dp-color-ink-secondary)' }}>Current Ceiling:</span>
+            <strong className="numeric">
+              {currentCeiling.ceiling ? formatINR(currentCeiling.ceiling) : 'Not Set'}
+            </strong>
           </div>
-
-          <div
-            style={{
-              padding: '16px 24px',
-              borderTop: '1px solid var(--dp-color-rule)',
-              display: 'flex',
-              justifyContent: 'flex-end',
-              gap: '12px',
-              backgroundColor: 'var(--dp-color-ground-muted)',
-            }}
-          >
-            <Button variant="secondary" onClick={onClose} type="button">
-              Cancel
-            </Button>
-            <Button id="btn-save-ceiling" type="submit" loading={loading}>
-              Save Ceiling
-            </Button>
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <span style={{ color: 'var(--dp-color-ink-secondary)' }}>Approved Total:</span>
+            <strong className="numeric" style={{ color: 'var(--dp-color-status-approved)' }}>
+              {formatINR(currentCeiling.approvedTotal || 0)}
+            </strong>
           </div>
-        </form>
-      </div>
-    </div>
+        </div>
+      )}
+
+      <form id="form-ceiling" onSubmit={handleSubmit}>
+        <Field
+          id="input-ceiling-amount"
+          label="Total Institutional Ceiling (₹)"
+          type="number"
+          step="0.01"
+          placeholder="e.g. 50000000"
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
+          required
+          hint="Maximum total approved budget allowed across all departments."
+        />
+      </form>
+    </Modal>
   );
 }

@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import Button from '../../../components/Button.jsx';
 import Field from '../../../components/Field.jsx';
+import Modal from '../../../components/Modal.jsx';
 import { reviewBudget } from '../../../api/budgets.js';
 
 export default function BudgetReviewModal({ budget, onClose, onSuccess }) {
@@ -81,201 +82,194 @@ export default function BudgetReviewModal({ budget, onClose, onSuccess }) {
   };
 
   return (
-    <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 1100,
-        padding: '20px',
-      }}
+    <Modal
+      id="modal-review-budget"
+      isOpen={true}
+      onClose={onClose}
+      maxWidth="720px"
+      title={`Finance Review: ${budget.department?.code} Budget`}
+      subtitle="Review proposed amounts, make adjustments if needed, and transition to UNDER_REVIEW."
+      footer={
+        <>
+          <Button variant="secondary" onClick={onClose} type="button" disabled={loading}>
+            Cancel
+          </Button>
+          <Button
+            id="btn-submit-review"
+            type="submit"
+            form="form-review-budget"
+            loading={loading}
+            disabled={!isSumMatched}
+            trailingIcon={true}
+          >
+            Submit Review &amp; Send to Management
+          </Button>
+        </>
+      }
     >
-      <div
-        style={{
-          backgroundColor: 'var(--dp-color-panel)',
-          borderRadius: 'var(--dp-radius-panel)',
-          border: '1px solid var(--dp-color-rule)',
-          width: '100%',
-          maxWidth: '720px',
-          maxHeight: '90vh',
-          display: 'flex',
-          flexDirection: 'column',
-          boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
-        }}
-      >
+      {error && (
         <div
+          role="alert"
           style={{
-            padding: '20px 24px',
-            borderBottom: '1px solid var(--dp-color-rule)',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
+            padding: '10px 14px',
+            borderRadius: 'var(--dp-radius-md)',
+            backgroundColor: 'var(--dp-color-status-critical-bg)',
+            color: 'var(--dp-color-status-critical)',
+            border: '1px solid var(--dp-color-status-critical-border)',
+            fontSize: 'var(--dp-typography-small)',
+            marginBottom: '16px',
           }}
         >
-          <div>
-            <h2 style={{ margin: 0, fontSize: '18px', fontWeight: '700', color: 'var(--dp-color-ink)' }}>
-              Finance Review: {budget.department?.code} Budget
-            </h2>
-            <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: 'var(--dp-color-ink-secondary)' }}>
-              Review proposed amounts, make adjustments if needed, and transition to UNDER_REVIEW.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            style={{
-              background: 'none',
-              border: 'none',
-              fontSize: '22px',
-              color: 'var(--dp-color-ink-secondary)',
-              cursor: 'pointer',
-            }}
-          >
-            &times;
-          </button>
+          {error}
         </div>
+      )}
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', flex: 1, overflowY: 'auto' }}>
-          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            {error && (
-              <div
-                style={{
-                  padding: '10px 14px',
-                  borderRadius: '6px',
-                  backgroundColor: '#fee2e2',
-                  color: '#dc2626',
-                  fontSize: '13px',
-                }}
-              >
-                {error}
-              </div>
-            )}
-
-            {/* Total Amount & Sync Button */}
-            <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-end' }}>
-              <div style={{ flex: 1 }}>
-                <Field label="Total Budget Amount (₹) *" helpText="Must equal sum of all category lines.">
-                  <input
-                    id="input-review-total"
-                    type="number"
-                    step="0.01"
-                    min="0.01"
-                    required
-                    value={totalAmount}
-                    onChange={(e) => setTotalAmount(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '8px 12px',
-                      borderRadius: '6px',
-                      border: '1px solid var(--dp-color-rule)',
-                      backgroundColor: 'var(--dp-color-panel)',
-                      color: 'var(--dp-color-ink)',
-                      fontSize: '16px',
-                      fontWeight: '600',
-                    }}
-                  />
-                </Field>
-              </div>
-              <Button
-                type="button"
-                variant="secondary"
-                size="sm"
-                onClick={handleSyncTotalToItems}
-                style={{ marginBottom: '2px' }}
-              >
-                Auto-match Total (₹{runningSum.toFixed(2)})
-              </Button>
-            </div>
-
-            {/* Item Table */}
-            <div>
-              <div style={{ marginBottom: '8px', fontWeight: '600', fontSize: '13px', color: 'var(--dp-color-ink)' }}>
-                Editable Category Line Items
-              </div>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
-                <thead>
-                  <tr style={{ backgroundColor: 'var(--dp-color-ground-muted)', borderBottom: '1px solid var(--dp-color-rule)' }}>
-                    <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: '600' }}>Category</th>
-                    <th style={{ padding: '8px 12px', textAlign: 'right', fontWeight: '600', width: '180px' }}>Proposed (₹)</th>
-                    <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: '600' }}>Justification</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {items.map((it) => (
-                    <tr key={it.categoryId} style={{ borderBottom: '1px solid var(--dp-color-rule)' }}>
-                      <td style={{ padding: '8px 12px', fontWeight: '600' }}>{it.categoryName}</td>
-                      <td style={{ padding: '8px 12px', textAlign: 'right' }}>
-                        <input
-                          id={`input-review-cat-${it.categoryId}`}
-                          type="number"
-                          step="0.01"
-                          min="0.01"
-                          value={it.amount}
-                          onChange={(e) => handleItemAmountChange(it.categoryId, e.target.value)}
-                          style={{
-                            width: '100%',
-                            padding: '6px 10px',
-                            borderRadius: '6px',
-                            border: '1px solid var(--dp-color-rule)',
-                            textAlign: 'right',
-                            fontWeight: '600',
-                          }}
-                        />
-                      </td>
-                      <td style={{ padding: '8px 12px', color: 'var(--dp-color-ink-secondary)', fontSize: '12px' }}>
-                        {it.justification || '—'}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Remark (Required) */}
-            <Field label="Review Remark *" helpText="Mandatory note documenting finance verification or adjustments.">
-              <textarea
-                id="input-review-remark"
+      <form id="form-review-budget" onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        {/* Total Amount & Sync Button */}
+        <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+          <div style={{ flex: 1, minWidth: '220px' }}>
+            <Field label="Total Budget Amount (₹) *" hint="Must equal sum of all category lines.">
+              <input
+                id="input-review-total"
+                type="number"
+                step="0.01"
+                min="0.01"
                 required
-                rows={3}
-                placeholder="e.g. Verified historical burn rate; reduced equipment allocation by 10%."
-                value={remark}
-                onChange={(e) => setRemark(e.target.value)}
+                value={totalAmount}
+                onChange={(e) => setTotalAmount(e.target.value)}
                 style={{
                   width: '100%',
-                  padding: '8px 12px',
-                  borderRadius: '6px',
+                  padding: '9px 12px',
+                  borderRadius: 'var(--dp-radius-md)',
                   border: '1px solid var(--dp-color-rule)',
                   backgroundColor: 'var(--dp-color-panel)',
                   color: 'var(--dp-color-ink)',
-                  fontSize: '13px',
-                  resize: 'vertical',
+                  fontSize: '16px',
+                  fontWeight: '700',
+                  fontVariantNumeric: 'tabular-nums',
+                  outline: 'none',
+                }}
+                onFocus={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--dp-color-accent)';
+                  e.currentTarget.style.boxShadow = 'var(--dp-shadow-focus)';
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--dp-color-rule)';
+                  e.currentTarget.style.boxShadow = 'none';
                 }}
               />
             </Field>
           </div>
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            onClick={handleSyncTotalToItems}
+            style={{ marginBottom: '18px' }}
+          >
+            Auto-match Total (₹{runningSum.toFixed(2)})
+          </Button>
+        </div>
 
+        {/* Item Table */}
+        <div style={{ border: '1px solid var(--dp-color-rule)', borderRadius: 'var(--dp-radius-md)', overflow: 'hidden' }}>
           <div
             style={{
-              padding: '16px 24px',
-              borderTop: '1px solid var(--dp-color-rule)',
-              display: 'flex',
-              justifyContent: 'flex-end',
-              gap: '12px',
+              padding: '10px 14px',
               backgroundColor: 'var(--dp-color-ground-muted)',
+              borderBottom: '1px solid var(--dp-color-rule)',
+              fontWeight: '700',
+              fontSize: '12px',
+              textTransform: 'uppercase',
+              letterSpacing: '0.04em',
+              color: 'var(--dp-color-ink-secondary)',
             }}
           >
-            <Button variant="secondary" onClick={onClose} type="button">
-              Cancel
-            </Button>
-            <Button id="btn-submit-review" type="submit" loading={loading} disabled={!isSumMatched}>
-              Submit Review &amp; Send to Management
-            </Button>
+            Editable Category Line Items
           </div>
-        </form>
-      </div>
-    </div>
+          <div className="dp-table-scroll-wrapper">
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+              <thead>
+                <tr style={{ backgroundColor: 'var(--dp-color-ground)', borderBottom: '1px solid var(--dp-color-rule)' }}>
+                  <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: '600', color: 'var(--dp-color-ink-secondary)' }}>Category</th>
+                  <th style={{ padding: '8px 12px', textAlign: 'right', fontWeight: '600', width: '180px', color: 'var(--dp-color-ink-secondary)' }}>Proposed (₹)</th>
+                  <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: '600', color: 'var(--dp-color-ink-secondary)' }}>Justification</th>
+                </tr>
+              </thead>
+              <tbody>
+                {items.map((it) => (
+                  <tr key={it.categoryId} style={{ borderBottom: '1px solid var(--dp-color-rule-subtle)' }}>
+                    <td style={{ padding: '8px 12px', fontWeight: '700', color: 'var(--dp-color-ink)' }}>{it.categoryName}</td>
+                    <td style={{ padding: '8px 12px', textAlign: 'right' }}>
+                      <input
+                        id={`input-review-cat-${it.categoryId}`}
+                        type="number"
+                        step="0.01"
+                        min="0.01"
+                        value={it.amount}
+                        onChange={(e) => handleItemAmountChange(it.categoryId, e.target.value)}
+                        style={{
+                          width: '100%',
+                          padding: '6px 10px',
+                          borderRadius: 'var(--dp-radius-sm)',
+                          border: '1px solid var(--dp-color-rule)',
+                          textAlign: 'right',
+                          fontWeight: '700',
+                          fontVariantNumeric: 'tabular-nums',
+                          outline: 'none',
+                        }}
+                        onFocus={(e) => {
+                          e.currentTarget.style.borderColor = 'var(--dp-color-accent)';
+                          e.currentTarget.style.boxShadow = 'var(--dp-shadow-focus)';
+                        }}
+                        onBlur={(e) => {
+                          e.currentTarget.style.borderColor = 'var(--dp-color-rule)';
+                          e.currentTarget.style.boxShadow = 'none';
+                        }}
+                      />
+                    </td>
+                    <td style={{ padding: '8px 12px', color: 'var(--dp-color-ink-secondary)', fontSize: '12px' }}>
+                      {it.justification || '—'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Remark */}
+        <Field label="Review Remark *" hint="Mandatory note documenting finance verification or adjustments.">
+          <textarea
+            id="input-review-remark"
+            required
+            rows={3}
+            placeholder="e.g. Verified historical burn rate; reduced equipment allocation by 10%."
+            value={remark}
+            onChange={(e) => setRemark(e.target.value)}
+            style={{
+              width: '100%',
+              padding: '10px 12px',
+              borderRadius: 'var(--dp-radius-md)',
+              border: '1px solid var(--dp-color-rule)',
+              backgroundColor: 'var(--dp-color-panel)',
+              color: 'var(--dp-color-ink)',
+              fontSize: 'var(--dp-typography-interface)',
+              resize: 'vertical',
+              outline: 'none',
+              fontFamily: 'Instrument Sans, var(--dp-typography-fallback)',
+            }}
+            onFocus={(e) => {
+              e.currentTarget.style.borderColor = 'var(--dp-color-accent)';
+              e.currentTarget.style.boxShadow = 'var(--dp-shadow-focus)';
+            }}
+            onBlur={(e) => {
+              e.currentTarget.style.borderColor = 'var(--dp-color-rule)';
+              e.currentTarget.style.boxShadow = 'none';
+            }}
+          />
+        </Field>
+      </form>
+    </Modal>
   );
 }

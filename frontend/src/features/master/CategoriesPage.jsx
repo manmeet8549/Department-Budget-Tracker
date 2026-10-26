@@ -1,8 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
-import Card from '../../components/Card.jsx';
+import { Plus, Edit2, Trash2, Tag } from 'lucide-react';
 import Button from '../../components/Button.jsx';
 import Field from '../../components/Field.jsx';
 import DataTable from '../../components/DataTable.jsx';
+import Modal from '../../components/Modal.jsx';
+import StatusBadge from '../../components/StatusBadge.jsx';
 import {
   getCategories,
   createCategory,
@@ -105,7 +107,10 @@ export default function CategoriesPage() {
       header: 'Category Name',
       accessor: 'name',
       render: (row) => (
-        <span style={{ fontWeight: '600', color: 'var(--dp-color-ink)' }}>{row.name}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Tag size={15} color="var(--dp-color-accent)" />
+          <span style={{ fontWeight: '700', color: 'var(--dp-color-ink)' }}>{row.name}</span>
+        </div>
       ),
     },
     {
@@ -121,18 +126,11 @@ export default function CategoriesPage() {
       header: 'Status',
       accessor: 'isActive',
       render: (row) => (
-        <span
-          style={{
-            fontSize: '12px',
-            fontWeight: '600',
-            padding: '2px 8px',
-            borderRadius: '4px',
-            backgroundColor: row.isActive ? '#f0fdf4' : '#fef2f2',
-            color: row.isActive ? '#166534' : '#991b1b',
-          }}
-        >
-          {row.isActive ? 'Active' : 'Inactive'}
-        </span>
+        <StatusBadge
+          status={row.isActive ? 'APPROVED' : 'CANCELLED'}
+          label={row.isActive ? 'Active' : 'Inactive'}
+          size="sm"
+        />
       ),
     },
     {
@@ -140,15 +138,20 @@ export default function CategoriesPage() {
       align: 'right',
       render: (row) => (
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
-          <Button size="sm" variant="secondary" onClick={() => openEditModal(row)}>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => openEditModal(row)}
+            trailingIcon={<Edit2 size={13} />}
+          >
             Edit
           </Button>
           {row.isActive && (
             <Button
               size="sm"
-              variant="secondary"
-              style={{ color: '#dc2626' }}
+              variant="danger"
               onClick={() => handleDeactivate(row.id)}
+              trailingIcon={<Trash2 size={13} />}
             >
               Deactivate
             </Button>
@@ -160,116 +163,136 @@ export default function CategoriesPage() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-        <div>
-          <h1 style={{ fontSize: '24px', fontWeight: '700', color: 'var(--dp-color-ink)' }}>
-            Expense & Budget Categories
+      {/* Standard Page Header Pattern */}
+      <div className="dp-page-header">
+        <div className="dp-page-header-text">
+          <h1 className="dp-page-title">
+            Expense & Budget <span className="dp-title-accent">Categories</span>
           </h1>
-          <p style={{ color: 'var(--dp-color-ink-secondary)', fontSize: 'var(--dp-typography-small)', margin: '4px 0 0 0' }}>
+          <p className="dp-page-subtitle">
             Standard college budget categories (e.g. Equipment, Consumables, Maintenance).
           </p>
         </div>
-        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-          <label style={{ fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+        <div className="dp-page-action" style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+          <label
+            style={{
+              fontSize: '13px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              cursor: 'pointer',
+              color: 'var(--dp-color-ink-secondary)',
+              fontWeight: '500',
+            }}
+          >
             <input
               type="checkbox"
               checked={showInactive}
               onChange={(e) => setShowInactive(e.target.checked)}
+              style={{ accentColor: 'var(--dp-color-accent)' }}
             />
             Show Inactive
           </label>
-          <Button id="btn-add-category" onClick={openCreateModal}>
-            + Add Category
+          <Button
+            id="btn-add-category"
+            onClick={openCreateModal}
+            trailingIcon={<Plus size={16} />}
+          >
+            Add Category
           </Button>
         </div>
       </div>
 
       {error && (
-        <div style={{ padding: '12px 16px', backgroundColor: '#fef2f2', border: '1px solid #fecaca', borderRadius: '6px', color: '#991b1b' }}>
+        <div
+          role="alert"
+          style={{
+            padding: '12px 16px',
+            backgroundColor: 'var(--dp-color-status-critical-bg)',
+            border: '1px solid var(--dp-color-status-critical-border)',
+            borderRadius: 'var(--dp-radius-md)',
+            color: 'var(--dp-color-status-critical)',
+            fontSize: 'var(--dp-typography-small)',
+          }}
+        >
           {error}
         </div>
       )}
 
-      <Card>
-        <DataTable
-          id="table-categories"
-          columns={columns}
-          data={categories}
-          loading={loading}
-          emptyMessage="No categories found."
-        />
-      </Card>
+      {/* Single Card DataTable (No card-in-card) */}
+      <DataTable
+        id="table-categories"
+        columns={columns}
+        data={categories}
+        loading={loading}
+        emptyMessage="No categories found."
+      />
 
-      {/* Modal Dialog for Add / Edit Category */}
-      {isModalOpen && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="modal-cat-title"
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            width: '100vw',
-            height: '100vh',
-            backgroundColor: 'rgba(0, 0, 0, 0.4)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000,
-          }}
-        >
+      {/* Shared Modal Dialog for Add / Edit Category */}
+      <Modal
+        id="modal-category"
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title={editingCategory ? 'Edit Category' : 'Add Category'}
+        subtitle="Manage category nomenclature and scope across department budgets."
+        footer={
+          <>
+            <Button
+              variant="secondary"
+              onClick={() => setIsModalOpen(false)}
+              disabled={submitting}
+            >
+              Cancel
+            </Button>
+            <Button
+              id="btn-submit-cat"
+              type="submit"
+              form="form-category"
+              loading={submitting}
+              trailingIcon={true}
+            >
+              {editingCategory ? 'Update Category' : 'Create Category'}
+            </Button>
+          </>
+        }
+      >
+        {formError && (
           <div
+            role="alert"
             style={{
-              backgroundColor: 'var(--dp-color-panel)',
-              borderRadius: 'var(--dp-radius-panel)',
-              padding: '24px',
-              width: '100%',
-              maxWidth: '480px',
-              border: '1px solid var(--dp-color-rule)',
-              boxShadow: '0 8px 30px rgba(0, 0, 0, 0.12)',
+              padding: '10px 14px',
+              backgroundColor: 'var(--dp-color-status-critical-bg)',
+              color: 'var(--dp-color-status-critical)',
+              border: '1px solid var(--dp-color-status-critical-border)',
+              borderRadius: 'var(--dp-radius-md)',
+              marginBottom: '16px',
+              fontSize: 'var(--dp-typography-small)',
             }}
           >
-            <h2 id="modal-cat-title" style={{ fontSize: '18px', fontWeight: '700', marginBottom: '16px' }}>
-              {editingCategory ? 'Edit Category' : 'Add Category'}
-            </h2>
-
-            {formError && (
-              <div style={{ padding: '8px 12px', backgroundColor: '#fef2f2', color: '#991b1b', borderRadius: '4px', marginBottom: '12px', fontSize: '14px' }}>
-                {formError}
-              </div>
-            )}
-
-            <form onSubmit={handleSubmit}>
-              <Field
-                id="input-cat-name"
-                label="Category Name"
-                placeholder="e.g. Equipment, Software"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                required
-              />
-
-              <Field
-                id="input-cat-description"
-                label="Description (Optional)"
-                placeholder="Brief summary of items in this category"
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              />
-
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '20px' }}>
-                <Button variant="secondary" onClick={() => setIsModalOpen(false)} disabled={submitting}>
-                  Cancel
-                </Button>
-                <Button id="btn-submit-cat" type="submit" loading={submitting}>
-                  {editingCategory ? 'Update Category' : 'Create Category'}
-                </Button>
-              </div>
-            </form>
+            {formError}
           </div>
-        </div>
-      )}
+        )}
+
+        <form id="form-category" onSubmit={handleSubmit}>
+          <Field
+            id="input-cat-name"
+            label="Category Name"
+            placeholder="e.g. Equipment, Software Licenses"
+            value={formData.name}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            required
+            hint="Display name for budget allocation and expense claims"
+          />
+
+          <Field
+            id="input-cat-description"
+            label="Description (Optional)"
+            placeholder="Brief summary of items in this category"
+            value={formData.description}
+            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+          />
+        </form>
+      </Modal>
     </div>
   );
 }

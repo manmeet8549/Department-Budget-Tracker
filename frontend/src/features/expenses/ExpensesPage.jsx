@@ -380,9 +380,9 @@ export default function ExpensesPage() {
         <Card
           style={{
             padding: '16px 20px',
-            backgroundColor: 'rgba(239, 68, 68, 0.08)',
-            border: '1px solid var(--dp-color-danger, #ef4444)',
-            color: 'var(--dp-color-danger, #dc2626)',
+            backgroundColor: 'var(--dp-color-danger-subtle)',
+            border: '1px solid var(--dp-color-danger-border)',
+            color: 'var(--dp-color-danger)',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
@@ -406,26 +406,29 @@ export default function ExpensesPage() {
         </Card>
       )}
 
-      {/* Top Header Card */}
-      <Card style={{ padding: '24px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
-          <div>
-            <h1 style={{ fontSize: '24px', fontWeight: 'bold', margin: '0 0 6px 0', color: 'var(--dp-color-ink-primary)' }}>
-              Expense Claims & Drafts
-            </h1>
-            <p style={{ margin: 0, color: 'var(--dp-color-ink-secondary)', fontSize: '14px' }}>
-              Submit, review, approve, and record payments for department expenses with live row-lock verification.
-            </p>
-          </div>
-
-          {canCreate && (
-            <Button variant="primary" onClick={handleOpenCreate} id="btn-create-expense">
-              + New Expense Draft
-            </Button>
-          )}
+      {/* Top Header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
+        <div>
+          <h1 style={{ margin: 0, fontSize: '24px', fontWeight: '800', letterSpacing: 'var(--dp-tracking-tight)', color: 'var(--dp-color-ink)' }}>
+            <span className="sr-only">Expense Claims &amp; Drafts</span>
+            <span aria-hidden="true">
+              Expense Claims &amp; <span className="dp-title-accent">Drafts</span>
+            </span>
+          </h1>
+          <p style={{ margin: '6px 0 0 0', color: 'var(--dp-color-ink-secondary)', fontSize: 'var(--dp-typography-body)' }}>
+            Submit, review, approve, and record payments for department expenses with live row-lock verification.
+          </p>
         </div>
 
-        {/* Filters */}
+        {canCreate && (
+          <Button variant="primary" onClick={handleOpenCreate} id="btn-create-expense">
+            + New Expense Draft
+          </Button>
+        )}
+      </div>
+
+      {/* Filters */}
+      <Card style={{ padding: '16px 20px' }}>
         <ExpenseFilters
           fyFilter={fyFilter}
           setFyFilter={setFyFilter}
