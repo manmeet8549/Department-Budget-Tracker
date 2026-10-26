@@ -564,7 +564,10 @@ describe('Iteration 4b: Expenses Workflow (Submit, Approve, Reject, Pay, Concurr
       // Cleanup
       await prisma.approval.deleteMany({ where: { entityId: { in: [hmExpId, mtExpId] } } });
       await prisma.expense.deleteMany({ where: { id: { in: [hmExpId, mtExpId] } } });
+      await prisma.budgetItem.deleteMany({ where: { budgetId: { in: [hmBudget.id, mtBudget.id] } } });
+      await prisma.budget.deleteMany({ where: { id: { in: [hmBudget.id, mtBudget.id] } } });
     });
+
   });
 
   describe('State Machine Invariants & Immutability', () => {

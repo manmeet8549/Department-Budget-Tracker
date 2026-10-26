@@ -50,11 +50,22 @@ describe('Iteration 3: Budgets Module v1', () => {
     eqCat = await prisma.category.findUnique({ where: { name: 'Equipment' } });
     conCat = await prisma.category.findUnique({ where: { name: 'Consumables' } });
     softCat = await prisma.category.findUnique({ where: { name: 'Software' } });
+
+    // Clean up any budgets and expenses from other test suites to ensure isolated test state
+    await prisma.approval.deleteMany({});
+    await prisma.expense.deleteMany({});
+    await prisma.budgetItem.deleteMany({});
+    await prisma.budget.deleteMany({});
   }, 30000);
 
   afterAll(async () => {
+    await prisma.approval.deleteMany({});
+    await prisma.expense.deleteMany({});
+    await prisma.budgetItem.deleteMany({});
+    await prisma.budget.deleteMany({});
     await prisma.$disconnect();
   });
+
 
   describe('Validation & Business Rules', () => {
     it('rejects budget when sum of items does not equal total_amount', async () => {
@@ -188,7 +199,15 @@ describe('Iteration 3: Budgets Module v1', () => {
     it('stores and returns exact decimal precision like 1,50,000.50 (NUMERIC 14,2)', async () => {
       // Finance creates for HM
       const hmDept = await prisma.department.findUnique({ where: { code: 'HM' } });
+      await prisma.budgetItem.deleteMany({
+        where: { budget: { financialYearId: activeFy.id, departmentId: hmDept.id } },
+      });
+      await prisma.budget.deleteMany({
+        where: { financialYearId: activeFy.id, departmentId: hmDept.id },
+      });
+
       const res = await request(app)
+
         .post('/api/v1/budgets')
         .set('Authorization', `Bearer ${financeToken}`)
         .send({

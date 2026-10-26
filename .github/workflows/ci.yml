@@ -62,18 +62,8 @@ jobs:
         run: npm run lint
 
       - name: Test
-        run: |
-          set +e
-          npm run test:ci > test.log 2>&1
-          TEST_EXIT=$?
-          cat test.log
-          if [ $TEST_EXIT -ne 0 ]; then
-            FIRST_ERR=$(grep -m 1 -E "(FAIL|●|Error:|FATAL)" test.log || echo "Test step failed with exit code $TEST_EXIT")
-            echo "::error title=First Error::$FIRST_ERR"
-            FAIL_SUMMARY=$(grep -E "(FAIL |● |    Error: |    Expected: |    Received: |FATAL)" test.log | head -n 25 | tr '\n' ' | ' | sed 's/"//g')
-            echo "::error title=Failure Summary::$FAIL_SUMMARY"
-            exit $TEST_EXIT
-          fi
+        run: npm run test:ci
+
 
 
   frontend:
