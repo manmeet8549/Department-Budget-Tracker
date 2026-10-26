@@ -118,6 +118,17 @@
   --dp-color-info-subtle:             var(--dp-color-status-submitted-bg);
   --dp-color-info-border:             var(--dp-color-status-submitted-border);
 
+  /* Backdrop & Illustration Tokens */
+  --dp-color-backdrop:                   rgba(22, 25, 31, 0.45);
+  --dp-color-illustration-border:        rgba(255, 255, 255, 0.12);
+  --dp-color-illustration-border-subtle: rgba(255, 255, 255, 0.08);
+  --dp-color-illustration-ring:          rgba(255, 255, 255, 0.14);
+  --dp-color-illustration-ring-faint:    rgba(255, 255, 255, 0.05);
+  --dp-color-illustration-connector:     rgba(255, 255, 255, 0.20);
+  --dp-color-illustration-bar:           rgba(255, 255, 255, 0.45);
+  --dp-color-illustration-bar-bg:        rgba(255, 255, 255, 0.25);
+  --dp-color-illustration-track:         rgba(255, 255, 255, 0.12);
+
   --dp-border-hairline:           1px;
 
   /* Motion */

@@ -40,7 +40,7 @@ export default function Modal({
         alignItems: 'center',
         justifyContent: 'center',
         padding: '16px',
-        backgroundColor: 'rgba(22, 25, 31, 0.45)',
+        backgroundColor: 'var(--dp-color-backdrop)',
         backdropFilter: 'blur(3px)',
       }}
       onClick={(e) => {

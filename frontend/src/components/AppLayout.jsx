@@ -106,7 +106,7 @@ export default function AppLayout() {
           style={{
             position: 'fixed',
             inset: 0,
-            backgroundColor: 'rgba(22, 25, 31, 0.4)',
+            backgroundColor: 'var(--dp-color-backdrop)',
             backdropFilter: 'blur(2px)',
             zIndex: 40,
           }}

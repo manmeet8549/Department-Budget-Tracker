@@ -8,11 +8,13 @@ export default function Button({
   disabled = false,
   loading = false,
   trailingIcon = false,
+  icon = false,
   onClick,
   style = {},
   id,
   ...props
 }) {
+  const showTrailingIcon = trailingIcon || icon;
   const getVariantStyles = () => {
     switch (variant) {
       case 'secondary':
@@ -148,15 +150,16 @@ export default function Button({
       ) : (
         <>
           {children}
-          {trailingIcon && (
+          {showTrailingIcon && (
             <span
+              className="dp-btn-arrow"
               data-testid="button-trailing-icon"
               style={{ display: 'inline-flex', alignItems: 'center' }}
             >
-              {typeof trailingIcon === 'boolean' ? (
+              {typeof showTrailingIcon === 'boolean' ? (
                 <ArrowRight size={iconSize} />
               ) : (
-                trailingIcon
+                showTrailingIcon
               )}
             </span>
           )}

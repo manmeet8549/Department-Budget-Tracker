@@ -293,10 +293,10 @@ export default function BudgetsPage() {
               style={{
                 marginLeft: '8px',
                 fontSize: '11px',
-                backgroundColor: 'var(--dp-color-accent-subtle, #e0e7ff)',
-                color: 'var(--dp-color-accent, #074ce0)',
+                backgroundColor: 'var(--dp-color-accent-subtle)',
+                color: 'var(--dp-color-accent)',
                 padding: '2px 6px',
-                borderRadius: '4px',
+                borderRadius: 'var(--dp-radius-xs)',
                 fontWeight: '600',
               }}
             >

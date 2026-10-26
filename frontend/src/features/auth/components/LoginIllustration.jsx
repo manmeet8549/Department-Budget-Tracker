@@ -1,17 +1,16 @@
-import { CheckCircle2, Building2, BarChart2 } from 'lucide-react';
+import { Building2, CheckCircle2, BarChart2 } from 'lucide-react';
 
 export default function LoginIllustration() {
   return (
     <div
       style={{
         position: 'relative',
-        width: '100%',
-        maxWidth: '460px',
+        width: '460px',
         height: '380px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        margin: '0 auto',
+        userSelect: 'none',
       }}
     >
       {/* Concentric faint orbit circles */}
@@ -21,7 +20,7 @@ export default function LoginIllustration() {
           width: '210px',
           height: '210px',
           borderRadius: '50%',
-          border: '1px dashed rgba(255, 255, 255, 0.14)',
+          border: '1px dashed var(--dp-color-illustration-ring)',
           pointerEvents: 'none',
         }}
       />
@@ -31,7 +30,7 @@ export default function LoginIllustration() {
           width: '320px',
           height: '320px',
           borderRadius: '50%',
-          border: '1px solid rgba(255, 255, 255, 0.08)',
+          border: '1px solid var(--dp-color-illustration-border-subtle)',
           pointerEvents: 'none',
         }}
       />
@@ -41,7 +40,7 @@ export default function LoginIllustration() {
           width: '430px',
           height: '430px',
           borderRadius: '50%',
-          border: '1px dashed rgba(255, 255, 255, 0.05)',
+          border: '1px dashed var(--dp-color-illustration-ring-faint)',
           pointerEvents: 'none',
         }}
       />
@@ -63,7 +62,7 @@ export default function LoginIllustration() {
           y1="190"
           x2="130"
           y2="90"
-          stroke="rgba(255, 255, 255, 0.2)"
+          stroke="var(--dp-color-illustration-connector)"
           strokeWidth="1.5"
           strokeDasharray="4 4"
         />
@@ -73,7 +72,7 @@ export default function LoginIllustration() {
           y1="190"
           x2="330"
           y2="100"
-          stroke="rgba(255, 255, 255, 0.2)"
+          stroke="var(--dp-color-illustration-connector)"
           strokeWidth="1.5"
           strokeDasharray="4 4"
         />
@@ -83,7 +82,7 @@ export default function LoginIllustration() {
           y1="190"
           x2="310"
           y2="280"
-          stroke="rgba(255, 255, 255, 0.2)"
+          stroke="var(--dp-color-illustration-connector)"
           strokeWidth="1.5"
           strokeDasharray="4 4"
         />
@@ -119,7 +118,7 @@ export default function LoginIllustration() {
           zIndex: 12,
           transform: 'rotate(-4deg)',
           backgroundColor: 'var(--dp-color-field-card)',
-          border: '1px solid rgba(255, 255, 255, 0.12)',
+          border: '1px solid var(--dp-color-illustration-border)',
           borderRadius: 'var(--dp-radius-md)',
           padding: '12px 16px',
           boxShadow: 'var(--dp-shadow-card-float)',
@@ -170,7 +169,7 @@ export default function LoginIllustration() {
           style={{
             height: '5px',
             borderRadius: 'var(--dp-radius-pill)',
-            backgroundColor: 'rgba(255, 255, 255, 0.12)',
+            backgroundColor: 'var(--dp-color-illustration-track)',
             overflow: 'hidden',
             marginBottom: '4px',
           }}
@@ -205,7 +204,7 @@ export default function LoginIllustration() {
           zIndex: 12,
           transform: 'rotate(3deg)',
           backgroundColor: 'var(--dp-color-field-card)',
-          border: '1px solid rgba(255, 255, 255, 0.12)',
+          border: '1px solid var(--dp-color-illustration-border)',
           borderRadius: 'var(--dp-radius-md)',
           padding: '10px 14px',
           boxShadow: 'var(--dp-shadow-card-float)',
@@ -258,7 +257,7 @@ export default function LoginIllustration() {
           zIndex: 12,
           transform: 'rotate(-2deg)',
           backgroundColor: 'var(--dp-color-field-card)',
-          border: '1px solid rgba(255, 255, 255, 0.12)',
+          border: '1px solid var(--dp-color-illustration-border)',
           borderRadius: 'var(--dp-radius-md)',
           padding: '10px 14px',
           boxShadow: 'var(--dp-shadow-card-float)',
@@ -315,7 +314,7 @@ export default function LoginIllustration() {
             <div
               style={{
                 height: '22px',
-                backgroundColor: 'rgba(255, 255, 255, 0.45)',
+                backgroundColor: 'var(--dp-color-illustration-bar)',
                 borderRadius: '3px 3px 0 0',
               }}
             />
@@ -333,7 +332,7 @@ export default function LoginIllustration() {
             <div
               style={{
                 height: '14px',
-                backgroundColor: 'rgba(255, 255, 255, 0.25)',
+                backgroundColor: 'var(--dp-color-illustration-bar-bg)',
                 borderRadius: '3px 3px 0 0',
               }}
             />

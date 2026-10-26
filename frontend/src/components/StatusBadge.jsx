@@ -102,6 +102,7 @@ export default function StatusBadge({
       }}
     >
       <span
+        className="dp-status-badge-dot"
         style={{
           display: 'inline-block',
           width: isSm ? '5px' : '6px',

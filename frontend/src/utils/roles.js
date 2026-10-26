@@ -18,9 +18,14 @@ export function formatRoleLabel(role, department = null) {
 
   const cleanRole = String(role).toUpperCase().trim();
 
-  const deptLabel = department?.name
-    ? department.name.replace(/ Block$/i, '')
-    : department?.code || '';
+  let deptLabel = '';
+  if (typeof department === 'string') {
+    deptLabel = department.replace(/ Block$/i, '');
+  } else if (department && typeof department === 'object') {
+    deptLabel = department.name
+      ? department.name.replace(/ Block$/i, '')
+      : department.code || '';
+  }
 
   switch (cleanRole) {
     case 'SUPER_ADMIN':
@@ -32,7 +37,7 @@ export function formatRoleLabel(role, department = null) {
     case 'AUDITOR':
       return 'Auditor';
     case 'HOD':
-      return deptLabel ? `HoD - ${deptLabel}` : 'HoD';
+      return deptLabel ? `HoD - ${deptLabel}` : 'Head of Department';
     case 'STAFF':
       return deptLabel ? `Staff - ${deptLabel}` : 'Staff';
     default:
