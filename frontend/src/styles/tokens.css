@@ -1,16 +1,67 @@
 :root {
-  /* Colors */
+  /* Core Colors */
   --dp-color-ground:              #fcfcfd;
   --dp-color-ink:                 #16191f;
   --dp-color-ink-secondary:       #454c58;
+  --dp-color-ink-muted:           #8a92a6;
   --dp-color-ground-muted:        #f3f4f6;
   --dp-color-rule:                #dde0e6;
+  --dp-color-rule-subtle:         #eef0f4;
   --dp-color-accent:              #074ce0;
+  --dp-color-accent-hover:        #053bb3;
+  --dp-color-accent-subtle:       #eef4ff;
   --dp-color-field:               #16191f;
+  --dp-color-field-card:          #1f242d;
   --dp-color-on-field:            #fcfcfd;
   --dp-color-on-field-secondary:  #d0d4dd;
+  --dp-color-on-field-muted:      #8a92a6;
   --dp-color-panel:               #ffffff;
+  --dp-color-panel-hover:         #fafbfc;
+  --dp-color-row-hover:           #f8fafc;
   --dp-color-on-accent:           #ffffff;
+
+  /* UI-1 Gradients */
+  --dp-gradient-accent:           linear-gradient(135deg, #1d68f2 0%, #074ce0 100%);
+  --dp-gradient-accent-hover:     linear-gradient(135deg, #2575fc 0%, #0a56f5 100%);
+  --dp-gradient-dark:             linear-gradient(180deg, #16191f 0%, #0d0f13 100%);
+  --dp-gradient-active:           linear-gradient(90deg, rgba(7, 76, 224, 0.10) 0%, rgba(7, 76, 224, 0.02) 100%);
+  --dp-gradient-tile:             linear-gradient(135deg, #2563eb 0%, #074ce0 100%);
+
+  /* UI-1 Shadow Scale */
+  --dp-shadow-sm:                 0 1px 2px 0 rgba(22, 25, 31, 0.05);
+  --dp-shadow-md:                 0 4px 6px -1px rgba(22, 25, 31, 0.07), 0 2px 4px -2px rgba(22, 25, 31, 0.05);
+  --dp-shadow-lg:                 0 10px 15px -3px rgba(22, 25, 31, 0.08), 0 4px 6px -4px rgba(22, 25, 31, 0.04);
+  --dp-shadow-glow:               0 0 24px -2px rgba(7, 76, 224, 0.35);
+  --dp-shadow-card-float:         0 12px 28px -4px rgba(22, 25, 31, 0.12), 0 4px 8px -2px rgba(22, 25, 31, 0.06);
+  --dp-shadow-focus:              0 0 0 3px rgba(7, 76, 224, 0.25);
+
+  /* UI-1 Radius Scale */
+  --dp-radius-xs:                 4px;
+  --dp-radius-sm:                 6px;
+  --dp-radius-md:                 8px;
+  --dp-radius-lg:                 12px;
+  --dp-radius-xl:                 16px;
+  --dp-radius-panel:              12px;
+  --dp-radius-pill:               9999px;
+
+  /* UI-1 Typography & Letter-spacing Tokens */
+  --dp-typography-fallback:       sans-serif;
+  --dp-typography-body:           16px;
+  --dp-typography-interface:      15px;
+  --dp-typography-small:          14px;
+  --dp-typography-metadata:       13px;
+  --dp-typography-label:          12px;
+  --dp-typography-body-leading:   1.6;
+  --dp-tracking-tight:            -0.02em;
+  --dp-tracking-tighter:          -0.035em;
+  --dp-tracking-tightest:         -0.045em;
+
+  /* UI-1 Page Gutters & Spacing */
+  --dp-spacing-grid-gap:          24px;
+  --dp-spacing-gutter-mobile:     16px;
+  --dp-spacing-gutter-tablet:     24px;
+  --dp-spacing-gutter-desktop:    32px;
+  --dp-spacing-content-max:       1280px;
 
   /* Controlled Muted Status Tokens (design.md §7 Option A: used ONLY on StatusBadge with text label) */
   --dp-color-status-draft:            #92400e;
@@ -26,10 +77,12 @@
   --dp-color-status-warning:          #b45309;
   --dp-color-status-warning-bg:       #fffbeb;
   --dp-color-status-warning-border:   #fed7aa;
+  --dp-color-status-warning-dot:      #d97706;
 
   --dp-color-status-critical:         #b91c1c;
   --dp-color-status-critical-bg:      #fee2e2;
   --dp-color-status-critical-border:  #fecaca;
+  --dp-color-status-critical-dot:     #dc2626;
 
   --dp-color-status-paid:             #0f766e;
   --dp-color-status-paid-bg:          #ccfbf1;
@@ -51,18 +104,6 @@
   --dp-color-status-review-border:    #ddd6fe;
   --dp-color-status-review-dot:       #7c3aed;
 
-  /* Typography */
-  --dp-typography-fallback:       sans-serif;
-  --dp-typography-body:           16px;
-  --dp-typography-interface:      15px;
-  --dp-typography-small:          14px;
-  --dp-typography-metadata:       13px;
-  --dp-typography-label:          12px;
-  --dp-typography-body-leading:   1.6;
-
-  /* Spacing & shape */
-  --dp-spacing-grid-gap:          24px;
-  --dp-radius-panel:              12px;
   --dp-border-hairline:           1px;
 
   /* Motion */
