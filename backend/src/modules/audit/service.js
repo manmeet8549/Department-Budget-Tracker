@@ -60,3 +60,55 @@ export async function search({ page = 1, limit = 20, action, tableName, userId }
     },
   };
 }
+
+
+/**
+ * Lists unanchored audit log entries for ledger batch anchoring.
+ * Excludes entries whose entityType / tableName is LEDGER.
+ * Filters strictly older than or equal to beforeDate (settle window cutoff).
+ * If afterId is provided, filters for id > afterId.
+ * Ordered deterministically by createdAt: "asc", id: "asc".
+ */
+export async function listEntriesForLedger({ afterId = null, beforeDate = null, limit = 1000 } = {}) {
+  const where = {
+    tableName: { notIn: ["ledger_blocks", "ledger_verifications", "ledger_block_entries", "LEDGER", "ledger"] },
+    action: { not: { startsWith: "LEDGER" } },
+  };
+
+  if (afterId !== null && afterId !== undefined) {
+    where.id = { gt: Number(afterId) };
+  }
+
+  if (beforeDate) {
+    where.createdAt = { lte: beforeDate instanceof Date ? beforeDate : new Date(beforeDate) };
+  }
+
+  return prisma.auditLog.findMany({
+    where,
+    take: limit,
+    orderBy: [
+      { createdAt: "asc" },
+      { id: "asc" },
+    ],
+  });
+}
+
+/**
+ * Retrieves audit log entries by an array of IDs.
+ * Ordered deterministically by createdAt: "asc", id: "asc".
+ */
+export async function getEntriesByIds(ids) {
+  if (!Array.isArray(ids) || ids.length === 0) {
+    return [];
+  }
+
+  return prisma.auditLog.findMany({
+    where: {
+      id: { in: ids.map((id) => Number(id)) },
+    },
+    orderBy: [
+      { createdAt: "asc" },
+      { id: "asc" },
+    ],
+  });
+}

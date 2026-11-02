@@ -81,6 +81,8 @@ model User {
   createdExpenses  Expense[]        @relation("ExpenseCreator")
   approvals        Approval[]       @relation("UserApprovals")
   ceilingsSet      CollegeCeiling[] @relation("CeilingSetter")
+  createdLedgerBlocks LedgerBlock[] @relation("LedgerBlockCreator")
+  ledgerVerifications LedgerVerification[] @relation("LedgerVerifier")
 
   @@map("users")
 }
@@ -97,6 +99,7 @@ model AuditLog {
   createdAt DateTime @default(now()) @map("created_at")
 
   user      User?    @relation(fields: [userId], references: [id])
+  ledgerEntry LedgerBlockEntry?
 
   @@map("audit_logs")
 }
@@ -202,4 +205,56 @@ model Approval {
 
   @@index([entityType, entityId])
   @@map("approvals")
+}
+
+
+// Iteration L: Blockchain anchoring of audit trail
+model LedgerBlock {
+  id               Int                @id @default(autoincrement())
+  blockNo          Int                @unique @map("block_no")
+  prevBlockHash    String             @map("prev_block_hash")
+  merkleRoot       String             @map("merkle_root")
+  blockHash        String             @map("block_hash")
+  entryCount       Int                @map("entry_count")
+  status           String             @default("PENDING") // PENDING, SUBMITTED, ANCHORED, FAILED
+  chainId          Int?               @map("chain_id")
+  contractAddress  String?            @map("contract_address")
+  txHash           String?            @map("tx_hash")
+  chainBlockNumber BigInt?            @map("chain_block_number")
+  errorMessage     String?            @map("error_message")
+  createdBy        Int?               @map("created_by")
+  createdAt        DateTime           @default(now()) @map("created_at")
+  submittedAt      DateTime?          @map("submitted_at")
+  anchoredAt       DateTime?          @map("anchored_at")
+
+  creator          User?              @relation("LedgerBlockCreator", fields: [createdBy], references: [id])
+  entries          LedgerBlockEntry[]
+
+  @@map("ledger_blocks")
+}
+
+model LedgerBlockEntry {
+  id           Int         @id @default(autoincrement())
+  blockId      Int         @map("block_id")
+  position     Int
+  auditEntryId Int         @unique @map("audit_entry_id")
+  leafHash     String      @map("leaf_hash")
+
+  block        LedgerBlock @relation(fields: [blockId], references: [id], onDelete: Cascade)
+  auditEntry   AuditLog    @relation(fields: [auditEntryId], references: [id])
+
+  @@index([blockId, position])
+  @@map("ledger_block_entries")
+}
+
+model LedgerVerification {
+  id        Int      @id @default(autoincrement())
+  runBy     Int?     @map("run_by")
+  ok        Boolean
+  summary   Json
+  createdAt DateTime @default(now()) @map("created_at")
+
+  runner    User?    @relation("LedgerVerifier", fields: [runBy], references: [id])
+
+  @@map("ledger_verifications")
 }
