@@ -104,6 +104,22 @@
   --dp-color-status-review-border:    #ddd6fe;
   --dp-color-status-review-dot:       #7c3aed;
 
+  /* Iteration L Ledger & Integrity Tokens */
+  --dp-color-status-anchored:        #059669;
+  --dp-color-status-anchored-bg:     #ecfdf5;
+  --dp-color-status-anchored-border: #a7f3d0;
+  --dp-color-status-anchored-dot:    #10b981;
+
+  --dp-color-status-pending:         #d97706;
+  --dp-color-status-pending-bg:      #fffbeb;
+  --dp-color-status-pending-border:  #fde68a;
+  --dp-color-status-pending-dot:     #f59e0b;
+
+  --dp-color-status-failed:          #dc2626;
+  --dp-color-status-failed-bg:       #fef2f2;
+  --dp-color-status-failed-border:   #fecaca;
+  --dp-color-status-failed-dot:      #ef4444;
+
   /* Semantic UI State Tokens */
   --dp-color-danger:                  var(--dp-color-status-critical);
   --dp-color-danger-subtle:           var(--dp-color-status-critical-bg);

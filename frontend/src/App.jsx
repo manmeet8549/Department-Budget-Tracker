@@ -9,6 +9,7 @@ import DepartmentsPage from './features/master/DepartmentsPage.jsx';
 import CategoriesPage from './features/master/CategoriesPage.jsx';
 import BudgetsPage from './features/budgets/BudgetsPage.jsx';
 import ExpensesPage from './features/expenses/ExpensesPage.jsx';
+import IntegrityPage from './features/ledger/IntegrityPage.jsx';
 import Card from './components/Card.jsx';
 
 export default function App() {
@@ -123,6 +124,15 @@ export default function App() {
                   </ProtectedRoute>
                 }
               />
+              <Route
+                path="/integrity"
+                element={
+                  <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'MANAGEMENT', 'AUDITOR']}>
+                    <IntegrityPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route path="/ledger" element={<Navigate to="/integrity" replace />} />
             </Route>
           </Route>
 

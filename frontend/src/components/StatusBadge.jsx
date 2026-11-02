@@ -23,6 +23,27 @@ export default function StatusBadge({
           borderColor: 'var(--dp-color-status-approved-border)',
           dotColor: 'var(--dp-color-status-approved-dot)',
         };
+      case 'ANCHORED':
+        return {
+          color: 'var(--dp-color-status-anchored)',
+          backgroundColor: 'var(--dp-color-status-anchored-bg)',
+          borderColor: 'var(--dp-color-status-anchored-border)',
+          dotColor: 'var(--dp-color-status-anchored-dot)',
+        };
+      case 'PENDING':
+        return {
+          color: 'var(--dp-color-status-pending)',
+          backgroundColor: 'var(--dp-color-status-pending-bg)',
+          borderColor: 'var(--dp-color-status-pending-border)',
+          dotColor: 'var(--dp-color-status-pending-dot)',
+        };
+      case 'FAILED':
+        return {
+          color: 'var(--dp-color-status-failed)',
+          backgroundColor: 'var(--dp-color-status-failed-bg)',
+          borderColor: 'var(--dp-color-status-failed-border)',
+          dotColor: 'var(--dp-color-status-failed-dot)',
+        };
       case 'WARNING':
         return {
           color: 'var(--dp-color-status-warning)',

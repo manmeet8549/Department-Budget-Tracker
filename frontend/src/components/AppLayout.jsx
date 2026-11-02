@@ -36,6 +36,7 @@ export default function AppLayout() {
           { label: 'Expenses', path: '/expenses', icon: Receipt },
           { label: 'User Directory', path: '/users', icon: Users },
           { label: 'Audit Logs', path: '/audit-logs', icon: FileText },
+          { label: 'Blockchain Integrity', path: '/integrity', icon: ShieldCheck },
         ];
       case 'MANAGEMENT':
         return [
@@ -43,6 +44,7 @@ export default function AppLayout() {
           { label: 'Budget Approvals', path: '/budgets', icon: PieChart },
           { label: 'Expense Overview', path: '/expenses', icon: Receipt },
           { label: 'College Reports', path: '/reports', icon: BarChart3 },
+          { label: 'Blockchain Integrity', path: '/integrity', icon: ShieldCheck },
         ];
       case 'FINANCE':
         return [
@@ -69,6 +71,7 @@ export default function AppLayout() {
           { label: 'Budgets', path: '/budgets', icon: PieChart },
           { label: 'Expenses', path: '/expenses', icon: Receipt },
           { label: 'Audit Trail', path: '/audit-logs', icon: FileText },
+          { label: 'Blockchain Integrity', path: '/integrity', icon: ShieldCheck },
           { label: 'Compliance Reports', path: '/reports', icon: BarChart3 },
         ];
       default:
