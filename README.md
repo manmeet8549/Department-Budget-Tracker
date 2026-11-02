@@ -213,6 +213,77 @@ npm run test:ci
 
 ---
 
+## Blockchain Ledger & Audit Trail Anchoring (Iteration L)
+
+The **Ledger Module** provides cryptographic, tamper-evident anchoring of the system's audit trail.
+Batches of settled audit logs are deterministically canonicalized and fingerprinted into a binary Merkle tree with domain separation prefixes (`0x00` leaf, `0x01` interior node, `0x02` block hash). Only the resulting 32-byte Merkle root and block hash are anchored to an append-only Solidity smart contract (`AuditAnchor.sol`).
+The PostgreSQL database remains the primary operational source of truth; the blockchain acts as an immutable witness.
+
+### 1. Local Hardhat Chain Setup & Contract Deployment
+```bash
+# 1. In a dedicated terminal, launch the local Hardhat node (Chain ID: 31337):
+cd contracts
+npm install
+npx hardhat node
+
+# 2. In another terminal, deploy the AuditAnchor contract:
+npm run deploy:local
+# Output deploys AuditAnchor.sol and saves address to contracts/deployments/local.json
+# and exports ABI to backend/src/modules/ledger/chain/AuditAnchor.abi.json
+```
+
+### 2. Configuration for Testnets (Sepolia & Polygon Amoy)
+Configure the following in `backend/.env`:
+
+| Environment Variable | Local Hardhat | Ethereum Sepolia | Polygon Amoy |
+|---|---|---|---|
+| `LEDGER_ENABLED` | `true` | `true` | `true` |
+| `LEDGER_CHAIN` | `local` | `sepolia` | `amoy` |
+| `LEDGER_RPC_URL` | `http://127.0.0.1:8545` | `https://rpc.sepolia.org` | `https://rpc-amoy.polygon.technology` |
+| `LEDGER_CONTRACT_ADDRESS` | `0x5FbDB2315678afecb367f032d93F642f64180aa3` | `<Deployed Sepolia Address>` | `<Deployed Amoy Address>` |
+| `LEDGER_SIGNER_PRIVATE_KEY` | `0xac0974bec...` (Hardhat Account #0) | `0x<Your testnet private key>` | `0x<Your testnet private key>` |
+| `LEDGER_EXPECTED_CHAIN_ID` | `31337` | `11155111` | `80002` |
+| `LEDGER_INTERVAL_SECONDS` | `300` (5 minutes) | `300` | `300` |
+| `LEDGER_SETTLE_SECONDS` | `300` (5 minutes) | `300` | `300` |
+| `LEDGER_BATCH_MAX` | `100` | `100` | `100` |
+
+> **Security Guardrail:** The system strictly refuses the well-known Hardhat default private key (`0xac09...`) on any non-local network.
+
+### 3. Demonstrating Tamper Detection (Exact SQL Commands)
+Anyone with database access can attempt to tamper with audit records. The system's cryptographic verification (`POST /api/v1/ledger/verify` or via the **Blockchain Integrity** frontend screen) instantly detects and flags unauthorized modifications:
+
+#### Case A — Modifying an Audit Log Row
+```sql
+-- Alter a sensitive business record inside the audit trail:
+UPDATE audit_logs
+SET action = 'HACKED_APPROVAL'
+WHERE id = 1;
+```
+*Verification Outcome:* Integrity check reports `ok: false`, marks the affected block as `AUDIT_MODIFIED`, and identifies audit entry `#1`.
+
+#### Case B — Deleting an Audit Log Row
+```sql
+-- Bypass referential integrity temporarily and delete an audit record:
+SET session_replication_role = replica;
+DELETE FROM audit_logs WHERE id = 1;
+SET session_replication_role = DEFAULT;
+```
+*Verification Outcome:* Integrity check reports `ok: false`, marks block as `AUDIT_MISSING`, and reports missing audit ID `#1`.
+
+#### Case C — Tampering with Database Merkle Root
+```sql
+-- Malicious DBA attempts to cover tampering by altering the stored root:
+UPDATE ledger_blocks
+SET merkle_root = '0x1111111111111111111111111111111111111111111111111111111111111111'
+WHERE id = 1;
+```
+*Verification Outcome:* Integrity check reports `ok: false` with `LEDGER_TAMPERED` because the DB root no longer matches the on-chain smart contract anchor.
+
+#### Case D — Missing On-Chain Anchor
+If a block is marked `ANCHORED` in the local database but never successfully mined on-chain, verification flags `MISSING_ON_CHAIN`.
+
+---
+
 ## Architectural Documentation
 
 | Document | Description |
