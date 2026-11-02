@@ -21,6 +21,7 @@ import { budgetsRouter, budgetCeilingsRouter } from './modules/budgets/index.js'
 import { balancesRouter } from './modules/balances/index.js';
 import { expensesRouter } from './modules/expenses/index.js';
 import { dashboardRouter } from './modules/dashboard/index.js';
+import { ledgerRouter } from './modules/ledger/index.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -49,6 +50,7 @@ export function createApp() {
   app.use('/api/v1/balances', balancesRouter);
   app.use('/api/v1/expenses', expensesRouter);
   app.use('/api/v1/dashboard', dashboardRouter);
+  app.use('/api/v1/ledger', ledgerRouter);
 
   // ── Swagger UI ──────────────────────────────────────────────────────────────
   try {

@@ -6,17 +6,24 @@
     "description": "RESTful JSON API for the college budget management system.\n\nBase path: `/api/v1`. All responses: `{ success, data }` or `{ success, error: { code, message, details } }`.\n\nAuthentication: `Authorization: Bearer <accessToken>`."
   },
   "servers": [
-    { "url": "http://localhost:5000/api/v1", "description": "Local development" }
+    {
+      "url": "http://localhost:5000/api/v1",
+      "description": "Local development"
+    }
   ],
   "paths": {
     "/health": {
       "get": {
         "summary": "Health check",
         "description": "Liveness probe. No authentication required.",
-        "tags": ["System"],
+        "tags": [
+          "System"
+        ],
         "operationId": "getHealth",
         "responses": {
-          "200": { "description": "Service is running" }
+          "200": {
+            "description": "Service is running"
+          }
         }
       }
     },
@@ -24,25 +31,41 @@
       "post": {
         "summary": "User login",
         "description": "Authenticates user with email and password. Returns access token in response body and sets refresh token in httpOnly cookie.",
-        "tags": ["Auth"],
+        "tags": [
+          "Auth"
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["email", "password"],
+                "required": [
+                  "email",
+                  "password"
+                ],
                 "properties": {
-                  "email": { "type": "string", "format": "email", "example": "superadmin@college.edu" },
-                  "password": { "type": "string", "example": "Password@123" }
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "example": "superadmin@college.edu"
+                  },
+                  "password": {
+                    "type": "string",
+                    "example": "Password@123"
+                  }
                 }
               }
             }
           }
         },
         "responses": {
-          "200": { "description": "Login successful" },
-          "401": { "description": "Invalid credentials or user disabled" }
+          "200": {
+            "description": "Login successful"
+          },
+          "401": {
+            "description": "Invalid credentials or user disabled"
+          }
         }
       }
     },
@@ -50,10 +73,16 @@
       "post": {
         "summary": "Refresh access token",
         "description": "Generates a new access token using the refresh token cookie.",
-        "tags": ["Auth"],
+        "tags": [
+          "Auth"
+        ],
         "responses": {
-          "200": { "description": "Token refreshed" },
-          "401": { "description": "Missing or expired refresh token" }
+          "200": {
+            "description": "Token refreshed"
+          },
+          "401": {
+            "description": "Missing or expired refresh token"
+          }
         }
       }
     },
@@ -61,10 +90,18 @@
       "post": {
         "summary": "User logout",
         "description": "Clears the refresh token cookie.",
-        "tags": ["Auth"],
-        "security": [{ "bearerAuth": [] }],
+        "tags": [
+          "Auth"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "responses": {
-          "200": { "description": "Logged out successfully" }
+          "200": {
+            "description": "Logged out successfully"
+          }
         }
       }
     },
@@ -72,26 +109,44 @@
       "post": {
         "summary": "Change password",
         "description": "Allows an authenticated user to change their password.",
-        "tags": ["Auth"],
-        "security": [{ "bearerAuth": [] }],
+        "tags": [
+          "Auth"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["currentPassword", "newPassword"],
+                "required": [
+                  "currentPassword",
+                  "newPassword"
+                ],
                 "properties": {
-                  "currentPassword": { "type": "string" },
-                  "newPassword": { "type": "string", "minLength": 6 }
+                  "currentPassword": {
+                    "type": "string"
+                  },
+                  "newPassword": {
+                    "type": "string",
+                    "minLength": 6
+                  }
                 }
               }
             }
           }
         },
         "responses": {
-          "200": { "description": "Password updated" },
-          "400": { "description": "Invalid current password or new password format" }
+          "200": {
+            "description": "Password updated"
+          },
+          "400": {
+            "description": "Invalid current password or new password format"
+          }
         }
       }
     },
@@ -99,39 +154,85 @@
       "get": {
         "summary": "List users",
         "description": "List users with role and department details. Restricted to SUPER_ADMIN.",
-        "tags": ["Users"],
-        "security": [{ "bearerAuth": [] }],
+        "tags": [
+          "Users"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "responses": {
-          "200": { "description": "Users retrieved" },
-          "403": { "description": "Access denied" }
+          "200": {
+            "description": "Users retrieved"
+          },
+          "403": {
+            "description": "Access denied"
+          }
         }
       },
       "post": {
         "summary": "Create user",
         "description": "Creates a new user. Restricted to SUPER_ADMIN.",
-        "tags": ["Users"],
-        "security": [{ "bearerAuth": [] }],
+        "tags": [
+          "Users"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["email", "password", "name", "role"],
+                "required": [
+                  "email",
+                  "password",
+                  "name",
+                  "role"
+                ],
                 "properties": {
-                  "email": { "type": "string", "format": "email" },
-                  "password": { "type": "string", "minLength": 6 },
-                  "name": { "type": "string" },
-                  "role": { "type": "string", "enum": ["SUPER_ADMIN", "MANAGEMENT", "FINANCE", "HOD", "STAFF", "AUDITOR"] },
-                  "departmentId": { "type": "integer", "nullable": true }
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "password": {
+                    "type": "string",
+                    "minLength": 6
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "role": {
+                    "type": "string",
+                    "enum": [
+                      "SUPER_ADMIN",
+                      "MANAGEMENT",
+                      "FINANCE",
+                      "HOD",
+                      "STAFF",
+                      "AUDITOR"
+                    ]
+                  },
+                  "departmentId": {
+                    "type": "integer",
+                    "nullable": true
+                  }
                 }
               }
             }
           }
         },
         "responses": {
-          "201": { "description": "User created" },
-          "403": { "description": "Access denied" }
+          "201": {
+            "description": "User created"
+          },
+          "403": {
+            "description": "Access denied"
+          }
         }
       }
     },
@@ -139,10 +240,23 @@
       "patch": {
         "summary": "Update user",
         "description": "Updates or disables a user. Restricted to SUPER_ADMIN.",
-        "tags": ["Users"],
-        "security": [{ "bearerAuth": [] }],
+        "tags": [
+          "Users"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "parameters": [
-          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
         ],
         "requestBody": {
           "required": true,
@@ -151,18 +265,31 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "name": { "type": "string" },
-                  "role": { "type": "string" },
-                  "departmentId": { "type": "integer", "nullable": true },
-                  "isActive": { "type": "boolean" }
+                  "name": {
+                    "type": "string"
+                  },
+                  "role": {
+                    "type": "string"
+                  },
+                  "departmentId": {
+                    "type": "integer",
+                    "nullable": true
+                  },
+                  "isActive": {
+                    "type": "boolean"
+                  }
                 }
               }
             }
           }
         },
         "responses": {
-          "200": { "description": "User updated" },
-          "403": { "description": "Access denied" }
+          "200": {
+            "description": "User updated"
+          },
+          "403": {
+            "description": "Access denied"
+          }
         }
       }
     },
@@ -170,62 +297,130 @@
       "get": {
         "summary": "List audit logs",
         "description": "Returns immutable audit logs with pagination and filters. Restricted to SUPER_ADMIN.",
-        "tags": ["Audit"],
-        "security": [{ "bearerAuth": [] }],
+        "tags": [
+          "Audit"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "responses": {
-          "200": { "description": "Audit logs retrieved" },
-          "403": { "description": "Access denied" }
+          "200": {
+            "description": "Audit logs retrieved"
+          },
+          "403": {
+            "description": "Access denied"
+          }
         }
       }
     },
     "/financial-years": {
       "get": {
         "summary": "List financial years",
-        "tags": ["Master - Financial Years"],
-        "security": [{ "bearerAuth": [] }],
+        "tags": [
+          "Master - Financial Years"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "responses": {
-          "200": { "description": "Financial years list" }
+          "200": {
+            "description": "Financial years list"
+          }
         }
       },
       "post": {
         "summary": "Create financial year",
-        "tags": ["Master - Financial Years"],
-        "security": [{ "bearerAuth": [] }],
+        "tags": [
+          "Master - Financial Years"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["year", "startDate", "endDate"],
+                "required": [
+                  "year",
+                  "startDate",
+                  "endDate"
+                ],
                 "properties": {
-                  "year": { "type": "string", "example": "2024-2025" },
-                  "startDate": { "type": "string", "format": "date" },
-                  "endDate": { "type": "string", "format": "date" },
-                  "status": { "type": "string", "enum": ["OPEN", "CLOSED"], "default": "OPEN" },
-                  "isActive": { "type": "boolean", "default": false }
+                  "year": {
+                    "type": "string",
+                    "example": "2024-2025"
+                  },
+                  "startDate": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "endDate": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "OPEN",
+                      "CLOSED"
+                    ],
+                    "default": "OPEN"
+                  },
+                  "isActive": {
+                    "type": "boolean",
+                    "default": false
+                  }
                 }
               }
             }
           }
         },
         "responses": {
-          "201": { "description": "Financial year created" },
-          "403": { "description": "Access denied" }
+          "201": {
+            "description": "Financial year created"
+          },
+          "403": {
+            "description": "Access denied"
+          }
         }
       }
     },
     "/financial-years/{id}": {
       "patch": {
         "summary": "Update financial year",
-        "tags": ["Master - Financial Years"],
-        "security": [{ "bearerAuth": [] }],
+        "tags": [
+          "Master - Financial Years"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "parameters": [
-          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
         ],
         "responses": {
-          "200": { "description": "Financial year updated" },
-          "403": { "description": "Access denied" }
+          "200": {
+            "description": "Financial year updated"
+          },
+          "403": {
+            "description": "Access denied"
+          }
         }
       }
     },
@@ -233,158 +428,332 @@
       "post": {
         "summary": "Mark financial year as active",
         "description": "Enforces that only one financial year is active at a time.",
-        "tags": ["Master - Financial Years"],
-        "security": [{ "bearerAuth": [] }],
+        "tags": [
+          "Master - Financial Years"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "parameters": [
-          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
         ],
         "responses": {
-          "200": { "description": "Financial year marked active" },
-          "403": { "description": "Access denied" }
+          "200": {
+            "description": "Financial year marked active"
+          },
+          "403": {
+            "description": "Access denied"
+          }
         }
       }
     },
     "/departments": {
       "get": {
         "summary": "List departments",
-        "tags": ["Master - Departments"],
-        "security": [{ "bearerAuth": [] }],
+        "tags": [
+          "Master - Departments"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "responses": {
-          "200": { "description": "Departments list" }
+          "200": {
+            "description": "Departments list"
+          }
         }
       },
       "post": {
         "summary": "Create department",
-        "tags": ["Master - Departments"],
-        "security": [{ "bearerAuth": [] }],
+        "tags": [
+          "Master - Departments"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["code", "name"],
+                "required": [
+                  "code",
+                  "name"
+                ],
                 "properties": {
-                  "code": { "type": "string", "example": "CS" },
-                  "name": { "type": "string", "example": "Computer Science" },
-                  "parentId": { "type": "integer", "nullable": true },
-                  "hodUserId": { "type": "integer", "nullable": true }
+                  "code": {
+                    "type": "string",
+                    "example": "CS"
+                  },
+                  "name": {
+                    "type": "string",
+                    "example": "Computer Science"
+                  },
+                  "parentId": {
+                    "type": "integer",
+                    "nullable": true
+                  },
+                  "hodUserId": {
+                    "type": "integer",
+                    "nullable": true
+                  }
                 }
               }
             }
           }
         },
         "responses": {
-          "201": { "description": "Department created" },
-          "403": { "description": "Access denied" }
+          "201": {
+            "description": "Department created"
+          },
+          "403": {
+            "description": "Access denied"
+          }
         }
       }
     },
     "/departments/{id}": {
       "get": {
         "summary": "Get department by ID",
-        "tags": ["Master - Departments"],
-        "security": [{ "bearerAuth": [] }],
+        "tags": [
+          "Master - Departments"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "parameters": [
-          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
         ],
         "responses": {
-          "200": { "description": "Department details" }
+          "200": {
+            "description": "Department details"
+          }
         }
       },
       "patch": {
         "summary": "Update department",
-        "tags": ["Master - Departments"],
-        "security": [{ "bearerAuth": [] }],
+        "tags": [
+          "Master - Departments"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "parameters": [
-          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
         ],
         "responses": {
-          "200": { "description": "Department updated" },
-          "403": { "description": "Access denied" }
+          "200": {
+            "description": "Department updated"
+          },
+          "403": {
+            "description": "Access denied"
+          }
         }
       },
       "delete": {
         "summary": "Deactivate department (soft delete)",
-        "tags": ["Master - Departments"],
-        "security": [{ "bearerAuth": [] }],
+        "tags": [
+          "Master - Departments"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "parameters": [
-          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
         ],
         "responses": {
-          "200": { "description": "Department deactivated" },
-          "403": { "description": "Access denied" }
+          "200": {
+            "description": "Department deactivated"
+          },
+          "403": {
+            "description": "Access denied"
+          }
         }
       }
     },
     "/categories": {
       "get": {
         "summary": "List categories",
-        "tags": ["Master - Categories"],
-        "security": [{ "bearerAuth": [] }],
+        "tags": [
+          "Master - Categories"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "responses": {
-          "200": { "description": "Categories list" }
+          "200": {
+            "description": "Categories list"
+          }
         }
       },
       "post": {
         "summary": "Create category",
-        "tags": ["Master - Categories"],
-        "security": [{ "bearerAuth": [] }],
+        "tags": [
+          "Master - Categories"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["name"],
+                "required": [
+                  "name"
+                ],
                 "properties": {
-                  "name": { "type": "string", "example": "Equipment" },
-                  "description": { "type": "string", "nullable": true }
+                  "name": {
+                    "type": "string",
+                    "example": "Equipment"
+                  },
+                  "description": {
+                    "type": "string",
+                    "nullable": true
+                  }
                 }
               }
             }
           }
         },
         "responses": {
-          "201": { "description": "Category created" },
-          "403": { "description": "Access denied" }
+          "201": {
+            "description": "Category created"
+          },
+          "403": {
+            "description": "Access denied"
+          }
         }
       }
     },
     "/categories/{id}": {
       "get": {
         "summary": "Get category by ID",
-        "tags": ["Master - Categories"],
-        "security": [{ "bearerAuth": [] }],
+        "tags": [
+          "Master - Categories"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "parameters": [
-          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
         ],
         "responses": {
-          "200": { "description": "Category details" }
+          "200": {
+            "description": "Category details"
+          }
         }
       },
       "patch": {
         "summary": "Update category",
-        "tags": ["Master - Categories"],
-        "security": [{ "bearerAuth": [] }],
+        "tags": [
+          "Master - Categories"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "parameters": [
-          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
         ],
         "responses": {
-          "200": { "description": "Category updated" },
-          "403": { "description": "Access denied" }
+          "200": {
+            "description": "Category updated"
+          },
+          "403": {
+            "description": "Access denied"
+          }
         }
       },
       "delete": {
         "summary": "Deactivate category (soft delete)",
-        "tags": ["Master - Categories"],
-        "security": [{ "bearerAuth": [] }],
+        "tags": [
+          "Master - Categories"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "parameters": [
-          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
         ],
         "responses": {
-          "200": { "description": "Category deactivated" },
-          "403": { "description": "Access denied" }
+          "200": {
+            "description": "Category deactivated"
+          },
+          "403": {
+            "description": "Access denied"
+          }
         }
       }
     },
@@ -392,43 +761,107 @@
       "get": {
         "summary": "List budgets",
         "description": "Returns budgets. Scoped by role: HOD and STAFF see only their own department; MANAGEMENT, FINANCE, AUDITOR, SUPER_ADMIN see all.",
-        "tags": ["Budgets"],
-        "security": [{ "bearerAuth": [] }],
+        "tags": [
+          "Budgets"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "parameters": [
-          { "name": "financialYearId", "in": "query", "schema": { "type": "integer" } },
-          { "name": "departmentId", "in": "query", "schema": { "type": "integer" } },
-          { "name": "status", "in": "query", "schema": { "type": "string", "enum": ["DRAFT", "APPROVED"] } }
+          {
+            "name": "financialYearId",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "departmentId",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "DRAFT",
+                "APPROVED"
+              ]
+            }
+          }
         ],
         "responses": {
-          "200": { "description": "List of budgets" },
-          "401": { "description": "Unauthorized" }
+          "200": {
+            "description": "List of budgets"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
         }
       },
       "post": {
         "summary": "Create annual budget proposal",
         "description": "Creates a budget in DRAFT status with category items. HOD can create for own department; FINANCE can create for any department.",
-        "tags": ["Budgets"],
-        "security": [{ "bearerAuth": [] }],
+        "tags": [
+          "Budgets"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["financialYearId", "departmentId", "totalAmount", "items"],
+                "required": [
+                  "financialYearId",
+                  "departmentId",
+                  "totalAmount",
+                  "items"
+                ],
                 "properties": {
-                  "financialYearId": { "type": "integer", "example": 1 },
-                  "departmentId": { "type": "integer", "example": 1 },
-                  "totalAmount": { "type": "number", "example": 1000000.00 },
+                  "financialYearId": {
+                    "type": "integer",
+                    "example": 1
+                  },
+                  "departmentId": {
+                    "type": "integer",
+                    "example": 1
+                  },
+                  "totalAmount": {
+                    "type": "number",
+                    "example": 1000000
+                  },
                   "items": {
                     "type": "array",
                     "items": {
                       "type": "object",
-                      "required": ["categoryId", "amount"],
+                      "required": [
+                        "categoryId",
+                        "amount"
+                      ],
                       "properties": {
-                        "categoryId": { "type": "integer", "example": 1 },
-                        "amount": { "type": "number", "example": 500000.00 },
-                        "justification": { "type": "string", "example": "Lab equipment upgrade" }
+                        "categoryId": {
+                          "type": "integer",
+                          "example": 1
+                        },
+                        "amount": {
+                          "type": "number",
+                          "example": 500000
+                        },
+                        "justification": {
+                          "type": "string",
+                          "example": "Lab equipment upgrade"
+                        }
                       }
                     }
                   }
@@ -438,10 +871,18 @@
           }
         },
         "responses": {
-          "201": { "description": "Budget created" },
-          "400": { "description": "Sum of items does not match totalAmount or validation failure" },
-          "403": { "description": "Forbidden for role or outside department scope" },
-          "409": { "description": "Duplicate budget for department and financial year" }
+          "201": {
+            "description": "Budget created"
+          },
+          "400": {
+            "description": "Sum of items does not match totalAmount or validation failure"
+          },
+          "403": {
+            "description": "Forbidden for role or outside department scope"
+          },
+          "409": {
+            "description": "Duplicate budget for department and financial year"
+          }
         }
       }
     },
@@ -449,24 +890,56 @@
       "get": {
         "summary": "Get budget details",
         "description": "Returns budget details including all category items.",
-        "tags": ["Budgets"],
-        "security": [{ "bearerAuth": [] }],
+        "tags": [
+          "Budgets"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "parameters": [
-          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
         ],
         "responses": {
-          "200": { "description": "Budget details" },
-          "403": { "description": "Forbidden (HOD/STAFF outside department scope)" },
-          "404": { "description": "Budget not found" }
+          "200": {
+            "description": "Budget details"
+          },
+          "403": {
+            "description": "Forbidden (HOD/STAFF outside department scope)"
+          },
+          "404": {
+            "description": "Budget not found"
+          }
         }
       },
       "put": {
         "summary": "Update DRAFT budget",
         "description": "Updates items and total amount of a DRAFT budget. APPROVED budgets are frozen and return 409.",
-        "tags": ["Budgets"],
-        "security": [{ "bearerAuth": [] }],
+        "tags": [
+          "Budgets"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "parameters": [
-          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
         ],
         "requestBody": {
           "required": true,
@@ -474,18 +947,35 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["totalAmount", "items"],
+                "required": [
+                  "totalAmount",
+                  "items"
+                ],
                 "properties": {
-                  "totalAmount": { "type": "number", "example": 1200000.00 },
+                  "totalAmount": {
+                    "type": "number",
+                    "example": 1200000
+                  },
                   "items": {
                     "type": "array",
                     "items": {
                       "type": "object",
-                      "required": ["categoryId", "amount"],
+                      "required": [
+                        "categoryId",
+                        "amount"
+                      ],
                       "properties": {
-                        "categoryId": { "type": "integer", "example": 1 },
-                        "amount": { "type": "number", "example": 600000.00 },
-                        "justification": { "type": "string" }
+                        "categoryId": {
+                          "type": "integer",
+                          "example": 1
+                        },
+                        "amount": {
+                          "type": "number",
+                          "example": 600000
+                        },
+                        "justification": {
+                          "type": "string"
+                        }
                       }
                     }
                   }
@@ -495,10 +985,18 @@
           }
         },
         "responses": {
-          "200": { "description": "Budget updated" },
-          "400": { "description": "Sum of items does not match totalAmount" },
-          "403": { "description": "Forbidden" },
-          "409": { "description": "Cannot edit an APPROVED budget" }
+          "200": {
+            "description": "Budget updated"
+          },
+          "400": {
+            "description": "Sum of items does not match totalAmount"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "409": {
+            "description": "Cannot edit an APPROVED budget"
+          }
         }
       }
     },
@@ -506,10 +1004,23 @@
       "post": {
         "summary": "Submit budget proposal",
         "description": "Submit a DRAFT or REJECTED budget. Re-verifies category item sums and amounts. Allowed: HOD (own department) or FINANCE.",
-        "tags": ["Budgets"],
-        "security": [{ "bearerAuth": [] }],
+        "tags": [
+          "Budgets"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "parameters": [
-          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
         ],
         "requestBody": {
           "required": false,
@@ -518,18 +1029,30 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "remark": { "type": "string" }
+                  "remark": {
+                    "type": "string"
+                  }
                 }
               }
             }
           }
         },
         "responses": {
-          "200": { "description": "Budget submitted successfully" },
-          "401": { "description": "Unauthorized" },
-          "403": { "description": "Forbidden" },
-          "404": { "description": "Budget not found" },
-          "409": { "description": "Invalid state transition" }
+          "200": {
+            "description": "Budget submitted successfully"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Budget not found"
+          },
+          "409": {
+            "description": "Invalid state transition"
+          }
         }
       }
     },
@@ -537,10 +1060,23 @@
       "post": {
         "summary": "Review budget proposal",
         "description": "Transition a SUBMITTED budget to UNDER_REVIEW with a mandatory remark. FINANCE role only. FINANCE may also optionally adjust item amounts with this review.",
-        "tags": ["Budgets"],
-        "security": [{ "bearerAuth": [] }],
+        "tags": [
+          "Budgets"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "parameters": [
-          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
         ],
         "requestBody": {
           "required": true,
@@ -548,34 +1084,62 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["remark"],
+                "required": [
+                  "remark"
+                ],
                 "properties": {
-                  "remark": { "type": "string", "example": "Reviewed and verified against department equipment requirements" },
+                  "remark": {
+                    "type": "string",
+                    "example": "Reviewed and verified against department equipment requirements"
+                  },
                   "items": {
                     "type": "array",
                     "items": {
                       "type": "object",
-                      "required": ["categoryId", "amount"],
+                      "required": [
+                        "categoryId",
+                        "amount"
+                      ],
                       "properties": {
-                        "categoryId": { "type": "integer" },
-                        "amount": { "type": "number" },
-                        "justification": { "type": "string" }
+                        "categoryId": {
+                          "type": "integer"
+                        },
+                        "amount": {
+                          "type": "number"
+                        },
+                        "justification": {
+                          "type": "string"
+                        }
                       }
                     }
                   },
-                  "totalAmount": { "type": "number" }
+                  "totalAmount": {
+                    "type": "number"
+                  }
                 }
               }
             }
           }
         },
         "responses": {
-          "200": { "description": "Budget transitioned to UNDER_REVIEW" },
-          "400": { "description": "Validation error or missing remark" },
-          "401": { "description": "Unauthorized" },
-          "403": { "description": "Forbidden (FINANCE only)" },
-          "404": { "description": "Budget not found" },
-          "409": { "description": "Invalid state transition" }
+          "200": {
+            "description": "Budget transitioned to UNDER_REVIEW"
+          },
+          "400": {
+            "description": "Validation error or missing remark"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden (FINANCE only)"
+          },
+          "404": {
+            "description": "Budget not found"
+          },
+          "409": {
+            "description": "Invalid state transition"
+          }
         }
       }
     },
@@ -583,10 +1147,23 @@
       "post": {
         "summary": "Approve budget proposal",
         "description": "Approve an UNDER_REVIEW budget proposal. Validates college ceiling with pessimistic lock if set. Freezes budget and records approval metadata. MANAGEMENT role only.",
-        "tags": ["Budgets"],
-        "security": [{ "bearerAuth": [] }],
+        "tags": [
+          "Budgets"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "parameters": [
-          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
         ],
         "requestBody": {
           "required": false,
@@ -595,18 +1172,30 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "remark": { "type": "string" }
+                  "remark": {
+                    "type": "string"
+                  }
                 }
               }
             }
           }
         },
         "responses": {
-          "200": { "description": "Budget approved and frozen" },
-          "401": { "description": "Unauthorized" },
-          "403": { "description": "Forbidden (only MANAGEMENT can approve)" },
-          "404": { "description": "Budget not found" },
-          "409": { "description": "Invalid state (not UNDER_REVIEW) or CEILING_EXCEEDED" }
+          "200": {
+            "description": "Budget approved and frozen"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden (only MANAGEMENT can approve)"
+          },
+          "404": {
+            "description": "Budget not found"
+          },
+          "409": {
+            "description": "Invalid state (not UNDER_REVIEW) or CEILING_EXCEEDED"
+          }
         }
       }
     },
@@ -614,10 +1203,23 @@
       "post": {
         "summary": "Reject budget proposal",
         "description": "Reject an UNDER_REVIEW budget proposal with a required reason. MANAGEMENT role only. Budget becomes editable by HOD for resubmission.",
-        "tags": ["Budgets"],
-        "security": [{ "bearerAuth": [] }],
+        "tags": [
+          "Budgets"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "parameters": [
-          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
         ],
         "requestBody": {
           "required": true,
@@ -625,21 +1227,38 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["remark"],
+                "required": [
+                  "remark"
+                ],
                 "properties": {
-                  "remark": { "type": "string", "example": "Exceeds department allocation expectations; please revise equipment items." }
+                  "remark": {
+                    "type": "string",
+                    "example": "Exceeds department allocation expectations; please revise equipment items."
+                  }
                 }
               }
             }
           }
         },
         "responses": {
-          "200": { "description": "Budget rejected" },
-          "400": { "description": "Validation error (missing remark)" },
-          "401": { "description": "Unauthorized" },
-          "403": { "description": "Forbidden (MANAGEMENT only)" },
-          "404": { "description": "Budget not found" },
-          "409": { "description": "Invalid state transition (must be UNDER_REVIEW)" }
+          "200": {
+            "description": "Budget rejected"
+          },
+          "400": {
+            "description": "Validation error (missing remark)"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden (MANAGEMENT only)"
+          },
+          "404": {
+            "description": "Budget not found"
+          },
+          "409": {
+            "description": "Invalid state transition (must be UNDER_REVIEW)"
+          }
         }
       }
     },
@@ -647,16 +1266,37 @@
       "get": {
         "summary": "Get budget category comparison with last year actuals",
         "description": "Returns proposed category amounts alongside last year actual Spent aggregated from balances module. Allowed: HOD/STAFF (own dept), MANAGEMENT/FINANCE/AUDITOR/SUPER_ADMIN.",
-        "tags": ["Budgets"],
-        "security": [{ "bearerAuth": [] }],
+        "tags": [
+          "Budgets"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "parameters": [
-          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
         ],
         "responses": {
-          "200": { "description": "Comparison data retrieved" },
-          "401": { "description": "Unauthorized" },
-          "403": { "description": "Forbidden" },
-          "404": { "description": "Budget not found" }
+          "200": {
+            "description": "Comparison data retrieved"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Budget not found"
+          }
         }
       }
     },
@@ -664,10 +1304,23 @@
       "put": {
         "summary": "Set college budget ceiling for a financial year",
         "description": "Sets or updates total annual budget ceiling for all approved department budgets. MANAGEMENT role only.",
-        "tags": ["Budgets"],
-        "security": [{ "bearerAuth": [] }],
+        "tags": [
+          "Budgets"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "parameters": [
-          { "name": "financialYearId", "in": "path", "required": true, "schema": { "type": "integer" } }
+          {
+            "name": "financialYearId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
         ],
         "requestBody": {
           "required": true,
@@ -675,32 +1328,62 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["amount"],
+                "required": [
+                  "amount"
+                ],
                 "properties": {
-                  "amount": { "type": "number", "example": 50000000.00 }
+                  "amount": {
+                    "type": "number",
+                    "example": 50000000
+                  }
                 }
               }
             }
           }
         },
         "responses": {
-          "200": { "description": "College ceiling set" },
-          "401": { "description": "Unauthorized" },
-          "403": { "description": "Forbidden (MANAGEMENT only)" }
+          "200": {
+            "description": "College ceiling set"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden (MANAGEMENT only)"
+          }
         }
       },
       "get": {
         "summary": "Get college budget ceiling for a financial year",
         "description": "Returns ceiling amount, approved total, and remaining balance. Allowed: MANAGEMENT, FINANCE, AUDITOR, SUPER_ADMIN.",
-        "tags": ["Budgets"],
-        "security": [{ "bearerAuth": [] }],
+        "tags": [
+          "Budgets"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "parameters": [
-          { "name": "financialYearId", "in": "path", "required": true, "schema": { "type": "integer" } }
+          {
+            "name": "financialYearId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
         ],
         "responses": {
-          "200": { "description": "Ceiling details retrieved" },
-          "401": { "description": "Unauthorized" },
-          "403": { "description": "Forbidden" }
+          "200": {
+            "description": "Ceiling details retrieved"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
         }
       }
     },
@@ -708,16 +1391,40 @@
       "get": {
         "summary": "Get college or department balance summary",
         "description": "Calculates Allocated, Committed, Spent, Available, and Utilisation % over approved budgets and expenses. Allowed: MANAGEMENT, FINANCE, AUDITOR, SUPER_ADMIN (any dept), HOD and STAFF (own dept only).",
-        "tags": ["Balances"],
-        "security": [{ "bearerAuth": [] }],
+        "tags": [
+          "Balances"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "parameters": [
-          { "name": "financialYearId", "in": "query", "schema": { "type": "integer" } },
-          { "name": "departmentId", "in": "query", "schema": { "type": "integer" } }
+          {
+            "name": "financialYearId",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "departmentId",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          }
         ],
         "responses": {
-          "200": { "description": "Balance summary retrieved" },
-          "401": { "description": "Unauthorized" },
-          "403": { "description": "Forbidden (scoping violation)" }
+          "200": {
+            "description": "Balance summary retrieved"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden (scoping violation)"
+          }
         }
       }
     },
@@ -725,16 +1432,41 @@
       "get": {
         "summary": "Get category-wise balance breakdown for a department",
         "description": "Returns allocated, committed, spent, available, and utilisation % per category. Allowed: MANAGEMENT, FINANCE, AUDITOR, SUPER_ADMIN, HOD & STAFF (own dept).",
-        "tags": ["Balances"],
-        "security": [{ "bearerAuth": [] }],
+        "tags": [
+          "Balances"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "parameters": [
-          { "name": "deptId", "in": "path", "required": true, "schema": { "type": "integer" } },
-          { "name": "financialYearId", "in": "query", "schema": { "type": "integer" } }
+          {
+            "name": "deptId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "financialYearId",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          }
         ],
         "responses": {
-          "200": { "description": "Category balances retrieved" },
-          "401": { "description": "Unauthorized" },
-          "403": { "description": "Forbidden" }
+          "200": {
+            "description": "Category balances retrieved"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
         }
       }
     },
@@ -742,74 +1474,196 @@
       "get": {
         "summary": "List expenses with pagination and filters",
         "description": "Filter by financialYearId, departmentId, categoryId, status. Scoped: HOD/STAFF own dept, FINANCE/MANAGEMENT/AUDITOR/SUPER_ADMIN all.",
-        "tags": ["Expenses"],
-        "security": [{ "bearerAuth": [] }],
+        "tags": [
+          "Expenses"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "parameters": [
-          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
-          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 20 } },
-          { "name": "financialYearId", "in": "query", "schema": { "type": "integer" } },
-          { "name": "departmentId", "in": "query", "schema": { "type": "integer" } },
-          { "name": "categoryId", "in": "query", "schema": { "type": "integer" } },
-          { "name": "status", "in": "query", "schema": { "type": "string", "enum": ["DRAFT", "SUBMITTED", "APPROVED", "REJECTED", "PAID", "CANCELLED"] } }
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 20
+            }
+          },
+          {
+            "name": "financialYearId",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "departmentId",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "categoryId",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "DRAFT",
+                "SUBMITTED",
+                "APPROVED",
+                "REJECTED",
+                "PAID",
+                "CANCELLED"
+              ]
+            }
+          }
         ],
         "responses": {
-          "200": { "description": "Paginated list of expenses" },
-          "401": { "description": "Unauthorized" }
+          "200": {
+            "description": "Paginated list of expenses"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
         }
       },
       "post": {
         "summary": "Create a DRAFT expense",
         "description": "Creates an expense draft. Amount > 0, active category, active department, active open FY, and department must have an APPROVED budget. Allowed: HOD, STAFF (own dept only).",
-        "tags": ["Expenses"],
-        "security": [{ "bearerAuth": [] }],
+        "tags": [
+          "Expenses"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["financialYearId", "departmentId", "categoryId", "amount", "purpose"],
+                "required": [
+                  "financialYearId",
+                  "departmentId",
+                  "categoryId",
+                  "amount",
+                  "purpose"
+                ],
                 "properties": {
-                  "financialYearId": { "type": "integer" },
-                  "departmentId": { "type": "integer" },
-                  "categoryId": { "type": "integer" },
-                  "amount": { "type": "number", "example": 15000 },
-                  "purpose": { "type": "string", "example": "Laboratory glassware" }
+                  "financialYearId": {
+                    "type": "integer"
+                  },
+                  "departmentId": {
+                    "type": "integer"
+                  },
+                  "categoryId": {
+                    "type": "integer"
+                  },
+                  "amount": {
+                    "type": "number",
+                    "example": 15000
+                  },
+                  "purpose": {
+                    "type": "string",
+                    "example": "Laboratory glassware"
+                  }
                 }
               }
             }
           }
         },
         "responses": {
-          "201": { "description": "DRAFT expense created" },
-          "400": { "description": "Validation error or invalid state" },
-          "401": { "description": "Unauthorized" },
-          "403": { "description": "Forbidden" }
+          "201": {
+            "description": "DRAFT expense created"
+          },
+          "400": {
+            "description": "Validation error or invalid state"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
         }
       }
     },
     "/expenses/{id}": {
       "get": {
         "summary": "Get expense details",
-        "tags": ["Expenses"],
-        "security": [{ "bearerAuth": [] }],
+        "tags": [
+          "Expenses"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "parameters": [
-          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
         ],
         "responses": {
-          "200": { "description": "Expense details" },
-          "401": { "description": "Unauthorized" },
-          "403": { "description": "Forbidden" },
-          "404": { "description": "Not found" }
+          "200": {
+            "description": "Expense details"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not found"
+          }
         }
       },
       "put": {
         "summary": "Edit a DRAFT expense",
         "description": "Edits a draft expense. Only the creator or an HOD of that department can edit. Non-draft returns 409.",
-        "tags": ["Expenses"],
-        "security": [{ "bearerAuth": [] }],
+        "tags": [
+          "Expenses"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "parameters": [
-          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
         ],
         "requestBody": {
           "required": true,
@@ -818,34 +1672,69 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "categoryId": { "type": "integer" },
-                  "amount": { "type": "number" },
-                  "purpose": { "type": "string" }
+                  "categoryId": {
+                    "type": "integer"
+                  },
+                  "amount": {
+                    "type": "number"
+                  },
+                  "purpose": {
+                    "type": "string"
+                  }
                 }
               }
             }
           }
         },
         "responses": {
-          "200": { "description": "Expense updated" },
-          "403": { "description": "Forbidden (not creator or HOD)" },
-          "404": { "description": "Not found" },
-          "409": { "description": "Expense is not in DRAFT status" }
+          "200": {
+            "description": "Expense updated"
+          },
+          "403": {
+            "description": "Forbidden (not creator or HOD)"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "409": {
+            "description": "Expense is not in DRAFT status"
+          }
         }
       },
       "delete": {
         "summary": "Delete a DRAFT expense",
         "description": "Deletes a draft expense. Only the creator or an HOD of that department can delete. Non-draft returns 409.",
-        "tags": ["Expenses"],
-        "security": [{ "bearerAuth": [] }],
+        "tags": [
+          "Expenses"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "parameters": [
-          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
         ],
         "responses": {
-          "200": { "description": "Expense deleted" },
-          "403": { "description": "Forbidden (not creator or HOD)" },
-          "404": { "description": "Not found" },
-          "409": { "description": "Expense is not in DRAFT status" }
+          "200": {
+            "description": "Expense deleted"
+          },
+          "403": {
+            "description": "Forbidden (not creator or HOD)"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "409": {
+            "description": "Expense is not in DRAFT status"
+          }
         }
       }
     },
@@ -853,15 +1742,34 @@
       "post": {
         "summary": "Submit a DRAFT expense",
         "description": "Submits a draft expense. Allowed for creator or department HOD. Checks balance against available category funds; if insufficient returns 409.",
-        "tags": ["Expenses"],
-        "security": [{ "bearerAuth": [] }],
+        "tags": [
+          "Expenses"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "parameters": [
-          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
         ],
         "responses": {
-          "200": { "description": "Expense submitted" },
-          "403": { "description": "Forbidden (not creator or department HOD)" },
-          "409": { "description": "Invalid state or insufficient balance" }
+          "200": {
+            "description": "Expense submitted"
+          },
+          "403": {
+            "description": "Forbidden (not creator or department HOD)"
+          },
+          "409": {
+            "description": "Invalid state or insufficient balance"
+          }
         }
       }
     },
@@ -869,10 +1777,23 @@
       "post": {
         "summary": "Approve a SUBMITTED expense",
         "description": "Approves an expense. Only authorized approver via ApprovalPolicy (HOD approves STAFF request, FINANCE approves HOD request, requester can never approve). Commits available balance with a database row lock.",
-        "tags": ["Expenses"],
-        "security": [{ "bearerAuth": [] }],
+        "tags": [
+          "Expenses"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "parameters": [
-          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
         ],
         "requestBody": {
           "required": false,
@@ -881,16 +1802,24 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "remark": { "type": "string" }
+                  "remark": {
+                    "type": "string"
+                  }
                 }
               }
             }
           }
         },
         "responses": {
-          "200": { "description": "Expense approved and committed" },
-          "403": { "description": "Forbidden (not authorized approver)" },
-          "409": { "description": "Invalid state or insufficient balance" }
+          "200": {
+            "description": "Expense approved and committed"
+          },
+          "403": {
+            "description": "Forbidden (not authorized approver)"
+          },
+          "409": {
+            "description": "Invalid state or insufficient balance"
+          }
         }
       }
     },
@@ -898,10 +1827,23 @@
       "post": {
         "summary": "Reject a SUBMITTED expense",
         "description": "Rejects an expense. Only authorized approver. Requires non-empty remark. Rejected expenses never count toward committed funds.",
-        "tags": ["Expenses"],
-        "security": [{ "bearerAuth": [] }],
+        "tags": [
+          "Expenses"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "parameters": [
-          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
         ],
         "requestBody": {
           "required": true,
@@ -909,19 +1851,32 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["remark"],
+                "required": [
+                  "remark"
+                ],
                 "properties": {
-                  "remark": { "type": "string", "example": "Exceeds planned quarterly spending" }
+                  "remark": {
+                    "type": "string",
+                    "example": "Exceeds planned quarterly spending"
+                  }
                 }
               }
             }
           }
         },
         "responses": {
-          "200": { "description": "Expense rejected" },
-          "400": { "description": "Remark is required" },
-          "403": { "description": "Forbidden (not authorized approver)" },
-          "409": { "description": "Invalid state" }
+          "200": {
+            "description": "Expense rejected"
+          },
+          "400": {
+            "description": "Remark is required"
+          },
+          "403": {
+            "description": "Forbidden (not authorized approver)"
+          },
+          "409": {
+            "description": "Invalid state"
+          }
         }
       }
     },
@@ -929,10 +1884,23 @@
       "post": {
         "summary": "Mark an APPROVED expense as PAID",
         "description": "Records payment for an approved expense. FINANCE only. Requires paid_on, payment_mode, payment_ref. Money moves from Committed to Spent.",
-        "tags": ["Expenses"],
-        "security": [{ "bearerAuth": [] }],
+        "tags": [
+          "Expenses"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "parameters": [
-          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
         ],
         "requestBody": {
           "required": true,
@@ -940,21 +1908,43 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["paid_on", "payment_mode", "payment_ref"],
+                "required": [
+                  "paid_on",
+                  "payment_mode",
+                  "payment_ref"
+                ],
                 "properties": {
-                  "paid_on": { "type": "string", "format": "date", "example": "2026-10-25" },
-                  "payment_mode": { "type": "string", "example": "NEFT" },
-                  "payment_ref": { "type": "string", "example": "TXN987654321" }
+                  "paid_on": {
+                    "type": "string",
+                    "format": "date",
+                    "example": "2026-10-25"
+                  },
+                  "payment_mode": {
+                    "type": "string",
+                    "example": "NEFT"
+                  },
+                  "payment_ref": {
+                    "type": "string",
+                    "example": "TXN987654321"
+                  }
                 }
               }
             }
           }
         },
         "responses": {
-          "200": { "description": "Expense marked paid" },
-          "400": { "description": "Missing payment details" },
-          "403": { "description": "Forbidden (FINANCE only)" },
-          "409": { "description": "Expense is not in APPROVED status" }
+          "200": {
+            "description": "Expense marked paid"
+          },
+          "400": {
+            "description": "Missing payment details"
+          },
+          "403": {
+            "description": "Forbidden (FINANCE only)"
+          },
+          "409": {
+            "description": "Expense is not in APPROVED status"
+          }
         }
       }
     },
@@ -962,14 +1952,22 @@
       "get": {
         "summary": "Get dashboard summary figures and department cards",
         "description": "Returns financialYear, college totals, and department cards for all departments with an APPROVED budget. Scoped: HOD and STAFF see only their own department and college is null; MANAGEMENT, FINANCE, AUDITOR, SUPER_ADMIN see all and college totals.",
-        "tags": ["Dashboard"],
-        "security": [{ "bearerAuth": [] }],
+        "tags": [
+          "Dashboard"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "financialYearId",
             "in": "query",
             "required": false,
-            "schema": { "type": "integer" },
+            "schema": {
+              "type": "integer"
+            },
             "description": "Financial year ID (defaults to active financial year)"
           }
         ],
@@ -981,20 +1979,40 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "success": { "type": "boolean", "example": true },
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
                     "data": {
                       "type": "object",
                       "properties": {
-                        "financialYear": { "type": "object" },
+                        "financialYear": {
+                          "type": "object"
+                        },
                         "college": {
                           "type": "object",
                           "nullable": true,
                           "properties": {
-                            "allocated": { "type": "string", "example": "800000.00" },
-                            "committed": { "type": "string", "example": "150000.50" },
-                            "spent": { "type": "string", "example": "0.00" },
-                            "available": { "type": "string", "example": "649999.50" },
-                            "utilisationPercent": { "type": "number", "example": 18.75 }
+                            "allocated": {
+                              "type": "string",
+                              "example": "800000.00"
+                            },
+                            "committed": {
+                              "type": "string",
+                              "example": "150000.50"
+                            },
+                            "spent": {
+                              "type": "string",
+                              "example": "0.00"
+                            },
+                            "available": {
+                              "type": "string",
+                              "example": "649999.50"
+                            },
+                            "utilisationPercent": {
+                              "type": "number",
+                              "example": 18.75
+                            }
                           }
                         },
                         "departments": {
@@ -1002,15 +2020,42 @@
                           "items": {
                             "type": "object",
                             "properties": {
-                              "id": { "type": "integer" },
-                              "code": { "type": "string", "example": "ET" },
-                              "name": { "type": "string", "example": "Engineering Block" },
-                              "parentCode": { "type": "string", "nullable": true, "example": null },
-                              "allocated": { "type": "string", "example": "800000.00" },
-                              "committed": { "type": "string", "example": "150000.50" },
-                              "spent": { "type": "string", "example": "0.00" },
-                              "available": { "type": "string", "example": "649999.50" },
-                              "utilisationPercent": { "type": "number", "example": 18.75 }
+                              "id": {
+                                "type": "integer"
+                              },
+                              "code": {
+                                "type": "string",
+                                "example": "ET"
+                              },
+                              "name": {
+                                "type": "string",
+                                "example": "Engineering Block"
+                              },
+                              "parentCode": {
+                                "type": "string",
+                                "nullable": true,
+                                "example": null
+                              },
+                              "allocated": {
+                                "type": "string",
+                                "example": "800000.00"
+                              },
+                              "committed": {
+                                "type": "string",
+                                "example": "150000.50"
+                              },
+                              "spent": {
+                                "type": "string",
+                                "example": "0.00"
+                              },
+                              "available": {
+                                "type": "string",
+                                "example": "649999.50"
+                              },
+                              "utilisationPercent": {
+                                "type": "number",
+                                "example": 18.75
+                              }
                             }
                           }
                         }
@@ -1021,7 +2066,219 @@
               }
             }
           },
-          "401": { "description": "Unauthorized" }
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/ledger/status": {
+      "get": {
+        "summary": "Ledger status",
+        "description": "Returns current chain network information, latest block, unanchored count, and last verification summary. Accessible by SUPER_ADMIN, MANAGEMENT, AUDITOR.",
+        "tags": [
+          "Ledger"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Status retrieved successfully"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      }
+    },
+    "/ledger/blocks": {
+      "get": {
+        "summary": "List anchored blocks",
+        "description": "Paginated list of anchored ledger blocks. Accessible by SUPER_ADMIN, MANAGEMENT, AUDITOR.",
+        "tags": [
+          "Ledger"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 20
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "PENDING",
+                "SUBMITTED",
+                "ANCHORED",
+                "FAILED"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Blocks retrieved successfully"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      }
+    },
+    "/ledger/anchor": {
+      "post": {
+        "summary": "Anchor pending audit entries",
+        "description": "Commits settled audit entries into a new block and anchors its root on-chain. Accessible by SUPER_ADMIN, MANAGEMENT, AUDITOR.",
+        "tags": [
+          "Ledger"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Block anchored or no entries pending"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "409": {
+            "description": "Existing pending block or ledger not configured"
+          }
+        }
+      }
+    },
+    "/ledger/blocks/{id}/retry": {
+      "post": {
+        "summary": "Retry failed block",
+        "description": "Retries anchoring a failed or pending block. Syncs from chain if already present. Accessible by SUPER_ADMIN, MANAGEMENT, AUDITOR.",
+        "tags": [
+          "Ledger"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Block retried successfully"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Block not found"
+          }
+        }
+      }
+    },
+    "/ledger/verify": {
+      "post": {
+        "summary": "Verify ledger integrity",
+        "description": "Re-verifies all anchored blocks against current DB rows and on-chain roots. Records verification result. Accessible by SUPER_ADMIN, MANAGEMENT, AUDITOR.",
+        "tags": [
+          "Ledger"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Integrity check completed"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      }
+    },
+    "/ledger/proof/{auditEntryId}": {
+      "get": {
+        "summary": "Get Merkle inclusion proof",
+        "description": "Returns inclusion proof for an individual audit entry. Accessible by SUPER_ADMIN, MANAGEMENT, AUDITOR.",
+        "tags": [
+          "Ledger"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "auditEntryId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Proof generated successfully"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "409": {
+            "description": "Audit entry not yet anchored"
+          }
         }
       }
     }
@@ -1038,20 +2295,35 @@
       "SuccessResponse": {
         "type": "object",
         "properties": {
-          "success": { "type": "boolean", "example": true },
-          "data": { "type": "object" }
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "data": {
+            "type": "object"
+          }
         }
       },
       "ErrorResponse": {
         "type": "object",
         "properties": {
-          "success": { "type": "boolean", "example": false },
+          "success": {
+            "type": "boolean",
+            "example": false
+          },
           "error": {
             "type": "object",
             "properties": {
-              "code": { "type": "string", "example": "UNAUTHORIZED" },
-              "message": { "type": "string" },
-              "details": { "type": "object" }
+              "code": {
+                "type": "string",
+                "example": "UNAUTHORIZED"
+              },
+              "message": {
+                "type": "string"
+              },
+              "details": {
+                "type": "object"
+              }
             }
           }
         }

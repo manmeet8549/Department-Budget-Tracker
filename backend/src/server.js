@@ -5,10 +5,12 @@
  */
 import { createApp } from './app.js';
 import { logger } from './modules/platform/index.js';
+import { startLedgerScheduler } from './modules/ledger/index.js';
 
 const PORT = process.env.PORT ?? 5000;
 
 const app = await createApp();
 app.listen(PORT, () => {
   logger.info(`API server running on port ${PORT} (${process.env.NODE_ENV ?? 'development'})`);
+  startLedgerScheduler();
 });
