@@ -35,3 +35,8 @@ Thumbs.db
 
 # Vite
 .vite/
+
+# Hardhat / Blockchain
+contracts/artifacts/
+contracts/cache/
+contracts/typechain-types/
