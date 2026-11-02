@@ -40,7 +40,7 @@ Lower layers never import from higher layers.
 | Layer | Modules | Role |
 | --- | --- | --- |
 | L0 Platform | `platform` | Config, auth/role/department middleware, validation, error format, logger, event bus, cache wrapper, audit writer interface, money and date utils |
-| L1 Identity and reference | `auth` (users, login), `master` (financial years, departments, categories, vendors, settings), `audit` | Who is acting; what lists exist; permanent record |
+| L1 Identity and reference | `auth` (users, login), `master` (financial years, departments, categories, vendors, settings), `audit`, `ledger` | Who is acting; what lists exist; permanent record; blockchain tamper-evident witness |
 | L2 Core domain | `budgets`, `expenses`, `balances` | Budget decisions, spending, calculation of figures |
 | L3 Read and output | `dashboard`, `reports` | Read-only views over `balances` |
 | L4 Reaction | `notifications` | Reacts to domain events |
@@ -63,6 +63,9 @@ flowchart LR
   master --> auth
   auth --> platform
   audit --> platform
+  ledger --> audit
+  ledger --> master
+  ledger --> platform
 ```
 
 Rules that follow from the graph:
@@ -70,6 +73,7 @@ Rules that follow from the graph:
 - `dashboard` and `reports` never write business data and never compute their own totals.
 - `notifications` never changes business data; it only reacts to events.
 - `audit.log()` is called by services **inside the same transaction** as the change (techstack rule 11). Audit is not driven by events.
+- `ledger` depends only on `audit` and `master` (and `platform`); nothing depends on it. It provides blockchain-anchored tamper evidence for the audit trail.
 
 ---
 
@@ -211,7 +215,17 @@ Owns: `notifications`. Exposes: `notify(userId, type, message, link)`. Subscribe
 | v1 | In-app notifications: approval needed, approved, rejected, threshold crossed; unread count |
 | v2 | Email channel (Nodemailer) through the queue; Redis unread counter; year-end reminders (node-cron) |
 
+### 5.11 `ledger` (L1)
+
+Owns: `ledger_blocks`, `ledger_block_entries`, `ledger_verifications`. Depends only on `audit` and `master`; nothing depends on it.
+Exposes: `getStatus()`, `listBlocks(filters)`, `anchorPending()`, `retryBlock(id)`, `verifyAll()`, `getProof(auditEntryId)`.
+Emits: `ledger.anchored`, `ledger.tamper_detected`.
+
+| Version | Content |
+| --- | --- |
+| v1 | Deterministic canonical JSON and Merkle tree generation; block chaining; append-only smart contract (`AuditAnchor.sol`) on Hardhat/Sepolia/Amoy; FakeChainClient for tests; tamper detection (`verifyAll`) and inclusion proofs (`getProof`); interval scheduler; REST endpoints under `/api/v1/ledger` |
 ---
+
 
 ## 6. Data growth by iteration (migrations)
 
@@ -226,6 +240,7 @@ Migrations are **additive**: add tables and nullable or defaulted columns; never
 | 4 | `expenses`, `approvals` |
 | 5 | none (read-only views) |
 | 6 | `budgets` gains review fields; `approvals` supports `BUDGET` |
+| L | `ledger_blocks`, `ledger_block_entries`, `ledger_verifications` |
 | 7 | `approval_limits`, `vendors`, `expenses.bill_file` |
 | 8 | `settings` |
 | 9 | `notifications` |
@@ -281,7 +296,9 @@ Each iteration is one branch (`iter/N-name`), ends in a passing gate (section 9)
 | It. | Modules | Scope |
 | --- | --- | --- |
 | 6 | `budgets` v2 | Proposal, review, approval flow; ceiling check |
-| 7 | `master` v2, `expenses` v2 | Vendors, settings, approval limits, chain by amount, cancel, bill upload, over-budget policy |
+| UI-1 | UI polish | Visual pass, design tokens, Host Grotesk + Instrument Sans, floating card diagrams |
+| L | `ledger` v1 | Blockchain anchoring of audit trail (Merkle tree, AuditAnchor.sol, Hardhat / Sepolia / Amoy, tamper detection, proofs) |
+| 7a | `master` v2, `expenses` v2 | Vendors, settings, approval limits, chain by amount, cancel, bill upload, over-budget policy |
 | 8 | `balances` v2 | Threshold statuses, monthly totals |
 
 ### Release 3: Visibility

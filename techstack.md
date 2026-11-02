@@ -49,6 +49,7 @@ Departments are data. A new department must be addable from the admin screen wit
 | Testing | Jest, Supertest, React Testing Library |
 | Quality | ESLint, Prettier, Husky |
 | DevOps | Git, GitHub Actions, Docker, Docker Compose, Nginx, PM2 |
+| Blockchain / Ledger | Solidity (0.8.28), Hardhat (^2.22.18), ethers (^6.13.5), @openzeppelin/contracts (^5.2.0), Test networks (Hardhat Local chainId 31337, Ethereum Sepolia chainId 11155111, Polygon Amoy chainId 80002) |
 
 Language: JavaScript (ES modules) unless the user asks for TypeScript. Do not mix the two.
 
@@ -73,6 +74,7 @@ budget-tracker/
         reports/
         notifications/
         audit/
+        ledger/          routes.js, controller.js, service.js, schema.js, pure/, chain/
       jobs/              report.worker.js, email.worker.js, cron.js
       utils/             money.js, dates.js, logger.js, errors.js
       app.js
@@ -87,6 +89,7 @@ budget-tracker/
       hooks/             useAuth, useBalances, usePermissions
       routes/            ProtectedRoute by role
       utils/             currency.js (Indian grouping), dates.js
+  contracts/             Hardhat project (AuditAnchor.sol, deploy.js, AuditAnchor.test.js, deployments/)
   docker-compose.yml     services: api, web, postgres, redis
   .env.example
   techstack.md
@@ -148,10 +151,15 @@ All tables carry `id`, `created_at`, `updated_at`, `created_by`.
 | `approval_limits` | role, max_amount |
 | `settings` | key, value (thresholds, over-budget policy) |
 | `notifications` | user_id, type, message, is_read, link |
+| `ledger_blocks` | block_no (unique), prev_block_hash, merkle_root, block_hash, entry_count, status, chain_id, contract_address, tx_hash, chain_block_number, error_message, created_by, created_at, submitted_at, anchored_at |
+| `ledger_block_entries` | block_id, position, audit_entry_id (unique), leaf_hash |
+| `ledger_verifications` | run_by, ok, summary (json), created_at |
 
 **Statuses**
 - Budget: `DRAFT → SUBMITTED → UNDER_REVIEW → APPROVED → LOCKED`, or `REJECTED` (returns to HoD).
 - Expense: `DRAFT → SUBMITTED → APPROVED → PAID`, or `REJECTED`, `CANCELLED`.
+- Ledger Block: `PENDING → SUBMITTED → ANCHORED`, or `FAILED`.
+- Ledger Verification: `INTACT`, `TAMPERED`.
 
 Index: `expenses(department_id, fy_id, category_id, status, created_at)`, `audit_logs(table_name, record_id)`, `approvals(entity_type, entity_id)`.
 

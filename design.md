@@ -149,7 +149,7 @@ Use a single content width for the whole app (for example `max-width: 1200px`, c
 
 Budget thresholds and document statuses (DRAFT, APPROVED, Warning, Critical) must be distinguishable. Keep this contained:
 
-- **Design Decision (Option A Chosen):** Defined controlled, muted status tokens in `tokens.css` (`--dp-color-status-draft`, `--dp-color-status-draft-bg`, `--dp-color-status-approved`, `--dp-color-status-approved-bg`, `--dp-color-status-submitted`, `--dp-color-status-submitted-bg`, `--dp-color-status-review`, `--dp-color-status-review-bg`, `--dp-color-status-warning`, `--dp-color-status-critical`). These tokens are used exclusively within the shared `StatusBadge` component.
+- **Design Decision (Option A Chosen):** Defined controlled, muted status tokens in `tokens.css` (`--dp-color-status-draft`, `--dp-color-status-draft-bg`, `--dp-color-status-approved`, `--dp-color-status-approved-bg`, `--dp-color-status-submitted`, `--dp-color-status-submitted-bg`, `--dp-color-status-review`, `--dp-color-status-review-bg`, `--dp-color-status-warning`, `--dp-color-status-critical`, `--dp-color-status-anchored`, `--dp-color-status-anchored-bg`, `--dp-color-status-pending`, `--dp-color-status-pending-bg`, `--dp-color-status-failed`, `--dp-color-status-failed-bg`). These tokens are used within the shared `StatusBadge` and integrity indicators.
 - Never rely on color alone. Every status badge always displays a clear text label and an indicator icon/dot.
 - Progress bars use accent for Normal. For Warning, Critical and Exceeded use the same accent bar plus a distinct icon, a text badge, and a heavier border or pattern on the badge.
 - Do not tint whole cards or table rows with status color.
@@ -300,6 +300,56 @@ All tokens must be added to `frontend/src/styles/tokens.css` and used across com
   --dp-color-info:            var(--dp-color-status-submitted);
   --dp-color-info-subtle:     var(--dp-color-status-submitted-bg);
   --dp-color-info-border:     var(--dp-color-status-submitted-border);
+
+  /* Iteration L Ledger & Integrity Tokens */
+  --dp-color-status-anchored:        #059669;
+  --dp-color-status-anchored-bg:     #ecfdf5;
+  --dp-color-status-anchored-border: #a7f3d0;
+  --dp-color-status-pending:         #d97706;
+  --dp-color-status-pending-bg:      #fffbeb;
+  --dp-color-status-pending-border:  #fde68a;
+  --dp-color-status-failed:          #dc2626;
+  --dp-color-status-failed-bg:       #fef2f2;
+  --dp-color-status-failed-border:   #fecaca;
 }
 ```
 
+
+---
+
+## 15. Integrity Screen (Iteration L)
+
+The Integrity screen provides tamper-evident audit verification by validating local database records against Merkle roots anchored to smart contracts on EVM-compatible blockchains (Hardhat Local, Ethereum Sepolia, Polygon Amoy).
+
+### 15.1 Access & Visibility
+- **Permitted Roles:** `SUPER_ADMIN`, `MANAGEMENT`, `AUDITOR`.
+- **Hidden Roles:** `FINANCE`, `HOD`, `STAFF` (omitted from navigation and protected with 403 route guards).
+
+### 15.2 Layout Architecture & Components
+1. **Chain Header Card:**
+   - Display connected network name (e.g., "Hardhat Local", "Ethereum Sepolia", "Polygon Amoy").
+   - Highlight test networks with a distinct "Test network" pill badge.
+   - Contract address with copy-to-clipboard action and truncated display.
+   - External block explorer link button when `LEDGER_EXPLORER_BASE_URL` is configured.
+2. **Stat Cards Row (4 Cards):**
+   - **Blocks Anchored:** Total number of verified blocks anchored on-chain.
+   - **Entries Protected:** Cumulative audit log entries incorporated into Merkle trees.
+   - **Pending Entries:** Audit entries waiting for the next anchor batch.
+   - **Last Anchored:** Formatted timestamp via `formatDate` of the most recent block.
+3. **Verification & Action Panel:**
+   - **Verify Integrity Button:** Triggers real-time cryptographic audit of all blocks against the chain with loading feedback.
+   - **Verification Result Banner:** Prominent indicator showing green "Intact" (all records intact) or red "Tampering Detected" with a list of compromised block numbers and affected audit entry IDs.
+   - **Anchor Now Button:** Accessible to `SUPER_ADMIN` and `MANAGEMENT` with a confirmation modal before dispatching.
+4. **Blocks Table:**
+   - Compact tabular view: Block Number, Entry Count, Short Merkle Root (with copy button), Short Tx Hash (with explorer link), Status Badge (`PENDING`, `SUBMITTED`, `ANCHORED`, `FAILED`), Anchored Timestamp.
+   - `SUPER_ADMIN` Retry button on any `FAILED` blocks.
+5. **Audit Proof Lookup:**
+   - Input field to query an individual audit entry ID.
+   - Displays inclusion proof breakdown: Block Number, Leaf Hash, Merkle Root, Proof Steps, and on-chain Transaction Hash.
+6. **Educational Trust Notice:**
+   - Clear plain-language note: *"Only fingerprints (hashes) are stored on the blockchain. No names, amounts or reasons."*
+
+### 15.3 Visual & Functional Rules
+- Strict adherence to UI-1 design tokens (`--dp-shadow-md`, `--dp-radius-lg`, `--dp-tracking-tight`).
+- Responsive grid layout adapting cleanly across 360px (mobile stack), 768px (tablet grid), and 1280px (desktop wide).
+- All timestamps rendered through the standard `formatDate` utility; no raw backend enums displayed in UI.
