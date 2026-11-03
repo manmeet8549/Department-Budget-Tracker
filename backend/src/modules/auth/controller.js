@@ -1,9 +1,10 @@
 import * as authService from './service.js';
 
+const isProd = process.env.NODE_ENV === 'production';
 const COOKIE_OPTIONS = {
   httpOnly: true,
-  secure: process.env.NODE_ENV === 'production',
-  sameSite: 'lax',
+  secure: process.env.COOKIE_SECURE ? process.env.COOKIE_SECURE === 'true' : isProd,
+  sameSite: process.env.COOKIE_SAME_SITE || (isProd ? 'none' : 'lax'),
   maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
 };
 

@@ -34,3 +34,4 @@ export {
   computeBlockHash,
   GENESIS_PREV_BLOCK_HASH,
 } from './pure/merkle.js';
+

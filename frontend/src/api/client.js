@@ -1,7 +1,22 @@
 import axios from 'axios';
 
+/**
+ * Normalizes the API base URL.
+ * Handles both "https://domain.com" and "https://domain.com/api/v1".
+ */
+export function resolveBaseUrl(url) {
+  if (!url || typeof url !== 'string') return '/api/v1';
+  const trimmed = url.trim().replace(/\/+$/, '');
+  if (!trimmed) return '/api/v1';
+  if (trimmed.endsWith('/api/v1')) return trimmed;
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+    return `${trimmed}/api/v1`;
+  }
+  return trimmed;
+}
+
 export const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || '/api/v1',
+  baseURL: resolveBaseUrl(import.meta.env.VITE_API_URL),
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',

@@ -28,19 +28,62 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 export function createApp() {
   const app = express();
 
+  // Trust reverse proxy (Render, Vercel, Nginx) for secure cookies & HTTPS detection
+  app.set('trust proxy', 1);
+
   // ── Security & parsing ──────────────────────────────────────────────────────
   app.use(helmet());
+
+  const allowedOrigins = process.env.FRONTEND_URL
+    ? process.env.FRONTEND_URL.split(',').map((u) => u.trim().replace(/\/+$/, ''))
+    : ['http://localhost:5173'];
+
   app.use(
     cors({
-      origin: process.env.FRONTEND_URL ?? 'http://localhost:5173',
+      origin: (origin, callback) => {
+        // Allow requests with no origin (e.g. server-to-server, health probes, curl)
+        if (!origin) return callback(null, true);
+
+        const isExplicitlyAllowed = allowedOrigins.some((allowed) => {
+          if (allowed === '*' || allowed === origin) return true;
+          return false;
+        });
+
+        if (isExplicitlyAllowed) return callback(null, true);
+
+        // Allow localhost origins in development / test
+        if (process.env.NODE_ENV !== 'production' && origin.includes('localhost')) {
+          return callback(null, true);
+        }
+
+        // Allow *.vercel.app preview deployments if enabled
+        if (process.env.ALLOW_VERCEL_PREVIEWS === 'true' && origin.endsWith('.vercel.app')) {
+          return callback(null, true);
+        }
+
+        return callback(null, false);
+      },
       credentials: true,
+      methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
     })
   );
   app.use(express.json());
   app.use(cookieParser());
 
-  // ── API routes ──────────────────────────────────────────────────────────────
+  // ── Root & health probes ────────────────────────────────────────────────────
+  app.get('/', (_req, res) => {
+    res.json({
+      success: true,
+      message: 'Department Budget Spending Tracker API is running',
+      health: '/health',
+      docs: '/api/docs',
+    });
+  });
+  app.use('/health', healthRouter);
   app.use('/api/v1', healthRouter);
+
+  // ── API routes ──────────────────────────────────────────────────────────────
   app.use('/api/v1/auth', authRouter);
   app.use('/api/v1/users', usersRouter);
   app.use('/api/v1', auditRouter);

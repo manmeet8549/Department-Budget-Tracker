@@ -62,3 +62,4 @@ ALTER TABLE "ledger_block_entries" ADD CONSTRAINT "ledger_block_entries_audit_en
 
 -- AddForeignKey
 ALTER TABLE "ledger_verifications" ADD CONSTRAINT "ledger_verifications_run_by_fkey" FOREIGN KEY ("run_by") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+

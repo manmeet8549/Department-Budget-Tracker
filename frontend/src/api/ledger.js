@@ -32,3 +32,4 @@ export async function getLedgerProof(auditEntryId) {
   const res = await apiClient.get(`/ledger/proof/${auditEntryId}`);
   return res.data.data;
 }
+

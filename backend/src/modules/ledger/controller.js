@@ -72,3 +72,4 @@ export async function getProof(req, res, next) {
     next(err);
   }
 }
+

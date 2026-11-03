@@ -13,3 +13,4 @@ export const blockParamSchema = z.object({
 export const proofParamSchema = z.object({
   auditEntryId: z.coerce.number().int().positive(),
 });
+

@@ -1,0 +1,31 @@
+name: Render Keep-Alive Pinger
+
+on:
+  schedule:
+    # Runs every 14 minutes (Render free tier sleeps after 15 minutes of inactivity)
+    - cron: '*/14 * * * *'
+  workflow_dispatch: # Allows manual run anytime from GitHub Actions tab
+
+jobs:
+  ping:
+    name: Ping Render Backend
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Backend Health Endpoint
+        env:
+          BACKEND_URL: ${{ secrets.RENDER_BACKEND_URL || vars.RENDER_BACKEND_URL }}
+        run: |
+          if [ -z "$BACKEND_URL" ]; then
+            echo "::warning ::RENDER_BACKEND_URL is not set yet. Set RENDER_BACKEND_URL in GitHub Repo -> Settings -> Secrets and variables -> Actions to keep your Render instance awake 24/7."
+            exit 0
+          fi
+          TARGET_URL="${BACKEND_URL%/}"
+          echo "Sending keep-alive ping to $TARGET_URL/health ..."
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 "$TARGET_URL/health" || echo "failed")
+          echo "Response HTTP status: $STATUS"
+          if [ "$STATUS" = "200" ]; then
+            echo "Backend is awake and responding healthy!"
+          else
+            echo "Backend returned HTTP $STATUS (service may be performing a cold restart)"
+          fi
+

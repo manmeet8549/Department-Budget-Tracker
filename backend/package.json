@@ -8,6 +8,8 @@
   },
   "scripts": {
     "dev": "node --watch src/server.js",
+    "build": "prisma generate",
+    "postinstall": "prisma generate",
     "start": "node src/server.js",
     "test": "node scripts/test-db-setup.js && cross-env NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules npx jest --runInBand",
     "test:ci": "cross-env NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules npx jest --runInBand --ci --forceExit --testTimeout=30000",

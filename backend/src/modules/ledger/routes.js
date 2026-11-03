@@ -15,3 +15,4 @@ ledgerRouter.post('/anchor', ledgerController.anchor);
 ledgerRouter.post('/blocks/:id/retry', validate(blockParamSchema, 'params'), ledgerController.retryBlock);
 ledgerRouter.post('/verify', ledgerController.verify);
 ledgerRouter.get('/proof/:auditEntryId', validate(proofParamSchema, 'params'), ledgerController.getProof);
+

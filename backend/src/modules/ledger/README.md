@@ -25,3 +25,4 @@ The PostgreSQL database remains the system's primary source of truth, while the 
 - No personal or business data on-chain; only cryptographic hashes and counts.
 - Well-known test private keys (e.g., Hardhat Account #0) are strictly forbidden on public testnets (Sepolia, Amoy).
 - Zero private key leakage in logs, audit records, or HTTP responses.
+

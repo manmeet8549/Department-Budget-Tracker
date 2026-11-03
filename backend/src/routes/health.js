@@ -1,7 +1,7 @@
 /**
  * src/routes/health.js
- * GET /api/v1/health — liveness probe.
- * No auth required. Used by Docker health check and CI gate.
+ * GET /health or /api/v1/health — liveness probe.
+ * No auth required. Used by Docker, Render, CI gate, and keep-alive pingers.
  * Documented in docs/openapi.json.
  */
 import { Router } from 'express';
@@ -14,7 +14,7 @@ const pkg = JSON.parse(readFileSync(join(__dirname, '../../package.json'), 'utf-
 
 export const healthRouter = Router();
 
-healthRouter.get('/health', (_req, res) => {
+healthRouter.get(['/', '/health'], (_req, res) => {
   res.json({
     success: true,
     data: {

@@ -1,0 +1,45 @@
+# Render Blueprint Specification
+# Docs: https://render.com/docs/blueprint-spec
+
+services:
+  - type: web
+    name: budget-tracker-backend
+    runtime: node
+    plan: free
+    rootDir: backend
+    buildCommand: npm install && npx prisma generate && npx prisma migrate deploy
+    startCommand: npm start
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: FRONTEND_URL
+        sync: false # Set to your Vercel deployment URL (e.g. https://your-project.vercel.app)
+      - key: DATABASE_URL
+        sync: false # PostgreSQL connection string (Render Postgres, Supabase, Neon, or Railway)
+      - key: DIRECT_URL
+        sync: false # Same as DATABASE_URL or dedicated unpooled connection
+      - key: JWT_SECRET
+        generateValue: true # Render will automatically generate a cryptographically strong secret
+      - key: JWT_ACCESS_EXPIRES
+        value: 15m
+      - key: JWT_REFRESH_EXPIRES
+        value: 7d
+      - key: KEEP_ALIVE_ENABLED
+        value: "true"
+      - key: KEEP_ALIVE_INTERVAL_MINUTES
+        value: "12"
+      - key: ALLOW_VERCEL_PREVIEWS
+        value: "true"
+      - key: COOKIE_SAME_SITE
+        value: none
+      - key: COOKIE_SECURE
+        value: "true"
+      - key: LEDGER_ENABLED
+        value: "false"
+      - key: LEDGER_CHAIN
+        value: disabled
+

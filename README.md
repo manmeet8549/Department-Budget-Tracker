@@ -284,6 +284,17 @@ If a block is marked `ANCHORED` in the local database but never successfully min
 
 ---
 
+## Cloud Deployment (Render & Vercel)
+
+This application is production-ready for deployment with:
+- **Backend API & PostgreSQL** on **[Render](https://render.com)** (configured via [`render.yaml`](./render.yaml)).
+- **Frontend SPA** on **[Vercel](https://vercel.com)** (configured via [`frontend/vercel.json`](./frontend/vercel.json)).
+- **24/7 Server Keep-Alive Protection:** Prevents Render's free tier from sleeping after 15 minutes of inactivity via internal self-pings and automated GitHub Actions ([`.github/workflows/keep-alive.yml`](./.github/workflows/keep-alive.yml)).
+
+For detailed step-by-step setup, database provisioning, and environment variable matrices, read the **[Production Deployment Guide](./DEPLOYMENT.md)**.
+
+---
+
 ## Architectural Documentation
 
 | Document | Description |

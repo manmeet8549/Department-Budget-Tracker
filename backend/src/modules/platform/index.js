@@ -19,6 +19,7 @@ export { requireAuth, requireRole, scopeDepartment, validate } from './middlewar
 export { events } from './events.js';
 export { cache } from './cache.js';
 export { featureEnabled } from './feature-flags.js';
+export { startKeepAlive, stopKeepAlive, resolveKeepAliveUrl, ping } from './keepAlive.js';
 
 // Utils
 export * as money from './money.js';

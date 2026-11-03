@@ -214,3 +214,4 @@ export function computeBlockHash(prevBlockHash, merkleRoot, blockNo, entryCount)
   const digest = crypto.createHash('sha256').update(data).digest('hex');
   return '0x' + digest.toLowerCase();
 }
+
