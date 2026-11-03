@@ -1,6 +1,6 @@
 /**
  * backend/tests/keepAlive.test.js
- * Unit tests for keep-alive self-ping helper and route aliases.
+ * Unit tests for keep-alive self-ping helper, route aliases, and CORS headers.
  */
 import request from 'supertest';
 import { createApp } from '../src/app.js';
@@ -93,6 +93,17 @@ describe('KeepAlive Service & Health Endpoints', () => {
       expect(res.body.message).toContain('Department Budget Spending Tracker');
       expect(res.body.health).toBe('/health');
     });
+
+    it('allows CORS for *.vercel.app deployment origins', async () => {
+      const vercelOrigin = 'https://department-budget-tracker-i8p8j43j3-manmeet9.vercel.app';
+      const res = await request(app)
+        .options('/api/v1/auth/login')
+        .set('Origin', vercelOrigin)
+        .set('Access-Control-Request-Method', 'POST');
+
+      expect(res.status).toBe(204);
+      expect(res.headers['access-control-allow-origin']).toBe(vercelOrigin);
+      expect(res.headers['access-control-allow-credentials']).toBe('true');
+    });
   });
 });
-

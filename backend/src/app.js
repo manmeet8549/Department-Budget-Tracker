@@ -56,8 +56,8 @@ export function createApp() {
           return callback(null, true);
         }
 
-        // Allow *.vercel.app preview deployments if enabled
-        if (process.env.ALLOW_VERCEL_PREVIEWS === 'true' && origin.endsWith('.vercel.app')) {
+        // Allow any *.vercel.app domain (production, branch, and preview URLs)
+        if (process.env.ALLOW_VERCEL_PREVIEWS !== 'false' && origin.endsWith('.vercel.app')) {
           return callback(null, true);
         }
 
@@ -65,7 +65,6 @@ export function createApp() {
       },
       credentials: true,
       methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-      allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
     })
   );
   app.use(express.json());
