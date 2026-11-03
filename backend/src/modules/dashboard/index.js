@@ -4,6 +4,7 @@
  */
 export {
   getDashboardSummary,
+  clearDashboardCache,
 } from './service.js';
 
 export { dashboardRouter } from './routes.js';

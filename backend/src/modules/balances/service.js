@@ -90,6 +90,80 @@ export async function getDepartmentBalance(financialYearId, departmentId) {
 }
 
 /**
+ * Returns balance summaries for multiple departments in a financial year in a single batch.
+ * Eliminates N+1 query waterfall (replaces 3*N queries with 2 queries).
+ */
+export async function getDepartmentBalancesBatch(financialYearId, departmentIds) {
+  const fyId = await resolveFyId(financialYearId);
+  const ids = (departmentIds || []).map((id) => Number(id));
+
+  if (ids.length === 0) {
+    return new Map();
+  }
+
+  // 1. Fetch all approved budgets for these departments in ONE query
+  const approvedBudgets = await prisma.budget.findMany({
+    where: {
+      financialYearId: fyId,
+      departmentId: { in: ids },
+      status: 'APPROVED',
+    },
+    select: {
+      departmentId: true,
+      totalAmount: true,
+    },
+  });
+
+  const budgetMap = new Map();
+  for (const b of approvedBudgets) {
+    budgetMap.set(b.departmentId, Number(b.totalAmount || 0));
+  }
+
+  // 2. Fetch expense aggregations for all these departments in ONE query
+  const expenseAggs = await prisma.expense.groupBy({
+    by: ['departmentId', 'status'],
+    where: {
+      financialYearId: fyId,
+      departmentId: { in: ids },
+      status: { in: ['APPROVED', 'PAID'] },
+    },
+    _sum: { amount: true },
+  });
+
+  // Map expenses: deptId -> { committed: number, spent: number }
+  const expenseMap = new Map();
+  for (const agg of expenseAggs) {
+    if (!expenseMap.has(agg.departmentId)) {
+      expenseMap.set(agg.departmentId, { committed: 0, spent: 0 });
+    }
+    const current = expenseMap.get(agg.departmentId);
+    if (agg.status === 'APPROVED') {
+      current.committed = Number(agg._sum.amount || 0);
+    } else if (agg.status === 'PAID') {
+      current.spent = Number(agg._sum.amount || 0);
+    }
+  }
+
+  // 3. Compute balances in-memory
+  const results = new Map();
+  for (const deptId of ids) {
+    const hasApprovedBudget = budgetMap.has(deptId);
+    const allocated = budgetMap.get(deptId) || 0;
+    const exp = expenseMap.get(deptId) || { committed: 0, spent: 0 };
+    const balances = calculateBalances(allocated, exp.committed, exp.spent);
+
+    results.set(deptId, {
+      financialYearId: fyId,
+      departmentId: deptId,
+      hasApprovedBudget,
+      ...balances,
+    });
+  }
+
+  return results;
+}
+
+/**
  * Returns category-wise breakdown of balances for a department in a financial year.
  */
 export async function getCategoryBalances(financialYearId, departmentId) {
